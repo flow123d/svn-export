@@ -184,15 +184,20 @@ int main(int argc, char **argv) {
      char *jmeno = new char[ini_fname.length() + 1];
      strcpy(jmeno,ini_fname.c_str());
     if(G_problem.semchemie_on == true){
+      G_prm.pocet_latekvefazi = G_problem.transport -> n_substances; 
+      if ( G_prm.pocet_latekvefazi <= 0 )
+ 	{
+	  xprintf(Msg,"\nPocet latek ve fazi musi byt kladny!");
+	  exit(133);
+	}
       priprav(jmeno); //priprav(ini_fname);
       printf("\nPOCET ROVNIC: %d \n",G_prm.celkovy_pocet_reakci);
     }
     // Controls number of precipitates an other things
-    if(G_problem.semchemie_on == true){
-//       xprintf(Msg,"\n Pocet dalsich latek je %d\n",G_problem.sediment->n_substances);
-      xprintf(Msg,"\nzdrojovy soubor: %s\n",jmeno); //xprintf(Msg,"\nzdrojovy soubor: %s\n",ini_fname);
-      kontrola();
-    }
+     if(G_problem.semchemie_on == true){
+       xprintf(Msg,"\nzdrojovy soubor: %s\n",jmeno); //xprintf(Msg,"\nzdrojovy soubor: %s\n",ini_fname);
+       kontrola();
+     }
     
     make_mesh(&G_problem);
 

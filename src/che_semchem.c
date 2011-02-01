@@ -21,10 +21,12 @@ void che_vypis_soubor(char *soubor)
    FILE *fw;
 
    fw = fopen(soubor, "a");
-   for (i=0; i<G_prm.pocet_latekvefazi; i++)
-	   fprintf (fw, "\nmolalita rozpustene %s : %f", P_lat[i].nazev, P_lat[i].m);
-   for (i=0; i<G_prm.pocet_latekvefazi; i++)
-	   fprintf (fw, "\nmolalita sorbovane  %s : %f", P_lat[i].nazev, P_lat[i].m_sorb);
+    for (i=0; i<G_prm.pocet_latekvefazi; i++)
+//  	   fprintf (fw, "\nmolalita rozpustene %s : %f", P_lat[i].nazev, P_lat[i].m);
+ 	   fprintf (fw, "\nmolalita rozpustene %d. latky: %f", i, P_lat[i].m);
+    for (i=0; i<G_prm.pocet_latekvefazi; i++)
+//  	   fprintf (fw, "\nmolalita sorbovane  %s : %f", P_lat[i].nazev, P_lat[i].m_sorb);
+ 	   fprintf (fw, "\nmolalita sorbovane  %d. latky: %f", i, P_lat[i].m_sorb);
    fclose(fw);
 }
 
@@ -46,11 +48,12 @@ void che_outpocp_soubor(FILE *fw)
 {
    int i = 0;
 
-	fprintf(fw,"\n..............................................................");
-   for (i=0; i<G_prm.pocet_latekvefazi; i++)
-	   fprintf (fw, "\npocatecni molalita rozpustene %s : %f", P_lat[i].nazev, P_lat[i].m0);
-   for (i=0; i<G_prm.pocet_latekvefazi; i++)
-	   fprintf (fw, "\npocatecni molalita sorbovane  %s : %f", P_lat[i].nazev, P_lat[i].m0_sorb);
+ 	fprintf(fw,"\n..............................................................");
+    for (i=0; i<G_prm.pocet_latekvefazi; i++)
+//  	   fprintf (fw, "\npocatecni molalita rozpustene %s : %f", P_lat[i].nazev, P_lat[i].m0);
+ 	   fprintf (fw, "\npocatecni molalita rozpustene %d. latky: %f", i, P_lat[i].m0);
+    for (i=0; i<G_prm.pocet_latekvefazi; i++)
+ 	   fprintf (fw, "\npocatecni molalita sorbovane  %d. latky: %f", i, P_lat[i].m0_sorb);
 }
 
 void che_outpocp__soubor(FILE *fw)
@@ -1774,7 +1777,7 @@ void che_maticovy_vypocet (char *soubor)
    if (stagnace >= MAX_STAGNACE)					 						   // cislo vycucane z prstu
    {
 	   fw = fopen(soubor, "a");
-      fprintf (fw, "\nchemie: NEMOHU DODRZET POZADOVANOU PRESNOST!\t");
+      fprintf (fw, "\nchemie: NEMOHU DODRZET POZADOVANOU PRESNOST!\n");
 		fclose(fw);
    }
    if (pruchodu >= MAX_POC_VNEJ_CYK)					 						   // cislo vycucane z prstu
@@ -2396,11 +2399,11 @@ void che_nadpis__soubor(char *soubor)
 	fprintf (fw,"\nkrok\tcas");
    for (i=0; i<G_prm.pocet_latekvefazi; i++)
    {
-		fprintf (fw,"\t%s(rozp.)", P_lat[i].nazev);
+ 		fprintf (fw,"\t%d. latka(rozp.)", i);
    }
    for (i=0; i<G_prm.pocet_latekvefazi; i++)
    {
-		fprintf (fw,"\t%s(sorb.)", P_lat[i].nazev);
+ 		fprintf (fw,"\t%d. latka(sorb.)", i);
    }
    fprintf(fw,"\tobjem");
 	fprintf (fw,"\n0\t0.0");
@@ -2427,24 +2430,26 @@ void che_vypis_prm_lat_che ( void )
    xprintf(Msg,"\nLAT: ");
    for (i=0; i<G_prm.pocet_latek; i++)
    {
-      xprintf(Msg,"\n  (%d): ", i);
-      xprintf(Msg,"%s %f %f %f %f %d %f",P_lat[i].nazev,P_lat[i].m0,P_lat[i].m,P_lat[i].M,P_lat[i].dGf,P_lat[i].Q,P_lat[i].aktivita);
+       xprintf(Msg,"\n  (%d): ", i);
+//        xprintf(Msg,"%s %f %f %f %f %d %f",P_lat[i].nazev,P_lat[i].m0,P_lat[i].m,P_lat[i].M,P_lat[i].dGf,P_lat[i].Q,P_lat[i].aktivita);
+       xprintf(Msg,"%d. %f %f %f %f %d %f",i,P_lat[i].m0,P_lat[i].m,P_lat[i].M,P_lat[i].dGf,P_lat[i].Q,P_lat[i].aktivita);
    }
 
    xprintf(Msg,"\nCHE: ");
    for (i=0; i<G_prm.celkovy_pocet_reakci; i++)
    {
-      xprintf(Msg,"\n  (%d): ", i);
-      xprintf(Msg,"%s %f %d %f",P_che[i].nazev,P_che[i].K,P_che[i].typ_reakce,P_che[i].zeta0);
-      xprintf(Msg,"\n     stech. koef.: ");
+       xprintf(Msg,"\n  (%d): ", i);
+//        xprintf(Msg,"%s %f %d %f",P_che[i].nazev,P_che[i].K,P_che[i].typ_reakce,P_che[i].zeta0);
+       xprintf(Msg,"%d %f %d %f",i,P_che[i].K,P_che[i].typ_reakce,P_che[i].zeta0);
+       xprintf(Msg,"\n     stech. koef.: ");
       for (j = 0; j<G_prm.pocet_latek; j++)
       {
-         xprintf(Msg,"%d ", P_che[i].stech_koef_p[j]);
+          xprintf(Msg,"%d ", P_che[i].stech_koef_p[j]);
       }
-      xprintf(Msg,"\n     exponenty:    ");
+       xprintf(Msg,"\n     exponenty:    ");
       for (j = 0; j<G_prm.pocet_latekvefazi; j++)
       {
-         xprintf(Msg,"%f ", P_che[i].exponent[j]);
+          xprintf(Msg,"%f ", P_che[i].exponent[j]);
       }
    }
 }

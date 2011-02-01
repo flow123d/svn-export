@@ -27,11 +27,11 @@ float che_poradi (int typ_reakce, double max, double K)
 void ctiich_obecne( void )
 {
 	int	i;
-	const char *section = "CHEMIE-OBECNE";
+	const char *section = "SEMCHEM_MODULE";
 	char  buffer[ 1024 ];
 	char *pString;
 
-	G_prm.T = OptGetDbl(section,"Teplota","0.0");
+	G_prm.T = OptGetDbl(section,"Temperature","0.0");
 	//GetPrivateProfileString( (jmeno_sekce), "Teplota", "0.0", buffer, 1024, G_prm.jmeno_ich );
 	//G_prm.T = atol( buffer );
 	if ( G_prm.T <= 0.0 )
@@ -40,7 +40,7 @@ void ctiich_obecne( void )
       exit(133);
    	}
 /*------------------------------------------------------------------*/
-	G_prm.TGf = OptGetDbl(section,"TeplotaGf","-1.0");
+	G_prm.TGf = OptGetDbl(section,"Temperature_Gf","-1.0");
 	//GetPrivateProfileString( jmeno_sekce, "TeplotaGf", "-1.0", buffer, 1024, G_prm.jmeno_ich );
 	//G_prm.TGf = atol( buffer );
 	if ( G_prm.TGf == -1.0 )
@@ -62,7 +62,7 @@ void ctiich_obecne( void )
       exit(133);
    	}
 /*------------------------------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(section, "Typ_normy", "Absolutni")); 
+   pString = strcpy(buffer,OptGetStr(section, "Error_norm_type", "Absolute")); 
    //GetPrivateProfileString( jmeno_sekce, "Typ_normy", "Absolutni", buffer, 1024, G_prm.jmeno_ich );
    if ( pString == NULL )
    {
@@ -70,15 +70,15 @@ void ctiich_obecne( void )
       exit(133);
    }
    G_prm.abs_norma = -1;
-   if ( strcmp( buffer, "relativni" ) == 0 ) G_prm.abs_norma = 0;
-   if ( strcmp( buffer, "Relativni" ) == 0 ) G_prm.abs_norma = 0;
+   if ( strcmp( buffer, "relative" ) == 0 ) G_prm.abs_norma = 0;
+   if ( strcmp( buffer, "Relative" ) == 0 ) G_prm.abs_norma = 0;
    if ( strcmp( buffer, "rel" ) == 0 ) G_prm.abs_norma = 0;
    if ( strcmp( buffer, "Rel" ) == 0 ) G_prm.abs_norma = 0;
    if ( strcmp( buffer, "r" ) == 0 ) G_prm.abs_norma = 0;
    if ( strcmp( buffer, "R" ) == 0 ) G_prm.abs_norma = 0;
    if ( strcmp( buffer, "0" ) == 0 ) G_prm.abs_norma = 0;
-   if ( strcmp( buffer, "absolutni" ) == 0 ) G_prm.abs_norma = 1;
-   if ( strcmp( buffer, "Absolutni" ) == 0 ) G_prm.abs_norma = 1;
+   if ( strcmp( buffer, "absolute" ) == 0 ) G_prm.abs_norma = 1;
+   if ( strcmp( buffer, "Absolute" ) == 0 ) G_prm.abs_norma = 1;
    if ( strcmp( buffer, "abs" ) == 0 ) G_prm.abs_norma = 1;
    if ( strcmp( buffer, "Abs" ) == 0 ) G_prm.abs_norma = 1;
    if ( strcmp( buffer, "a" ) == 0 ) G_prm.abs_norma = 1;
@@ -103,7 +103,7 @@ void ctiich_obecne( void )
 */
    G_prm.omega = 1.0;
 /*------------------------------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(section,"Skalovani","No"));
+   pString = strcpy(buffer,OptGetStr(section,"Scaling","No"));
    //GetPrivateProfileString( jmeno_sekce, "Skalovani", "Ne", buffer, 1024, G_prm.jmeno_ich );
    if ( pString == NULL )
    {
@@ -135,23 +135,23 @@ void ctiich_obecne( void )
       exit(133);
    }
 /*------------------------------------------------------------------*/
-	G_prm.objem = OptGetDbl(section,"Objem", "0.0");
-	//GetPrivateProfileString( jmeno_sekce, "Objem", "0.0", buffer, 1024, G_prm.jmeno_ich );
-	//G_prm.objem = atol( buffer );
-	if ( G_prm.objem <= 0.0 )
-	{
-   	xprintf(Msg,"\nObjem musi byt kladny!");
-      exit(133);
-   }
+// 	G_prm.objem = OptGetDbl(section,"Objem", "0.0");
+// 	//GetPrivateProfileString( jmeno_sekce, "Objem", "0.0", buffer, 1024, G_prm.jmeno_ich );
+// 	//G_prm.objem = atol( buffer );
+// 	if ( G_prm.objem <= 0.0 )
+// 	{
+//    	xprintf(Msg,"\nObjem musi byt kladny!");
+//       exit(133);
+//    }
 /*------------------------------------------------------------------*/
-	G_prm.splocha = OptGetDbl(section,"Sorpcni_plocha","0.0");
-	//GetPrivateProfileString( jmeno_sekce, "Sorpcni_plocha", "0.0", buffer, 1024, G_prm.jmeno_ich );
-	//G_prm.splocha = atol( buffer );
-	if ( G_prm.splocha <= 0.0 )
-	{
-	xprintf(Msg,"\nSorpcni plocha musi byt kladna!");
-	  exit(133);
-   }
+// 	G_prm.splocha = OptGetDbl(section,"Sorpcni_plocha","0.0");
+// 	//GetPrivateProfileString( jmeno_sekce, "Sorpcni_plocha", "0.0", buffer, 1024, G_prm.jmeno_ich );
+// 	//G_prm.splocha = atol( buffer );
+// 	if ( G_prm.splocha <= 0.0 )
+// 	{
+// 	xprintf(Msg,"\nSorpcni plocha musi byt kladna!");
+// 	  exit(133);
+//    }
 /*------------------------------------------------------------------*/
 	G_prm.b = OptGetDbl(section,"Param_b","0.0");
 	//GetPrivateProfileString( jmeno_sekce, "Param_b", "0.0", buffer, 1024, G_prm.jmeno_ich );
@@ -171,7 +171,7 @@ void ctiich_obecne( void )
       exit(133);
    }
 /*------------------------------------------------------------------*/
-	G_prm.cas_kroku = OptGetInt(section,"Cas_kroku","0");
+	G_prm.cas_kroku = OptGetInt(section,"Time_steps","0");
 	//GetPrivateProfileString( jmeno_sekce, "Cas_kroku", "0", buffer, 1024, G_prm.jmeno_ich );
 	//G_prm.cas_kroku = atoi( buffer );
 	if ( G_prm.cas_kroku <= 0 )
@@ -180,20 +180,20 @@ void ctiich_obecne( void )
       exit(133);
    }
 /*------------------------------------------------------------------*/
-	G_prm.vypisy = OptGetInt(section,"Uroven_vypisu","0");
+	G_prm.vypisy = OptGetInt(section,"Output_precission","0");
 	//GetPrivateProfileString( jmeno_sekce, "Uroven_vypisu", "0", buffer, 1024, G_prm.jmeno_ich );
 	//G_prm.vypisy = atoi( buffer );
 /*------------------------------------------------------------------*/
-	G_prm.pocet_latekvefazi = OptGetInt(section,"Pocet_latek_ve_fazi","0");
-	//GetPrivateProfileString( jmeno_sekce, "Pocet_latek_ve_fazi", "0", buffer, 1024, G_prm.jmeno_ich );
-	//G_prm.pocet_latekvefazi = atoi( buffer );
-	if ( G_prm.pocet_latekvefazi <= 0 )
-	{
-   	xprintf(Msg,"\nPocet latek ve fazi musi byt kladny!");
-      exit(133);
-   }
+// 	G_prm.pocet_latekvefazi = OptGetInt(section,"Pocet_latek_ve_fazi","0");
+// 	//GetPrivateProfileString( jmeno_sekce, "Pocet_latek_ve_fazi", "0", buffer, 1024, G_prm.jmeno_ich );
+// 	//G_prm.pocet_latekvefazi = atoi( buffer );
+// 	if ( G_prm.pocet_latekvefazi <= 0 )
+// 	{
+//    	xprintf(Msg,"\nPocet latek ve fazi musi byt kladny!");
+//       exit(133);
+//    }
 /*------------------------------------------------------------------*/
-	i = OptGetInt(section, "Pocet_dalsich_latek","0");
+	i = OptGetInt(section, "Number_of_further_species","0");
 	//GetPrivateProfileString( jmeno_sekce, "Pocet_dalsich_latek", "0", buffer, 1024, G_prm.jmeno_ich );
 	//i = atoi( buffer );
 	if ( i < 0 )
@@ -208,7 +208,7 @@ void ctiich_obecne( void )
 	   exit(121);
    }
 /*------------------------------------------------------------------*/
-	G_prm.deleni_RK = OptGetInt(section,"Kroku_pomale_kinetiky","1");
+	G_prm.deleni_RK = OptGetInt(section,"Slow_kinetics_substeps","1");
 	//GetPrivateProfileString( jmeno_sekce, "Kroku_pomale_kinetiky", "1", buffer, 1024, G_prm.jmeno_ich );
 	//G_prm.deleni_RK = atoi( buffer );
 	if ( G_prm.deleni_RK < 1 )
@@ -246,41 +246,38 @@ void ctiich_latkyvefazi( void )
 	   exit(0);
    }
 // Nacteni obsahu seznamu latek
-   sprintf( nazev, "LATKY_VE_FAZI" );
+/*-----------------------------------------------*/
+   sprintf( nazev, "AQUEOUS_SPECIES" );
 
-   //pString =
-   //strcpy(buffer,OptGetStrArray(nazev, "Nazev", G_prm.pocet_latekvefazi, P_lat); 
    strcpy(buffer,OptGetStr(nazev,"Nazev","<NeplatnyNazev>"));
-   //GetPrivateProfileString( nazev, "Nazev", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
-   pom_buf = strtok( buffer, separators );
-   if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
-   {
-      for (j=0; j<G_prm.pocet_latekvefazi; j++)
-      {
-         sprintf( P_lat[j].nazev, "Latka_ve_fazi_%d", j+1 );
-      }
-   }
-   else
-   {
-      for (j=0; j<G_prm.pocet_latekvefazi; j++)
-      {
-         if ( pom_buf == NULL )
-         {
-            xprintf(Msg,"\nChybi nazev %d. latky ve fazi!", j+1);
-            exit(133);
-         }else{
-	 //printf("\n NAZEV %d-TE LATKY JE %s\n",j,pom_buf);
-         strcpy(P_lat[j].nazev, pom_buf); //tmp_copy() instead of strcpy()
-	 //printf("\n NAZEV %d-TE P_LATKY JE %s\n",j,P_lat[j].nazev);
-         pom_buf = strtok( NULL, separators );
-	 }
-      }
-      if ( pom_buf != NULL )
-      {
-         xprintf(Msg,"\nPrilis mnoho nazvu latek ve fazi!\n");
-         exit(133);
-      }
-   }
+    /*pom_buf = strtok( buffer, separators );
+    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )*/
+    {
+       for (j=0; j<G_prm.pocet_latekvefazi; j++)
+       {
+//           sprintf( P_lat[j].nazev, "Latka_ve_fazi_%d", j+1 );
+	  strcpy(P_lat[j].nazev,"");
+       }
+    }
+    /*else
+    {
+       for (j=0; j<G_prm.pocet_latekvefazi; j++)
+       {
+          if ( pom_buf == NULL )
+          {
+             xprintf(Msg,"\nChybi nazev %d. latky ve fazi!", j+1);
+             exit(133);
+          }else{
+          strcpy(P_lat[j].nazev, pom_buf);
+          pom_buf = strtok( NULL, separators );
+ 	 }
+       }
+       if ( pom_buf != NULL )
+       {
+          xprintf(Msg,"\nPrilis mnoho nazvu latek ve fazi!\n");
+          exit(133);
+       }
+    }*/
 /*-----------------------------------------------*/
    pString = strcpy(buffer,OptGetStr(nazev,"dGf","<NeplatnyNazev>"));
    //GetPrivateProfileString( nazev, "dGf", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
@@ -297,7 +294,7 @@ void ctiich_latkyvefazi( void )
          exit(133);
       }
       P_lat[j].dGf = atof(pom_buf);
-	//printf("\n P_lat[%d].dGf %Lf\n",j,P_lat[j].dGf);
+	xprintf(Msg,"\n P_lat[%d].dGf %Lf\n",j,P_lat[j].dGf);
       pom_buf = strtok( NULL, separators );
    }
    if ( pom_buf != NULL )
@@ -333,7 +330,7 @@ void ctiich_latkyvefazi( void )
       exit(133);
    }
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Mol_hmotnost","<NeplatnyNazev>"));
+   pString = strcpy(buffer,OptGetStr(nazev,"Molar_mass","<NeplatnyNazev>"));
    //GetPrivateProfileString( nazev, "Mol_hmotnost", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -357,7 +354,7 @@ void ctiich_latkyvefazi( void )
          exit(133);
       }
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Naboj","<NeplatnyNazev>"));
+   pString = strcpy(buffer,OptGetStr(nazev,"El_charge","<NeplatnyNazev>"));
    //GetPrivateProfileString( nazev, "Naboj", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -380,7 +377,7 @@ void ctiich_latkyvefazi( void )
       exit(133);
    }
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Poc_molalita","<NeplatnyNazev>"));
+   /*pString = strcpy(buffer,OptGetStr(nazev,"Poc_molalita","<NeplatnyNazev>"));
    //GetPrivateProfileString( nazev, "Poc_molalita", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -407,9 +404,9 @@ void ctiich_latkyvefazi( void )
          xprintf(Msg,"\nPrilis mnoho pocatecnich molalit pro latky ve fazi!");
          exit(133);
       }
-   }
+   }*/
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Poc_obsah_sorbovany","<NeplatnyNazev>"));
+   /*pString = strcpy(buffer,OptGetStr(nazev,"Poc_obsah_sorbovany","<NeplatnyNazev>"));
    //GetPrivateProfileString( nazev, "Poc_obsah_sorbovany", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -436,9 +433,9 @@ void ctiich_latkyvefazi( void )
          xprintf(Msg,"\nPrilis mnoho pocatecnich sorbovanych obsahu pro latky ve fazi!");
          exit(133);
 	  }
-   }
+   }*/
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Typ_sorpce","<NeplatnyNazev>")); 
+  pString = strcpy(buffer,OptGetStr(nazev,"Sorptiony_type","<NeplatnyNazev>")); 
    //GetPrivateProfileString( nazev, "Typ_sorpce", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -448,7 +445,7 @@ void ctiich_latkyvefazi( void )
 		 P_lat[j].typ_sorpce = 0;
 	  }
    }
-   else
+   /*else
    {
 	  for (j=0; j<G_prm.pocet_latekvefazi; j++)
 	  {
@@ -495,45 +492,45 @@ void ctiich_latkyvefazi( void )
 		 xprintf(Msg,"\nPrilis mnoho typu sorpce pro latky ve fazi!");
 		 exit(133);
 	  }
-   }
+   }*/
 /*-----------------------------------------------*/
-   for (i = 0; i<MAX_POC_PARAM_SORPCE ; i++)
-   {
-      sprintf(nazev1, "Param_sorpce%d", i+1 );
-      pString = strcpy(buffer,OptGetStr(nazev,nazev1,"<NeplatnyNazev>"));      
-      //GetPrivateProfileString( nazev, nazev1, "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
-      pom_buf = strtok( buffer, separators );
-      if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
-      {
-         for (j=0; j<G_prm.pocet_latekvefazi; j++)
-         {
-            P_lat[j].param_sorpce[i] = 0.0;
-         }
-      }
-      else
-      {
-         for (j=0; j<G_prm.pocet_latekvefazi; j++)
-         {
-            if ( pom_buf == NULL )
-            {
-               xprintf(Msg,"\nChybi %d. parametr sorpce %d. latky ve fazi!", i+1, j+1);
-               exit(133);
-            }
-            P_lat[j].param_sorpce[i] = atof(pom_buf);
-            if (P_lat[j].param_sorpce[i]<0.0)
-            {
-               xprintf(Msg,"\nParametry sorpce nesmeji byt zaporne!");
-               exit(100);
-            }
-            pom_buf = strtok( NULL, separators );
-         }
-         if ( pom_buf != NULL )
-         {
-            xprintf(Msg,"\nPrilis mnoho %d. parametru sorpce pro latky ve fazi!", i+1);
-            exit(133);
-         }
-      }
-   }
+//    for (i = 0; i<MAX_POC_PARAM_SORPCE ; i++)
+//    {
+//       sprintf(nazev1, "Param_sorpce%d", i+1 );
+//       pString = strcpy(buffer,OptGetStr(nazev,nazev1,"<NeplatnyNazev>"));      
+//       //GetPrivateProfileString( nazev, nazev1, "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
+//       pom_buf = strtok( buffer, separators );
+//       if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
+//       {
+//          for (j=0; j<G_prm.pocet_latekvefazi; j++)
+//          {
+//             P_lat[j].param_sorpce[i] = 0.0;
+//          }
+//       }
+//       else
+//       {
+//          for (j=0; j<G_prm.pocet_latekvefazi; j++)
+//          {
+//             if ( pom_buf == NULL )
+//             {
+//                xprintf(Msg,"\nChybi %d. parametr sorpce %d. latky ve fazi!", i+1, j+1);
+//                exit(133);
+//             }
+//             P_lat[j].param_sorpce[i] = atof(pom_buf);
+//             if (P_lat[j].param_sorpce[i]<0.0)
+//             {
+//                xprintf(Msg,"\nParametry sorpce nesmeji byt zaporne!");
+//                exit(100);
+//             }
+//             pom_buf = strtok( NULL, separators );
+//          }
+//          if ( pom_buf != NULL )
+//          {
+//             xprintf(Msg,"\nPrilis mnoho %d. parametru sorpce pro latky ve fazi!", i+1);
+//             exit(133);
+//          }
+//       }
+//    }
 /*-----------------------------------------------*/
 }
 // Cte DALSI_LATKY ze souboru parametru .ich
@@ -550,8 +547,8 @@ void ctiich_dalsilatky( void )
       return;
    }
 // Nacteni obsahu seznamu latek
-   sprintf( nazev, "DALSI_LATKY" );
-   pString = strcpy(buffer,OptGetStr(nazev,"Nazev","<NeplatnyNazev>")); 
+   sprintf( nazev, "FURTHER_SPECIES" );
+   pString = strcpy(buffer,OptGetStr(nazev,"Specie_name","<NeplatnyNazev>")); 
    //GetPrivateProfileString( nazev, "Nazev", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -630,7 +627,7 @@ void ctiich_dalsilatky( void )
       exit(133);
    }
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Mol_hmotnost","<NeplatnyNazev>")); 
+   pString = strcpy(buffer,OptGetStr(nazev,"Molar_mass","<NeplatnyNazev>")); 
    //GetPrivateProfileString( nazev, "Mol_hmotnost", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -653,7 +650,7 @@ void ctiich_dalsilatky( void )
       exit(133);
    }
 /*-----------------------------------------------*/
-   pString = strcpy(buffer,OptGetStr(nazev,"Aktivita","<NeplatnyNazev>")); 
+   pString = strcpy(buffer,OptGetStr(nazev,"Activity","<NeplatnyNazev>")); 
    //GetPrivateProfileString( nazev, "Aktivita", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -690,8 +687,8 @@ void ctiich_reakce( void )
 // Zjisteni delky seznamu reakci
    for ( i = 1;; ++i )
    {
-      sprintf( nazev, "REAKCE_%d", i );
-      strcpy(buffer,OptGetStr(nazev,"Typ_reakce","<NeplatnyNazev>")); xprintf(Msg,"probehlo zjisteni typu reakce %d: %s\n",i, buffer);  
+      sprintf( nazev, "REACTION_%d", i );
+      strcpy(buffer,OptGetStr(nazev,"Reaction_type","<NeplatnyNazev>")); xprintf(Msg,"probehlo zjisteni typu reakce %d: %s\n",i, buffer);  
       //GetPrivateProfileString( nazev, "Typ_reakce", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
       if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 ) break;
    }
@@ -715,42 +712,38 @@ void ctiich_reakce( void )
    max_poloc_rozp = 0.0;
    for (i=0; i<G_prm.celkovy_pocet_reakci; i++)
    {
-      sprintf( nazev, "REAKCE_%d", i+1 );
+      sprintf( nazev, "REACTION_%d", i+1 );
       //strcpy(buffer,OptGetStr(nazev,"Nazev",nazev)); 
       //puvodni wokeni fce//GetPrivateProfileString( nazev, "Nazev", nazev, buffer, 1024, G_prm.jmeno_ich );
       //pom_buf = strtok( buffer, separators );
       //strcpy(P_che[i].nazev, pom_buf);
-      sprintf(P_che[i].nazev,"REAKCE_%d",i+1);
+      sprintf(P_che[i].nazev,"REACTION_%d",i+1);
 /*-----------------------------------------------*/
-      strcpy(buffer,OptGetStr(nazev,"Typ_reakce","<NeplatnyTyp>")); 
+      strcpy(buffer,OptGetStr(nazev,"Reaction_type","<NeplatnyTyp>")); 
       //GetPrivateProfileString( nazev, "Typ_reakce", "<NeplatnyTyp>", buffer, 1024, G_prm.jmeno_ich );
       pom_buf = strtok( buffer, separators );
       P_che[i].typ_reakce = -888;
-      if ( strcmp( pom_buf, "Radioaktivni_rozpad" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "radioaktivni_rozpad" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "Rozpad" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "rozpad" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "Rozp" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "rozp" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "RR" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "rr" ) == 0 ) P_che[i].typ_reakce = 4;
+      if ( strcmp( pom_buf, "Radioactive_decay" ) == 0 ) P_che[i].typ_reakce = 4;
+      if ( strcmp( pom_buf, "radioactive_decay" ) == 0 ) P_che[i].typ_reakce = 4;
+      if ( strcmp( pom_buf, "Decay" ) == 0 ) P_che[i].typ_reakce = 4;
+      if ( strcmp( pom_buf, "decay" ) == 0 ) P_che[i].typ_reakce = 4;
+//       if ( strcmp( pom_buf, "Dec" ) == 0 ) P_che[i].typ_reakce = 4;
+//       if ( strcmp( pom_buf, "rozp" ) == 0 ) P_che[i].typ_reakce = 4;
+      if ( strcmp( pom_buf, "RD" ) == 0 ) P_che[i].typ_reakce = 4;
+      if ( strcmp( pom_buf, "rd" ) == 0 ) P_che[i].typ_reakce = 4;
       if ( strcmp( pom_buf, "4" ) == 0 ) P_che[i].typ_reakce = 4;
-      if ( strcmp( pom_buf, "Pomala_kinetika" ) == 0 ) P_che[i].typ_reakce = 3;
-      if ( strcmp( pom_buf, "pomala_kinetika" ) == 0 ) P_che[i].typ_reakce = 3;
+      if ( strcmp( pom_buf, "Slow_kinetics" ) == 0 ) P_che[i].typ_reakce = 3;
+      if ( strcmp( pom_buf, "slow_kinetics" ) == 0 ) P_che[i].typ_reakce = 3;
       if ( strcmp( pom_buf, "3" ) == 0 ) P_che[i].typ_reakce = 3;
-      if ( strcmp( pom_buf, "Kineticka" ) == 0 ) P_che[i].typ_reakce = 1;
-      if ( strcmp( pom_buf, "kineticka" ) == 0 ) P_che[i].typ_reakce = 1;
-      if ( strcmp( pom_buf, "Kinetika" ) == 0 ) P_che[i].typ_reakce = 1;
-      if ( strcmp( pom_buf, "kinetika" ) == 0 ) P_che[i].typ_reakce = 1;
+      if ( strcmp( pom_buf, "Kinetics" ) == 0 ) P_che[i].typ_reakce = 1;
+      if ( strcmp( pom_buf, "kinetics" ) == 0 ) P_che[i].typ_reakce = 1;
       if ( strcmp( pom_buf, "1" ) == 0 ) P_che[i].typ_reakce = 1;
-      if ( strcmp( pom_buf, "Rovnovazna" ) == 0 ) P_che[i].typ_reakce = 0;
-      if ( strcmp( pom_buf, "rovnovazna" ) == 0 ) P_che[i].typ_reakce = 0;
-      if ( strcmp( pom_buf, "Rovnovaha" ) == 0 ) P_che[i].typ_reakce = 0;
-      if ( strcmp( pom_buf, "rovnovaha" ) == 0 ) P_che[i].typ_reakce = 0;
+      if ( strcmp( pom_buf, "Equilibrium" ) == 0 ) P_che[i].typ_reakce = 0;
+      if ( strcmp( pom_buf, "equilibrium" ) == 0 ) P_che[i].typ_reakce = 0;
       if ( strcmp( pom_buf, "0" ) == 0 ) P_che[i].typ_reakce = 0;
       if (P_che[i].typ_reakce == -888)
       {
-         xprintf(Msg,"\nTyp reakce %d neni platny!", i);
+         xprintf(Msg,"\nThe type of reaction nr. %d is not valid!", i);
          exit(133);
       }
       if (P_che[i].typ_reakce==0)
@@ -774,7 +767,7 @@ void ctiich_reakce( void )
 //      GetPrivateProfileString( nazev, "Poc_posunuti", "0.0", buffer, 1024, G_prm.jmeno_ich );
 //      P_che[i].zeta0 = _atold( buffer );
 /*------------------------------------------------------------------*/
-      strcpy(buffer,OptGetStr(nazev,"Stechiometrie","")); 
+      strcpy(buffer,OptGetStr(nazev,"Stechiometry","")); 
       //GetPrivateProfileString( nazev, "Stechiometrie", "", buffer, 1024, G_prm.jmeno_ich );
       pom_buf = strtok( buffer, separators );
       for (j = 0; j<G_prm.pocet_latek; j++)
@@ -796,7 +789,7 @@ void ctiich_reakce( void )
 /*------------------------------------------------------------------*/
       if ((P_che[i].typ_reakce==1)||(P_che[i].typ_reakce==3))
       {
-         P_che[i].K = OptGetDbl(nazev,"Kinet_konst","0.0");
+         P_che[i].K = OptGetDbl(nazev,"Kinetic_constant","0.0");
 	 if(P_che[i].typ_reakce==1)xprintf(Msg,"\nKineticka konstanta v %d. rovnici ma hodnotu %f", i+1, P_che[i].K);
 	 //GetPrivateProfileString( nazev, "Kinet_konst", "0.0", buffer, 1024, G_prm.jmeno_ich );
          //P_che[i].K = atol( buffer );
@@ -806,7 +799,7 @@ void ctiich_reakce( void )
             exit(133);
          }
 /*------------------------------------------------------------------*/
-	 strcpy(buffer,OptGetStr(nazev,"Kinet_mocniny","")); 
+	 strcpy(buffer,OptGetStr(nazev,"Order_of_reaction","")); 
          //GetPrivateProfileString( nazev, "Kinet_mocniny", "", buffer, 1024, G_prm.jmeno_ich );
          pom_buf = strtok( buffer, separators );
          for (j = 0; j<G_prm.pocet_latek; j++)
@@ -833,14 +826,14 @@ void ctiich_reakce( void )
 /*------------------------------------------------------------------*/
       if (P_che[i].typ_reakce==0)
       {
-	 P_che[i].K = OptGetDbl(nazev, "Rovnov_konst","-1.0");
+	 P_che[i].K = OptGetDbl(nazev, "Equilibrium_constant","-1.0");
          //GetPrivateProfileString( nazev, "Rovnov_konst", "-1.0", buffer, 1024, G_prm.jmeno_ich );
          //P_che[i].K = atol( buffer );
       }
 /*------------------------------------------------------------------*/
       if (P_che[i].typ_reakce==4)
       {
-	 P_che[i].K = OptGetDbl( nazev, "Polocas_rozp","-1.0");
+	 P_che[i].K = OptGetDbl( nazev, "Half_life","-1.0");
          //GetPrivateProfileString( nazev, "Polocas_rozp", "-1.0", buffer, 1024, G_prm.jmeno_ich );
          //P_che[i].K = atol( buffer );
          if ( P_che[i].K <= 0.0 )

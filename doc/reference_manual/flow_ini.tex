@@ -347,8 +347,137 @@ Stopping criterium for iterations (maximum norm of pressure difference).
 \key{Write\_iterations} & \type{YES/NO} & NO &
 Write conc values during iterations to POS file.
 \\
+\hline\\
+\end{initable}
+
+\newpage
+\begin{initable}{SEMCHEM\_MODULE}
+\key{Compute\_reactions} & \type{Yes/No} & No &
+NO = transport without chemical reactions\br
+YES = transport influenced by chemical reactions
+\\
+\hline
+\key{Output\_precission} & \type{int} & 1 &
+xxx
+\\
+\hline\\
+\key{Substeps\_nr} & \type{int} & 1 &
+Number of transport step divisions.
+\\
+\hline
+\key{Number\_of\_further\_species} & \type{int} & 0 &
+Concentrations of these species are not computed.
+\\
+\hline
+\key{Temperature} & \type{double} & 0.0 &
+Temperature
+\\
+\key{Temperature\_Gf} & \type{double} & 0.0 &
+CTemperature\_Gf
+\\
+\hline
+\key{Param\_Afi} & \type{double} & 0.0 &
+ParamAfi
+\\
+\hline
+\key{Param\_b} & \type{double} & 0.0 &
+Param\_b
+\\
+\hline
+\key{Epsilon} & \type{double} & 0.0 &
+epsilon
+\\
+\hline
+\key{deltaT} & \type{double} & 0.0 &
+deltaT
+\\
+\hline
+\key{Time\_steps} & \type{int} & 1 &
+time steps
+\\
+\hline
+\key{Slow\_kinetics\_substeps} & \type{int} & 0 &
+substeps
+\\
+\hline\\
+\key{Error\_norm\_type} & \type{string} & "Absolute" &
+Through wich kind of norm the error is measured.
+\\
+\hline\\
+\key{Scalling} & \type{boolean} & "No" &
+$\ldots$
+\\
+\hline\\
+\key{Output\_precission} & \type{int} & 0 &
+$\ldots$
+\\
+\hline\\
+
+\end{initable}
+\newpage
+\begin{initable}{AQEOUS\_SPECIES}
+\key{El\_charge} & \type{int} & 0 &
+electric charge of a particle
+\\
+\hline
+\key{dGf} & \type{double} & 0.0 &
+xxx
+\\
+\hline\\
+\key{dHf} & \type{double} & 0.0 &
+dHf
+\\
+\hline
+\key{Molar\_mass} & \type{double} & 0.0 &
+Molar mass
+\\
 \hline
 \end{initable}
 
+\begin{initable}{FURTHER\_SPECIES}
+\key{Specie\_name} & \type{string} & specie\_i &
+name
+\\
+\hline
+\key{dGf} & \type{double} & 0.0 &
+xxx
+\\
+\hline\\
+\key{dHf} & \type{double} & 0.0 &
+dHf
+\\
+\hline
+\key{Molar\_mass} & \type{double} & 0.0 &
+Molar mass
+\\
+\hline
+\key{Activity} & \type{double} & 0.0 &
+Activity
+\\
+\hline
+\end{initable}
+
+\begin{initable}{REACTION\_i}
+\key{Reaction\_type} & \type{string} & eq/kin &
+type of reaction
+\\
+\hline
+\key{Stechiometry} & \type{int} & 0 &
+stechiometric coeficients
+\\
+\hline\\
+\key{Kinetic\_constant} & \type{double} & 0.0 &
+kinetic constant for determination of reaction rate
+\\
+\hline
+\key{Order\_of\_reaction} & \type{int} & 0 &
+order of kinetic reaction for participating species
+\\
+\hline
+\key{Equilibrium\_constant} & \type{double} & 0.0 &
+equilibrium constant
+\\
+\hline
+\end{initable}
  
  

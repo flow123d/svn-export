@@ -38,42 +38,42 @@ void priprav(char *jmeno){
 
 //---------------------------------------------------------------------------
 void kontrola(){
-//   FILE *fw;
-//   int i,j;
-// 
-//   fw = fopen("kontrola.txt","w");
-//   fprintf(fw,"\nKONTROLA\n-------");
-//   fprintf(fw,"\n%s",G_prm.jmeno_ich);
-//   fprintf(fw,"\nG_prm.pocet_latek: %d",G_prm.pocet_latek);
-//   fprintf(fw,"\nG_prm.pocet_latekvefazi: %d",G_prm.pocet_latekvefazi);
-//   fprintf(fw,"\nG_prm.celkovy_pocet_reakci: %d",G_prm.celkovy_pocet_reakci);
-//   fprintf(fw,"\nG_prm.pocet_reakci_pro_matici: %d",G_prm.pocet_reakci_pro_matici);
-//   fprintf(fw,"\nG_prm.pocet_rovnovah: %d",G_prm.pocet_rovnovah);
-//   fprintf(fw,"\nG_prm.pocet_kinetik: %d",G_prm.pocet_kinetik);
-//   fprintf(fw,"\nG_prm.pocet_pom_kin: %d",G_prm.pocet_pom_kin);
-//   fprintf(fw,"\nG_prm.pocet_rozpadu: %d",G_prm.pocet_rozpadu);
-//   fprintf(fw,"\nG_prm.T: %f",G_prm.T);
-//   fprintf(fw,"\nG_prm.TGf: %f",G_prm.TGf);
-//   fprintf(fw,"\nG_prm.Afi: %f",G_prm.Afi);
-//   fprintf(fw,"\nG_prm.b: %f",G_prm.b);
-//   fprintf(fw,"\nG_prm.epsilon: %f",G_prm.epsilon);
-//   fprintf(fw,"\nG_prm.omega: %f",G_prm.omega);
-//   fprintf(fw,"\nG_prm.deltaT: %f",G_prm.deltaT);
-//   fprintf(fw,"\nG_prm.objem: %f",G_prm.objem);
-//   fprintf(fw,"\nG_prm.splocha: %f",G_prm.splocha);
-//   fprintf(fw,"\nG_prm.vypisy: %d",G_prm.vypisy);
-//   for (j = 0; j < G_prm.celkovy_pocet_reakci; j++){
-// 	 for(i=0;i<G_prm.pocet_latek;i++){
-// 	  fprintf(fw,"\n %s P_che[%d].stech_koef_p[%d]: %d",P_che[j].nazev,j,i,P_che[j].stech_koef_p[i]);
-// 	  //if(i < (G_prm.pocet_latek - 1)) 
-// 	    fprintf(fw,", P_che[%d].exponent[%d]: %d\n mola:rni: hmotnost: %f",j,i,P_che[j].exponent[i],P_lat[i].M);
-// 	  //else 
-// 	    fprintf(fw,"\n");
-// 	}
-//   }
-//   fprintf(fw,"parametr sorpce %f",P_lat[0].param_sorpce[0]);
-//   fclose(fw);
-//   return;
+   FILE *fw;
+   int i,j;
+ 
+   fw = fopen("kontrola.txt","w");
+   fprintf(fw,"\nKONTROLA\n-------");
+   fprintf(fw,"\n%s",G_prm.jmeno_ich);
+   fprintf(fw,"\nG_prm.pocet_latek: %d",G_prm.pocet_latek);
+   fprintf(fw,"\nG_prm.pocet_latekvefazi: %d",G_prm.pocet_latekvefazi);
+   fprintf(fw,"\nG_prm.celkovy_pocet_reakci: %d",G_prm.celkovy_pocet_reakci);
+   fprintf(fw,"\nG_prm.pocet_reakci_pro_matici: %d",G_prm.pocet_reakci_pro_matici);
+   fprintf(fw,"\nG_prm.pocet_rovnovah: %d",G_prm.pocet_rovnovah);
+   fprintf(fw,"\nG_prm.pocet_kinetik: %d",G_prm.pocet_kinetik);
+   fprintf(fw,"\nG_prm.pocet_pom_kin: %d",G_prm.pocet_pom_kin);
+   fprintf(fw,"\nG_prm.pocet_rozpadu: %d",G_prm.pocet_rozpadu);
+   fprintf(fw,"\nG_prm.T: %f",G_prm.T);
+   fprintf(fw,"\nG_prm.TGf: %f",G_prm.TGf);
+   fprintf(fw,"\nG_prm.Afi: %f",G_prm.Afi);
+   fprintf(fw,"\nG_prm.b: %f",G_prm.b);
+   fprintf(fw,"\nG_prm.epsilon: %f",G_prm.epsilon);
+   fprintf(fw,"\nG_prm.omega: %f",G_prm.omega);
+   fprintf(fw,"\nG_prm.deltaT: %f",G_prm.deltaT);
+   fprintf(fw,"\nG_prm.objem: %f",G_prm.objem);
+   fprintf(fw,"\nG_prm.splocha: %f",G_prm.splocha);
+   fprintf(fw,"\nG_prm.vypisy: %d",G_prm.vypisy);
+   for (j = 0; j < G_prm.celkovy_pocet_reakci; j++){
+ 	 for(i=0;i<G_prm.pocet_latek;i++){
+ 	  fprintf(fw,"\n %s, P_che[%d].stech_koef_p[%d]: %d",P_che[j].nazev,j,i,P_che[j].stech_koef_p[i]);
+ 	  //if(i < (G_prm.pocet_latek - 1)) 
+//  	    xprintf(Msg,", P_che[%d].exponent[%d]: %d\n mola:rni: hmotnost: %f",j,i,P_che[j].exponent[i],P_lat[i].M);
+ 	  //else 
+ 	    fprintf(fw,"\n");
+ 	}
+   }
+//    fprintf(fw,"parametr sorpce %f",P_lat[0].param_sorpce[0]);
+   fclose(fw);
+   return;
 }
 
 //---------------------------------------------------------------------------

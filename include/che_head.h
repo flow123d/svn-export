@@ -51,7 +51,7 @@ struct TS_prm //typedef struct
 
 struct TS_lat //typedef struct
 {
-	char nazev[ 80 ];      /* Jmeno latky */
+	  char nazev[ 80 ];      /* Jmeno latky */
 	  double m0;        /* pocatecni molalita *///long double
 	  double m0_sorb;   /* pocatecni obsah sorbovany *///long double
 	   double m;         /* konecna molalita *///long double

@@ -318,7 +318,7 @@ void alloc_transport_vectors(struct Transport *transport) {
            for (i = 0; i < transport->el_ds->lsize(); i++) {
              transport->conc[ph][sbi][i] = 0.0;
              transport->pconc[ph][sbi][i] = 0.0;
-             transport->out_conc[ph][sbi][i] = 0.0;
+//              transport->out_conc[ph][sbi][i] = 0.0;
            }
                   /*
                    i = 0;

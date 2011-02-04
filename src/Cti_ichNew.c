@@ -27,7 +27,7 @@ float che_poradi (int typ_reakce, double max, double K)
 void ctiich_obecne( void )
 {
 	int	i;
-	const char *section = "SEMCHEM_MODULE";
+	const char *section = "Semchem_module";
 	char  buffer[ 1024 ];
 	char *pString;
 
@@ -162,14 +162,14 @@ void ctiich_obecne( void )
       exit(133);
    }
 /*------------------------------------------------------------------*/
-	G_prm.deltaT = OptGetDbl(section,"deltaT","0.0");
-	//GetPrivateProfileString( jmeno_sekce, "deltaT", "0.0", buffer, 1024, G_prm.jmeno_ich );
-	//G_prm.deltaT = atol( buffer );
-	if ( G_prm.deltaT <= 0.0 )
-	{
-   	xprintf(Msg,"\nCasovy krok musi byt kladny!");
-      exit(133);
-   }
+// 	G_prm.deltaT = OptGetDbl(section,"deltaT","0.0");
+// 	//GetPrivateProfileString( jmeno_sekce, "deltaT", "0.0", buffer, 1024, G_prm.jmeno_ich );
+// 	//G_prm.deltaT = atol( buffer );
+// 	if ( G_prm.deltaT <= 0.0 )
+// 	{
+//    	xprintf(Msg,"\nCasovy krok musi byt kladny!");
+//       exit(133);
+//    }
 /*------------------------------------------------------------------*/
 	G_prm.cas_kroku = OptGetInt(section,"Time_steps","0");
 	//GetPrivateProfileString( jmeno_sekce, "Cas_kroku", "0", buffer, 1024, G_prm.jmeno_ich );
@@ -247,7 +247,7 @@ void ctiich_latkyvefazi( void )
    }
 // Nacteni obsahu seznamu latek
 /*-----------------------------------------------*/
-   sprintf( nazev, "AQUEOUS_SPECIES" );
+   sprintf( nazev, "Aqueous_species" );
 
    strcpy(buffer,OptGetStr(nazev,"Nazev","<NeplatnyNazev>"));
     /*pom_buf = strtok( buffer, separators );
@@ -435,7 +435,7 @@ void ctiich_latkyvefazi( void )
 	  }
    }*/
 /*-----------------------------------------------*/
-  pString = strcpy(buffer,OptGetStr(nazev,"Sorptiony_type","<NeplatnyNazev>")); 
+  pString = strcpy(buffer,OptGetStr(nazev,"Sorption_type","<NeplatnyNazev>")); 
    //GetPrivateProfileString( nazev, "Typ_sorpce", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
    if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 )
@@ -547,7 +547,7 @@ void ctiich_dalsilatky( void )
       return;
    }
 // Nacteni obsahu seznamu latek
-   sprintf( nazev, "FURTHER_SPECIES" );
+   sprintf( nazev, "Further_species" );
    pString = strcpy(buffer,OptGetStr(nazev,"Specie_name","<NeplatnyNazev>")); 
    //GetPrivateProfileString( nazev, "Nazev", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
    pom_buf = strtok( buffer, separators );
@@ -687,7 +687,7 @@ void ctiich_reakce( void )
 // Zjisteni delky seznamu reakci
    for ( i = 1;; ++i )
    {
-      sprintf( nazev, "REACTION_%d", i );
+      sprintf( nazev, "Reaction_%d", i );
       strcpy(buffer,OptGetStr(nazev,"Reaction_type","<NeplatnyNazev>")); xprintf(Msg,"probehlo zjisteni typu reakce %d: %s\n",i, buffer);  
       //GetPrivateProfileString( nazev, "Typ_reakce", "<NeplatnyNazev>", buffer, 1024, G_prm.jmeno_ich );
       if ( strcmp( buffer, "<NeplatnyNazev>" ) == 0 ) break;
@@ -712,12 +712,12 @@ void ctiich_reakce( void )
    max_poloc_rozp = 0.0;
    for (i=0; i<G_prm.celkovy_pocet_reakci; i++)
    {
-      sprintf( nazev, "REACTION_%d", i+1 );
+      sprintf( nazev, "Reaction_%d", i+1 );
       //strcpy(buffer,OptGetStr(nazev,"Nazev",nazev)); 
       //puvodni wokeni fce//GetPrivateProfileString( nazev, "Nazev", nazev, buffer, 1024, G_prm.jmeno_ich );
       //pom_buf = strtok( buffer, separators );
       //strcpy(P_che[i].nazev, pom_buf);
-      sprintf(P_che[i].nazev,"REACTION_%d",i+1);
+      sprintf(P_che[i].nazev,"Reaction_%d",i+1);
 /*-----------------------------------------------*/
       strcpy(buffer,OptGetStr(nazev,"Reaction_type","<NeplatnyTyp>")); 
       //GetPrivateProfileString( nazev, "Typ_reakce", "<NeplatnyTyp>", buffer, 1024, G_prm.jmeno_ich );
@@ -767,7 +767,7 @@ void ctiich_reakce( void )
 //      GetPrivateProfileString( nazev, "Poc_posunuti", "0.0", buffer, 1024, G_prm.jmeno_ich );
 //      P_che[i].zeta0 = _atold( buffer );
 /*------------------------------------------------------------------*/
-      strcpy(buffer,OptGetStr(nazev,"Stechiometry","")); 
+      strcpy(buffer,OptGetStr(nazev,"Stoichiometry","")); 
       //GetPrivateProfileString( nazev, "Stechiometrie", "", buffer, 1024, G_prm.jmeno_ich );
       pom_buf = strtok( buffer, separators );
       for (j = 0; j<G_prm.pocet_latek; j++)

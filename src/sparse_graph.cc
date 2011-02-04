@@ -32,7 +32,7 @@
 #include "par_distribution.hh"
 #include "sparse_graph.hh"
 
-#include "boost/lambda/lambda.hpp"
+#include <boost/lambda/lambda.hpp>
 #include <algorithm>
 
 extern "C" {

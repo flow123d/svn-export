@@ -7,7 +7,7 @@ Prerequisities
 ==============
 
 If you are running Windows, you have to install 'cygwin' software with
-packages: GCC, GFortran, Python, Perl
+packages: GCC, GFortran, Python, Perl, Boost
 (I need somebody who really tried whole Flow123 compilation with Cygwin)
 
 ==============================

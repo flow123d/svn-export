@@ -86,7 +86,7 @@ USE_PRINTALL = -DMPI_PRINTALL
 
 #############################################################################
 # third party include dirs relative to ./src
-THIRD_INCLUDE=-I../third_party/Deal-II-tensor -I../third_party/boost-1.42/ -I../third_party/metis-4.0/Lib
+THIRD_INCLUDE=-I../third_party/Deal-II-tensor -I../third_party/metis-4.0/Lib
 THIRD_LIBS=-L../third_party/metis-4.0/  -lmetis
 
 INCLUDE= ${PETSC_INCLUDE} ${PARMETIS_INCLUDE} ${THIRD_INCLUDE}

@@ -38,7 +38,7 @@
 //#include "transport.h"
 #include "math_fce.h"
 
-flow::VectorId<int> xx;
+//flow::VectorId<int> xx;
 
 /**
  * Default material constructor, set default values.
@@ -394,7 +394,8 @@ void MaterialDatabase::read_one_parameter_section(const string &section_name, co
     F_ENTRY_P(section_name);
 
     FILE   *fin;   // input file
-    char   line[ LINE_SIZE ],string[ LINE_SIZE ];   // line of data file
+    char   line[ LINE_SIZE ]; // line of data file
+    //char string[ LINE_SIZE ];
     bool found;
 
     std::string start_str("$"); start_str+=section_name;

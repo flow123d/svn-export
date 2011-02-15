@@ -229,7 +229,8 @@ void main_compute_mh(struct Problem *problem) {
 void main_compute_mh_unsteady_saturated(struct Problem *problem) {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
-    int t, i;
+    //int t;
+    //int i;
 
     char * output_file=OptGetFileName("Output", "Output_file", "\\");
 
@@ -405,7 +406,7 @@ void main_compute_mh_steady_saturated(struct Problem *problem) {
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR UNSTEADY SATURATED FLOW
  */
 void main_compute_mh_density(struct Problem *problem) {
-  Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+  //Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
     int i, j, dens_step, n_step, frame = 0;
     double save_step, stop_time; // update_dens_time

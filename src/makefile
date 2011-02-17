@@ -74,7 +74,8 @@ $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
 $(OBJS)/che_semchem.o\
 $(OBJS)/interfaceN.o\
-$(OBJS)/Cti_ichNew.o
+$(OBJS)/Cti_ichNew.o\
+$(OBJS)/linreact.o
 
 # $(OBJS)/ppfcs.o\
 

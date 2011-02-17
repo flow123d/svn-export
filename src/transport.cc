@@ -58,6 +58,7 @@
 #include "par_distribution.hh"
 #include "mesh/ini_constants_mesh.hh"
 #include "interfaceN.h"
+#include "linreact.h"
 #include "sparse_graph.hh"
 
 //void init_transport_vectors_mpi(struct Transport *transport);
@@ -332,6 +333,7 @@ void alloc_density_vectors(struct Transport *transport) {
 
                 for (i = 0; i < n_elements; i++)
                     transport->prev_conc[ph][sbi][i] = 0.0;
+                	transport->out_conc[ph][sbi][i] = 0.0; //just to suppress valgrind messages, problem is somewhere else !!!
     } else  transport->prev_conc[ph] = NULL;
     }
 }
@@ -1019,6 +1021,9 @@ void convection(struct Transport *trans) {
 //======================================
 //              CHEMISTRY
 //======================================
+//decay
+
+//Semchem
     if(problem->semchemie_on == true)
     {
       /*/get data from PETSc-vectors

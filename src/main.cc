@@ -62,6 +62,7 @@
 
 //for Chemistry computation
 #include "interfaceN.h"
+#include "linreact.h"
 /*
 #include "solve.h"
 #include "elements.h"
@@ -151,7 +152,7 @@ void parse_cmd_line(const int argc, char * argv[], int &goal, string &ini_fname)
  *  FUNCTION "MAIN"
  */
 int main(int argc, char **argv) {
-    int goal;
+    int goal,i;
     std::string ini_fname;
 
     F_ENTRY;
@@ -179,8 +180,8 @@ int main(int argc, char **argv) {
     }
 
     // Read inputs for chemistry
-     char *jmeno = new char[ini_fname.length() + 1];
-     strcpy(jmeno,ini_fname.c_str());
+    char *jmeno = new char[ini_fname.length() + 1];
+    strcpy(jmeno,ini_fname.c_str());
     if(G_problem.semchemie_on == true){
       G_prm.pocet_latekvefazi = G_problem.transport -> n_substances; 
       if ( G_prm.pocet_latekvefazi <= 0 )
@@ -195,6 +196,51 @@ int main(int argc, char **argv) {
      if(G_problem.semchemie_on == true){
        xprintf(Msg,"\nzdrojovy soubor: %s\n",jmeno); //xprintf(Msg,"\nzdrojovy soubor: %s\n",ini_fname);
        kontrola();
+     }
+
+     //Radioactive decay
+     if(G_problem.decay_on == true)
+     {
+    	Linear_reaction **decays = NULL;
+    	char section[512];
+
+     	(G_problem).nr_of_chains = OptGetInt("Decay", "nr_of_chains", "0");
+     	if(G_problem.nr_of_chains <= 0)
+     	{
+     		//std::cout << "\nRadioactive decay won't be computed. Decay is switched on, but number of decay chains is " << G_problem.nr_of_chains << ".\n";
+     		xprintf(Msg,"\nRadioactive decay won't be computed. Decay is switched on, but number of decay chains is %d.\n", G_problem.nr_of_chains);
+     		//return 0;
+     	}else{
+     		//std::cout << "\nRadioactive decay will be computed. Decay is switched on. Number of decay chains is " << G_problem.nr_of_chains << ".\n";
+     		xprintf(Msg,"\nRadioactive decay will be computed. Decay is switched on. Number of decay chains is %d.\n", G_problem.nr_of_chains);
+     		decays = (Linear_reaction **)xmalloc(G_problem.nr_of_chains*sizeof(Linear_reaction*));//creates array of pointers on decay
+     		for(i=0; i<G_problem.nr_of_chains; i++)
+     		{
+     			decays[i] = new Linear_reaction(); //dynamic memory allocation, heap
+     			sprintf(section,"Dec_chain_%d",i+1); //prepares section name "Dec_chain_i"
+     			(*decays[i]).Set_nr_of_isotopes(section);
+     			//std::cout << "\n" << section << ", nr of isotopes " << (*decays[i]).Get_nr_of_isotopes() << "\n";
+     			xprintf(Msg,"\n%s, nr_of isotopes %d",section,(*decays[i]).Get_nr_of_isotopes());
+     			if((*decays[i]).Set_indeces(section) == NULL)
+     			{
+     				//std::cout << "\nInformation about " << i << "-th decay-chain participants is not aviable.\n";
+     				xprintf(Msg,"\nInformation about %d-th decay-chain participants is not aviable.",i);
+     			}else{
+     				(*decays[i]).Get_indeces();
+     			}
+     			if((*decays[i]).Set_half_lives(section) == NULL)
+     			{
+     			    //std::cout << "\nInformation about " << i << "-th decay-chain participants' half-lives is not aviable.\n";
+     			    xprintf(Msg,"\nInformation about %d-th decay-chain participants is not aviable.",i);
+     			}else{
+     				(*decays[i]).Get_half_lives();
+     			}
+     		}
+     	}
+     }else{
+     	G_problem.nr_of_chains = 0;
+     	//std::cout << "\nRadioactive decay won't be computed.\n Decay is switched on, but number of decay chains is 0.\n";
+     	xprintf(Msg,"\nRadioactive decay won't be computed.\n Decay is switched on, but number of decay chains is 0.");
      }
     
     make_mesh(&G_problem);

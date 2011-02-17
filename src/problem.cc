@@ -113,7 +113,8 @@ void problem_init(struct Problem *problem)
 
     //Chemie, here should be initialization of chemical reactions simulation, problem (Flow) + global variables (Semchem), in future
     problem->semchemie_on = OptGetBool("Semchem_module","Compute_reactions","no");
-    //problem->chem_steps = OptGetInt("SEMCHEM_MODULE","Substeps_nr","1");
+    problem->decay_on = OptGetBool("Decay","Compute_decay","no");
+    //problem->nr_of_chains = OptGetInt("Decay", "nr_of_chains", "0");
 
 
     // Initialize sub structures by NULL

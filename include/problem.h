@@ -67,6 +67,9 @@ struct Problem {
     bool semchemie_on; //Enable to compute chemistry, YES/NO, NO defalut
     int chem_steps; //How many times chemistry should be computed, during one save_step
 
+    bool decay_on; // Enable to compute radioactive decday realized by matrix multiplication
+    int nr_of_chains; // How many decay chains should be included to the model
+
     struct Pos_view_params *pos_view_params;
 
     /* tohle se musi okomentovat !!!

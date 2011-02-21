@@ -57,7 +57,7 @@ $(OBJS)/local_matrix.o\
 $(OBJS)/darcy_flow_mh.o\
 $(OBJS)/output.o\
 $(OBJS)/concentrations.o\
-$(OBJS)/postprocess.o\
+$(OBJS)/darcy_flow_mh_output.o\
 $(OBJS)/solve.o\
 $(OBJS)/problem.o\
 $(OBJS)/main.o\
@@ -73,6 +73,9 @@ $(OBJS)/reaction.o\
 $(OBJS)/profiler.o\
 $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
+$(OBJS)/che_semchem.o\
+$(OBJS)/interfaceN.o\
+$(OBJS)/Cti_ichNew.o\
 $(OBJS)/input.o
 
 
@@ -82,9 +85,14 @@ FLOW123D_DEPS = $(addprefix $(DEPS)/, $(notdir $(FLOW123D_OBJS:.o=.d)))
 
 .PHONY: deps
 
+
 all: $(TARGETS)
 
 deps: $(FLOW123D_DEPS)
+
+# General rule to create dependencies files for .c source files
+${DEPS}/%.d: %.c
+	${CPP} -o $@ ${LOCAL_INCLUDE} ${INCLUDE} -MM -MG -MP -MT "$(addprefix $(OBJS)/, $(notdir $(@:%.d=%.o)))" $<
 
 # General rule to create dependencies files for .cc source files
 ${DEPS}/%.d: %.cc
@@ -96,6 +104,10 @@ ${DEPS}/%.d: %.ccp
 
 # Include generated files with dependencies
 -include $(FLOW123D_DEPS)
+
+# General rule to compile .c source files (pure C)
+${OBJS}/%.o: %.c ../makefile.in
+	${CPP} -c -o $@ ${CFLAGS} ${CDEFS} ${LOCAL_INCLUDE} ${INCLUDE} $<
 
 # General rule to compile .cc source files (mixture of C and C++)
 ${OBJS}/%.o: %.cc ../makefile.in

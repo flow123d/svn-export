@@ -89,7 +89,7 @@ namespace flow
     {
     public:
         /**
-         * Constructor, takes source filename and func_name of a function, and line numebr line_no
+         * Constructor, takes source filename and func_name of a function, and line number line_no
          * of the call of #F_ENTRY. Forms a message string and put it onto stack.
          */
         explicit Trace( const char * filename, const char * func_name, const int line_no , std::string param_string)

@@ -54,9 +54,9 @@ int main()
 
     //with helper function
     //direct type request
-    cout << "verze: \"" << find_value( root, "flow_ini_version").get_str() << "\"" << endl;
+    cout << "verze: \"" << find_value( root, "flow_ini_version" ).get_str() << "\"" << endl;
     //template request
-    cout << "verze: \"" << find_value( root, "flow_ini_version").get_value<string>() << "\"" << endl;
+    cout << "verze: \"" << find_value( root, "flow_ini_version" ).get_value<string>() << "\"" << endl;
 
     //with built-in
     cout << "komentar: \"" << root.find("comment")->second.get_str() << "\"" << endl;

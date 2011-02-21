@@ -72,7 +72,9 @@ $(OBJS)/transport.o\
 $(OBJS)/reaction.o\
 $(OBJS)/profiler.o\
 $(OBJS)/la_linsys.o\
-$(OBJS)/time_governor.o
+$(OBJS)/time_governor.o\
+$(OBJS)/input.o
+
 
 # $(OBJS)/ppfcs.o\
 

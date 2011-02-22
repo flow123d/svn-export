@@ -73,9 +73,9 @@ $(OBJS)/reaction.o\
 $(OBJS)/profiler.o\
 $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
-$(OBJS)/che_semchem.o\
-$(OBJS)/interfaceN.o\
-$(OBJS)/Cti_ichNew.o\
+$(OBJS)/semchem/che_semchem.o\
+$(OBJS)/semchem/interfacen.o\
+$(OBJS)/semchem/cti_ichnew.o\
 $(OBJS)/input.o
 
 
@@ -123,4 +123,8 @@ ${BIN}/flow123d: ${FLOW123D_OBJS}
 
 # The rule to delete all generated files	
 clean: 
-	rm -f ${OBJS}/*.o ${DEPS}/*.d ${TARGETS}
+	rm -f ${TARGETS}
+	rm -f ${OBJS}/*.o ${DEPS}/*.d
+	rm -f ${OBJS}/mesh/*.o ${DEPS}/mesh/*.d 
+	rm -f ${OBJS}/semchem/*.o ${DEPS}/semchem/*.d 
+	

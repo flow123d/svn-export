@@ -36,6 +36,7 @@ NPROC="$2"
 FLOW_PARAMS="$3"
 
 # how to run flow
+#RUN_FLOW=../bin/run_flow.sh
 RUN_FLOW=../../bin/run_flow.sh
 
 ERROR=0

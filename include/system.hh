@@ -36,7 +36,7 @@
 #include "global_defs.h"
 #include "read_ini.h"
 #include "math_fce.h"
-#include "sys_function_stack.hh"
+#include "sys_function_stack.hpp"
 
 // for a linux system we assume glibc library
 // with support of ISOC99 functions

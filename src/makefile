@@ -98,8 +98,8 @@ ${DEPS}/%.d: %.c
 ${DEPS}/%.d: %.cc
 	${CPP} -o $@ ${LOCAL_INCLUDE} ${INCLUDE} -MM -MG -MP -MT "$(addprefix $(OBJS)/, $(notdir $(@:%.d=%.o)))" $<
 
-# General rule to create dependencies files for .ccp source files
-${DEPS}/%.d: %.ccp
+# General rule to create dependencies files for .cpp source files
+${DEPS}/%.d: %.cpp
 	${CPP} -o $@ ${LOCAL_INCLUDE} ${INCLUDE} -MM -MG -MP -MT "$(addprefix $(OBJS)/, $(notdir $(@:%.d=%.o)))" $<
 
 # Include generated files with dependencies

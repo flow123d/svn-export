@@ -28,4 +28,4 @@
  *
  */
 
-#include "input.hh"
+#include "input.hpp"

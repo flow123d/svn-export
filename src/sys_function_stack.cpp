@@ -31,7 +31,7 @@
 #include <string>
 #include <list>
 
-#include "sys_function_stack.hh"
+#include "sys_function_stack.hpp"
 
 namespace flow
 {

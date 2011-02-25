@@ -59,7 +59,7 @@
 #include "mesh/ini_constants_mesh.hh"
 #include "sparse_graph.hh"
 #include "profiler.hh"
-#include "semchem/interfaceN.h"
+#include "semchem/semchem_interface.h"
 
 //void init_transport_vectors_mpi(struct Transport *transport);
 
@@ -1206,7 +1206,7 @@ void save_time_step_C(struct Problem *problem) {
 
 }
 
-/*
+
 //
 //=============================================================================
 //      PEPA CHUDOBA
@@ -1321,11 +1321,11 @@ void save_time_step_C(struct Problem *problem) {
 //         conc[8][ph][elm_pos] = pconc[8][ph][elm_pos] * (exp(-0.000000301 * delta_t)); //Cs 135
 //         conc[9][ph][elm_pos] = pconc[9][ph][elm_pos] * (exp(-0.0231 * delta_t)); //Cs 137
 //         conc[10][ph][elm_pos] = pconc[10][ph][elm_pos] * (exp(-0.0077 * delta_t)); //Sm 151
-//         /*	if(pconc[2][ph][elm_pos] != 0){
-//          printf("\nA: %f\t A+: %f",pconc[0][ph][elm_pos],conc[0][ph][elm_pos]);
-//          printf("\nC: %f\t C+: %f",pconc[2][ph][elm_pos],conc[2][ph][elm_pos]);
-//          getchar();
-//          } */
+//         	//if(pconc[2][ph][elm_pos] != 0){
+//          //printf("\nA: %f\t A+: %f",pconc[0][ph][elm_pos],conc[0][ph][elm_pos]);
+//          //printf("\nC: %f\t C+: %f",pconc[2][ph][elm_pos],conc[2][ph][elm_pos]);
+//          //getchar();
+//          //}
 //         for (i = 0; i < 11; i++) {
 //             pconc[i][ph][elm_pos] = conc[i][ph][elm_pos];
 //         }

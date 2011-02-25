@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef SYS_FUNCTION_STACK_HH_
-#define SYS_FUNCTION_STACK_HH_
+#ifndef SYS_FUNCTION_STACK_HPP_
+#define SYS_FUNCTION_STACK_HPP_
 
 #include <cstdio>
 #include <iostream>
@@ -134,4 +134,4 @@ namespace flow
     };
 }
 
-#endif /* SYS_FUNCTION_STACK_HH_ */
+#endif /* SYS_FUNCTION_STACK_HPP_ */

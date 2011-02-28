@@ -57,7 +57,6 @@ public:
 
     Generic_node & operator=( Generic_node const & n );
 
-
     // data_typ = strom["klic"].get_data<typ>() bez defaultu, pri nepritomnosti spadne
     // data_typ = strom["klic"].get_data<typ>( typ & default ) probehne vzdy
     template< typename T > T get_data();
@@ -89,6 +88,7 @@ public:
     Vector_node () { value_type_ = type_vector; }
 
     bool get_vector( vector<Generic_node> & ret_vector );
+    Generic_node & operator[]( const int & id );
     // get_vector pres template, aby se snazil dodat vse v konkretnim typu ??
 };
 
@@ -103,6 +103,9 @@ class Value_node : Generic_node {
 public:
     Value_node() { value_type_ = type_null; }
 
+    //pro ziskani uz finalnich skalarnich hodnot, s defaultni hodnotou a bez
+    //bez def: pri nemoznosti konverze vrati false
+    //  s def: uspeje vzdy, protoze pri nemoznosti konverze pouzije default
     bool get_bool( bool & ret_value );
     bool get_bool( bool & ret_value, bool & default_value );
     bool get_string( string & ret_value );

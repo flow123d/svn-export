@@ -1,0 +1,130 @@
+1) rozdelit na aproximace pomoci funkcnich hodnot
+   a aproximace pouzivajici derivace
+ 
+   - prvni nepotrebuji FADBAD funktor
+
+2) Dve moznosti:
+   - (nyni) aproximace je templatovana typem funktoru ktery aproximuje
+     tj. funktor nemusi mit zadne virtualni funkce, pro aproximaci kazde funkce 
+     vytvori prekladac novou specializaci aproximace
+
+   - jinak: je abstraktni trida funktor (jedna pro pocitani jen funkcnich hodnot, dalsi pro 
+     pocitani i FADBAD derivaci popr Taylorovych rozvoju), konkretni
+     funktor by pak byl potomkem.
+     Tady je problem, ze templatovana metoda nemuze byt virtualni nicmene mohlo by to snad byt tak, ze
+     class FunctorValueBase - by bylo pouhe netemplatovane rozhrani
+     
+     template <Func>
+     class FunctorValue - by byl templatovany potomek, ktery by mel virtualni metodu pro vypocet hodnoty
+
+     pokud to lze, tak: zjednodusilo by se deklarovani aproximacnich objektu (mene templatu), 
+     na druhou stranu by tvorba aproximace byla trochu pomalejsi - virtualni volani
+
+     aproximovatelne funktory - potomci abstraktniho rozhrani templatovani "hodnotovymi funcotory"
+     hodnotove functory - maji templatovany pretizeny operator (), samy jsou templatovane 
+                          jinymi hodnotovymi funktory pr:
+                          derivovaci funktor (zde omezeni, ze nelze pouzit v derivovacich aproximovatelnych funktorech),
+                          prevracena hodnota
+     terminalni hodnotove - objekt s pretizenym () ktery obsahuje konkretni predpis, objekt take obsahuje pripadne parametry.
+
+3) Druhy interpolantu:
+   - ekvidistantni spline rad jako template parametr:
+      0 - po castech konst
+      1 - spojitost hodnot, linearni approx
+      2 - spojitost 1. derivaci 
+      3 - spojitost 2. deriv.
+     
+      ? okrajove podminky pro 2 a vice
+      ? extrapolace
+
+      rozmyslet tvar soustavy pro rad N, pouzit pasovou matici s pasem N+1
+
+   - neekvidistantni spline, neadaptivni - predepsane interpolacni body
+     (stejna konstrukce jako u ekvidistantniho, jiny vypocet hodnot - vyhladavani pulenim
+
+   - adaptivni spline iteracni proces tvorby aproximace, nutno pouzit lokalne kvadraturu 
+     vyssiho radu nez stupen polynomu
+
+   - chebysevovy polynomy (mozno zadat pozadovanou presnost
+
+   !! aproximace by mely vytvaret Interpolanty - opet druh funktoru, jde o to odelit tvorbu interpolace a jeji vyhodnocovani
+   
+4) - derivovani a integrovani aproximaci (integrovani beztak potreba pro adaptivitu)
+
+5) implementace hydrologickeho modelu: 
+   I) trida pro parametry modelu, funktory jednotlivych funkci - obsahuji referenci na tridu parametru
+   II) trida modelu - poskytuje navenek hodnoty funkci a derivaci nebo jejich aproximace
+
+6) hp-adaptivni interpolace
+
+
+25. 10. ------------------------------------------------------------------------
+
+- Functor Diff -> vracet FADBAD objekt B<double> jako hodnotu derivace
+- polunomial: templatovana a ne templatovana verze, vraci derivaci 
+- IntepolantBase: potomek FunctorDiffBase, virtualizovane Value, Diff (? FADBAD derivace)
+  Interpolant - 
+
+- v deklaracich uvadet jmena parametru
+
+- checkout   https://dev.nti.tul.cz/repos/flow123d/branches/PE ...
+- nahrat do repozitare, 
+  oddelit knihovnu (namespace pro knihovni fce) a testy
+- pokrocit v navrhu, dokumentace DoxyGen ? 
+
+8.11.-----------------------------------
+- polynomial - netemplatovany, umi vracet derivace
+- interpolant umi vracet derivaci od polynomu (zadny FADBAD)
+- nahrat do repozitare, 
+
+- rozmyslet zadavani druhu extrapolace interpolantu -> vnesi polynomy, 
+  tvorba extrapolace v aproximacni tride
+
+
+- aproximace: Lagrage obecneho radu:
+
+
+
+15. 11. ----------------------------
+Polynomial, konstruktor bez parametru, zvlast metodu pro zmenu intervalu a koeficientu
+
+Interpolation - vnejsi polynomy zvlast
+
+rozchodit c_lapack, test reseni pasove matice
+
+
+
+g++ projekt.o  -L/home/exner/lapack/lib/ -lblas -llapack
+
+pokud v adresari /home/.../lib jsou soubory libblas.a liblapack.a
+
+... header pro C++: 
+
+extern "C" {
+  hlavicka C funkce
+}
+
+29.11. ----------------------------
+Polynomial, konstruktor bez parametru, zvlast metodu pro zmenu intervalu a koeficientu
+
+Interpolation - vnejsi polynomy zvlast
+
+rozchodit c_lapack, test reseni pasove matice
+
+horner -> do polynomial.cpp, (nebo inline do polynomial.h ??)
+
+lagrange. ... zadavani intervalu, step, okraj podminky,
+   metoda na pridavani okrajovych podminek (kde, derivace, hodnota) 
+   metoda na vycisteni seznamu, 
+   pred tvorbou aproximace, volani metody pro doplneni okrajovych podminek
+   
+   po vytvoreni vnitrku interpolantu, 
+   extrapolace podle BC, nezadane derivace =0, polynom M-1 stupne (nebo nizsiho)
+
+
+
+
+
+
+
+

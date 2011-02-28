@@ -1,0 +1,36 @@
+14.11.2010 
+  - Horner - napsana metoda Derivate
+  - Polynomial - Intergral - doplneni prohozeni limit a,b
+  - Polynomial - netemplatovany, Value,Diff,Intergral,Integral(void) - vse pomoci Hornera
+  - InterpolantBase - jedina virtualni metoda FindPolynomial vracejici iterator vektoru
+  - InterpolantBase - implementace Value
+  - InterpolantBase - implementace Integral - pomoci iteratoru
+  - rozdeleni na Interpolant a InterpolantEq - ekvidistantni deleni
+  - InterpolantEq - implementace FindPolynomial pomoci kroku aproximace step
+  - zkouska Doxygen v interpolantbase.h
+
+  - napriste 
+  - Interpolant - deleni neekvidistantni(puleni intervalu)
+  - InterpolantBase - dodelat derivaci
+  - pokracovat v Doxygen
+	
+28.11.2010
+  - konstruktor InterpolantEq(std::vector<Polynomial> polynomials, double step);
+  - kontruktory Polynomial, doplneni SetInterval, SetCoeficients
+  - interpolantbase::setExtrapolation
+  - doplneni FindPolynomial o podminky x < a, x > b
+  - preprocesing interpolace Lagrange::Preprocess
+  - struktura io_dgbtrs
+  - naincludovani CLAPACK, extern "C"
+  - Lagrange::Interpolate1
+
+- napriste 
+  - Interpolant - deleni neekvidistantni(puleni intervalu)
+  - InterpolantBase - dodelat derivaci
+  - pokracovat v Doxygen
+
+  - Lagrange::Preprocess 
+      - rozmer AB ?
+      - prvni upravy matice - pridani okrajovych podminek, GE na horni trojuhelnikovy tvar
+  - Lagrange::Interpolate1
+      - doplnit okrajove podminky, extrapolaci

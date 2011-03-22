@@ -23,7 +23,6 @@
  * $LastChangedDate: 2011-01-08 18:58:15 +0100 (So, 08 led 2011) $
  *
  * @file
- * @brief ???
  *
  */
 
@@ -36,8 +35,10 @@
 #include <time.h>
 #include <vector>
 #include <petsc.h>
+#include <string>
 
-#include "system.hh"
+using namespace std;
+
 
 class MPI_Functions {
 public:
@@ -79,8 +80,8 @@ public:
     }
 };
 
-/*
- * Class for profiling tree nodes.
+/**
+ * @brief Class for profiling tree nodes.
  */
 class Timer {
 private:
@@ -88,6 +89,7 @@ private:
     double cumul_time;
     int count;
     int start_count;
+    int sub_frames;
     bool running;
     string timer_tag;
     Timer* parent_timer;
@@ -107,6 +109,14 @@ public:
      */
     int call_count() const {
         return count;
+    }
+
+    int subframes() const {
+        return sub_frames;
+    }
+
+    void subframes(int info) {
+        sub_frames = info;
     }
 
     /**
@@ -129,26 +139,32 @@ public:
     Timer* parent() {
         return parent_timer;
     }
-    
-    vector<Timer*>* child_timers_list(){
+
+    vector<Timer*>* child_timers_list() {
         return &child_timers;
     }
 
     ~Timer();
 };
 
-
 /**
  *
  * @brief Main class for profiling by measuring time intervals.
  *
- * These time intervals
- * form a tree structure. The root node of the tree is automatically created and started
- * after creating the Profiler object and cannot be stopped manually.
+ * These time intervals form a tree structure where each interval is represented 
+ * by a Timer object. The root node of the tree is automatically created and
+ * started after creating the Profiler object and cannot be stopped manually.
  *
- * The class implements a singleton pattern all all the functions are accessible trough
- * Profiler::instance().
+ * The class implements a singleton pattern and all the functions are accessible trough
+ * Profiler::instance(), but in most cases the programmer will access the profiler
+ * functions via the #START_TIMER and #END_TIMER macros. The #START_TIMER macro
+ * is responsible for the fact that we don't have to call #END_TIMER macro to stop the timer and
+ * the timer will be stopped at the end of the block in which #START_TIMER was used.
+ * These macros internally use the TimerFrame objects and the programmer should
+ * not use the TimerFrame objects directly.
  *
+ * By using #SET_TIMER_SUBFRAMES macro, the programmer can specify the number of subframes (eg. iterations)
+ * for the currently active timer.
  *
  */
 class Profiler {
@@ -179,8 +195,8 @@ private:
     Profiler & operator=(Profiler const&); // assignment operator is private
 
     /**
-     *  Pass thorugh the profiling tree (colective over processors)
-     *  Print cumulative times average, balace (max/min), count (denote diferences)
+     *  Pass through the profiling tree (collective over processors)
+     *  Print cumulative times average, balance (max/min), count (denote differences)
      *  Destroy all structures.
      */
     ~Profiler();
@@ -193,7 +209,7 @@ public:
     static Profiler* instance() {
         //singleton pattern implementation
         if (!_instance)
-            _instance = new Profiler(NULL);
+            _instance = new Profiler(PETSC_COMM_WORLD);
 
         return _instance;
     }
@@ -230,31 +246,61 @@ public:
      */
     void end(string tag = "");
 
+    /**
+     * Sets the size of the task. Will be written into output
+     *
+     * @param size - size of the task
+     */
     void set_task_size(int size);
+
+    /**
+     * Sets the number of subframes (eg. iterations) in which the current Timer is divided.
+     *
+     * @param tag - the tag of the currently running timer. If the tag doesn't match the currently
+     * running one, no subframes are set.
+     * @param n_subframes - the number of subframes
+     */
+    void setTimerSubframes(string tag, int n_subframes);
 };
 
 #define _PASTE(a,b) a ## b
 #define PASTE(a,b) _PASTE(a, b)
 
 /**
- * Starts a timer witch specified tag.
+ * \def START_TIMER(tag)
+ *
+ * Starts a timer with specified tag.
  *
  * In fact it creates an object named 'timer_' followed by the number of the line
  * where it has been used. This is done to avoid variable name conflicts when
  * using the macro more than once in one block of code.
  */
 #define START_TIMER(tag) TimerFrame PASTE(timer_,__LINE__) = TimerFrame(tag)
+
+/**
+ * \def END_TIMER(tag)
+ *
+ * Ends a timer with specified tag.
+ */
 #define END_TIMER(tag) TimerFrame::endTimer(tag)          // only if you want end on diferent place then end of function
 
 /**
+ * \def SET_TIMER_SUBFRAMES(tag, subframes)
  *
- * @brief Class for automatic timer closing. This class is used by START_TIMER macro
- * and is responsible for the fact that we don't have to call END_TIMER macro to stop the timer,
- * the timer will be stopped at the end of the block in which START_TIMER was used.
+ * Sets specified amount of subframes (eg. iterations) for the given tag.
+ * The specified timer tag must represent the currently active timer.
+ */
+#define SET_TIMER_SUBFRAMES(tag, subframes) Profiler::instance->setTimerSubframes(tag, info)
+
+/**
+ *
+ * @brief Class for automatic timer closing. This class is used by #START_TIMER macro
+ * and is responsible for the fact that we don't have to call #END_TIMER macro to stop the timer,
+ * the timer will be stopped at the end of the block in which #START_TIMER was used.
  * 
  * The main idea of the approach described is that the TimerFrame variable will be destroyed
- * at the end of the block where START_TIMER macro was used. In order to work properly
- * in situations where END_TIMER was used to stop the timer manually before (but there is still the
+ * at the end of the block where #START_TIMER macro was used. In order to work properly
+ * in situations where #END_TIMER was used to stop the timer manually before (but there is still the
  * variable which will be later destroyed), we have to store references to these variables and
  * destroy them on-demand.
  */
@@ -280,7 +326,7 @@ public:
 
     /**
      * If not already closed, closes the TimerFrame object.
-     * Asks Prifler to end a timer with specified tag and changes the frames
+     * Asks Profler to end a timer with specified tag and changes the frames
      * map appropriately (if the TimerFrame object has a parent, associate hits parent
      * with the tag or if not, delete the tag from the map)
      */

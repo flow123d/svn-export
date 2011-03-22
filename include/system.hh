@@ -37,6 +37,7 @@
 #include "read_ini.h"
 #include "math_fce.h"
 #include "sys_function_stack.hpp"
+#include "sys_profiler.hh"
 
 // for a linux system we assume glibc library
 // with support of ISOC99 functions

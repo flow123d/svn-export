@@ -24,7 +24,7 @@
 
 # This script assumes that it is running in particular subdir of the "tests"
 # dir. 
-TEST_DIR=`pwd`
+export TEST_DIR=`pwd`
 
 #name of ini file
 INI_FILE="$1"
@@ -45,7 +45,7 @@ for i in $INI_FILE
 do
 for n in $NPROC
 do
-  if ! $RUN_FLOW -s "$INI_FILE" -np "$n" -- "$FLOW_PARAMS"; then
+  if ! $RUN_FLOW -s "$i" -np "$n" -- "$FLOW_PARAMS"; then
 	echo " Error occured during computation, leaving."
 	exit 1
   fi
@@ -58,7 +58,7 @@ do
   	done
   done
 
-  SAVE_OUTPUT="$TEST_DIR/Results/${INI_FILE%.ini}.$n"
+  SAVE_OUTPUT="$TEST_DIR/Results/${i%.ini}.$n"
   if [ -d "$SAVE_OUTPUT" ]; then
 		rm -rf "$SAVE_OUTPUT"
 		mkdir -p "$SAVE_OUTPUT"
@@ -77,7 +77,10 @@ do
 	ERROR=1
   fi
   echo "******************************************"
-
+	
+   mv ${TEST_DIR}/diff.log "$SAVE_OUTPUT"
+   mv ${TEST_DIR}/stdout_diff.log "$SAVE_OUTPUT"
+  
 done
 done
 

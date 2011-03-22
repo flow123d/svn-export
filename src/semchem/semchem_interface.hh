@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 #ifndef interfaceH
 #define interfaceH
-#endif
 //---------------------------------------------------------------------------
 #ifndef mobile
 #define mobile 0
@@ -11,13 +10,13 @@
 #define immobile 1
 #endif
 //---------------------------------------------------------------------------
-#ifndef mobile_sorb
-#define mobile_sorb 2
-#endif
+//#ifndef mobile_sorb
+//#define mobile_sorb 2
+//#endif
 //---------------------------------------------------------------------------
-#ifndef immobile_sorb
-#define immobile_sorb 3
-#endif
+//#ifndef immobile_sorb
+//#define immobile_sorb 3
+//#endif
 //---------------------------------------------------------------------------
 
 #include <stdio.h>
@@ -26,7 +25,7 @@
 #include "che_head.h"
 void print_usage(void);
 void kontrola(void);
-void priprav(char *jmeno);
+void priprav(void);
 
 //--------------pro semchem--------------------------------------------------
 void che_nadpis__soubor(char *soubor);
@@ -42,3 +41,5 @@ void che_vypis__soubor(char *soubor);
 extern struct TS_prm	G_prm;
 extern struct TS_lat 	*P_lat;
 extern struct TS_che	*P_che;
+
+#endif

@@ -12,8 +12,8 @@
 #include "functorvalue.h"
 #include "functordiff.h"
 #include "myfunction.h"
+#include "lagrange.h"
 #include "interpolant.h"
-//#include "lagrange.h"
 #include "polynomial.h"
 #include "interpolantbase.h"
 //*/

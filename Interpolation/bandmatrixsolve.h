@@ -2,6 +2,12 @@
 #ifndef BANDMATRIXSOLVE_H
 #define BANDMATRIXSOLVE_H
 
+#include <iomanip>
+#include <iostream>
+
+#ifndef DEB
+#define DEB true
+#endif
 
 //example  of dgbtrf and dgbtrs
 //http://ftp.nag.co.uk/numeric/FLOLCH/chgen22da/most_systems/c_examples/f07befe.c
@@ -13,19 +19,19 @@ extern "C" {
 #include "../CLAPACK-3.2.1/INCLUDE/clapack.h"
 }
 
-//types from CLAPACK/INCLUDE/f2c.h
+//types from CLAPACK/INCLUDE/f2c.h that are used here
 #ifndef F2C_INCLUDE
 #define F2C_INCLUDE
 typedef long int integer;
-typedef unsigned long int uinteger;
-typedef char *address;
-typedef short int shortint;
-typedef float real;
 typedef double doublereal;
 #endif 
 
-#include <iostream>
-
+/// A class BandMatrixSolve
+/** Provides interface for solving band matrix by DGBTRS_ and DGBTRF_ in CLAPACK.
+  * Closer specification for these methods can be found on 
+  * http://www.netlib.org/lapack/double/dgbtrf.f
+  * http://www.netlib.org/lapack/double/dgbtrs.f
+  */
 class BandMatrixSolve
 {
 private:
@@ -49,17 +55,34 @@ private:
   bool factorization;
  
 public:
-	BandMatrixSolve(integer n, integer ku, integer kl, integer nrhs);
-	//BandMatrixSolve(int number_of_nodes, int degree, int number_of_leftcond, 
-	//			 int number_of_rightcond, int number_of_functors);
-	~BandMatrixSolve();
-	//void SetUpperBandDimension(int ku);
-	//void SetLowerBandDimension(int kl);
-	//void Set_Adimension(int m,int n);
-	//void Set_Bdimension(int m,int n);
-	void SetA(integer i, integer j, doublereal value);
-	void SetB(integer i, integer j, doublereal value);
-	double* Solve();
+  /// A constructor.
+  /** Counts the function value of the interpolant in "x".
+    * Is evaluated by a polynom using the Horner schema. 
+    * @param n the order of (square) matrix.
+    * @param ku is the number of superdiagonals.
+    * @param kl is the number of subdiagonals.
+    * @param nhrs is the number of right hand vectors.
+    */
+  BandMatrixSolve(integer n, integer ku, integer kl, integer nrhs);
+  
+  ///A destructor.
+  ~BandMatrixSolve();
+  
+  /// A method for filling the matrix A.
+  /** @param i is the row
+    * @param j is the column
+    */
+  void SetA(integer i, integer j, doublereal value);
+  
+  /// A method for filling the matrix B.
+  /** @param i is the row
+    * @param j is the column
+    */
+  void SetB(integer i, integer j, doublereal value);
+  
+  double* Solve();
+
+  void WrMatrix(double* a, int m, int n);
 };
 
 #endif // BANDMATRIXSOLVE_H

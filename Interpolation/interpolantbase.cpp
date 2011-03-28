@@ -6,8 +6,9 @@ namespace Interpolation
 {
   double InterpolantBase::Integral(double a, double b)
   {
+    /*
     std::vector<Polynomial* >::iterator iterator;
-    Polynomial *pol; 
+    Polynomial* pol; 
     iterator = FindPolynomial(a, pol);
     double result = pol->Integral(a,pol->GetUpper());
     for(iterator; (iterator != FindPolynomial(b, pol)); iterator++)
@@ -16,6 +17,8 @@ namespace Interpolation
     }
     result += pol->Integral(pol->GetLower(),b);
     return result;
+    //*/
+    return 0.0;
   }
 
   der InterpolantBase::Diff(double x)
@@ -29,12 +32,11 @@ namespace Interpolation
 
   double InterpolantBase::Value(double x)
   {
-    Polynomial *pol;
     if (x < a)
       return left->Value(x);
     if (x > b)
       return right->Value(x);
-    FindPolynomial(x,pol);
-    return pol->Value(x); //Horner schema in Polynomials
+    
+    return polynomials[FindPolynomial(x)]->Value(x); //Horner schema in Polynomials
   }
 }

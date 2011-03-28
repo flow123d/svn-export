@@ -17,43 +17,43 @@ FADBAD = ../FADBAD++
 INCFADBAD = $(FADBAD)/badiff.h $(FADBAD)/fadbad.h
 
 OBJS = main.o bandmatrixsolve.o functorvaluebase.o functorvalue.o functordiffbase.o \
-	functordiff.o polynomial.o interpolantbase.o interpolant.o myfunction.o
+	functordiff.o polynomial.o interpolantbase.o interpolant.o myfunction.o lagrange.o
 
 $(NAME): $(OBJS)
 	$(CCC) $(CFLAGS) $^ $(LIBCLAPACK) -o $(NAME)
 
-myfunction.o: myfunction.cpp
-	$(CCC) $(CFLAGS) $< myfunction.h -c 
+myfunction.o: myfunction.cpp myfunction.h
+	$(CCC) $(CFLAGS) $< -c 
 
-#lagrange.o: lagrange.cpp lagrange.h functorvaluebase.h interpolant.h bandmatrixsolve.h
-#	$(CCC) $(CFLAGS) -c $<
+lagrange.o: lagrange.cpp lagrange.h functorvaluebase.h interpolant.h bandmatrixsolve.h
+	$(CCC) $(CFLAGS) $< -c
 
-interpolant.o: interpolant.cpp 
-	$(CCC) $(CFLAGS) $< interpolant.h interpolantbase.h polynomial.h -c
+interpolant.o: interpolant.cpp interpolant.h interpolantbase.h polynomial.h
+	$(CCC) $(CFLAGS) $< -c
 
-interpolantbase.o: interpolantbase.cpp
-	$(CCC) $(CFLAGS) $< interpolantbase.h polynomial.h functordiffbase.h -c
+interpolantbase.o: interpolantbase.cpp interpolantbase.h polynomial.h functordiffbase.h
+	$(CCC) $(CFLAGS) $< -c
 
-polynomial.o: polynomial.cpp 
-	$(CCC) $(CFLAGS) $< polynomial.h functordiffbase.h -c
+polynomial.o: polynomial.cpp polynomial.h functordiffbase.h
+	$(CCC) $(CFLAGS) $< -c
 
-functordiff.o: functordiff.cpp 
-	$(CCC) $(CFLAGS) $< functordiff.h functordiffbase.h $(INCFADBAD) -c
+functordiff.o: functordiff.cpp functordiff.h functordiffbase.h $(INCFADBAD)
+	$(CCC) $(CFLAGS) $< -c
 
-functordiffbase.o: functordiffbase.cpp 
-	$(CCC) $(CFLAGS) $< functordiffbase.h functorvaluebase.h -c
+functordiffbase.o: functordiffbase.cpp functordiffbase.h functorvaluebase.h
+	$(CCC) $(CFLAGS) $< -c
 
-functorvalue.o: functorvalue.cpp
-	$(CCC) $(CFLAGS) $< functorvalue.h functorvaluebase.h -c
+functorvalue.o: functorvalue.cpp functorvalue.h functorvaluebase.h
+	$(CCC) $(CFLAGS) $< -c
 
-functorvaluebase.o: functorvaluebase.cpp
-	$(CCC) $(CFLAGS) $< functorvaluebase.h -c 
+functorvaluebase.o: functorvaluebase.cpp functorvaluebase.h
+	$(CCC) $(CFLAGS) $< -c 
 
-bandmatrixsolve.o: bandmatrixsolve.cpp
-	$(CCC) $(CFLAGS) $< bandmatrixsolve.h $(INCCLAPACK) -c 
+bandmatrixsolve.o: bandmatrixsolve.cpp bandmatrixsolve.h
+	$(CCC) $(CFLAGS) $< $(INCCLAPACK) -c 
 
-main.o: main.cpp 
-	$(CCC) $(CFLAGS) $< stdafx.h -c 
+main.o: main.cpp stdafx.h
+	$(CCC) $(CFLAGS) $< -c 
 
 stdafx.h: functorvaluebase.h functordiffbase.h functorvalue.h functordiff.h \
 	  myfunction.h interpolant.h lagrange.h polynomial.h interpolantbase.h

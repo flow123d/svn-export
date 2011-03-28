@@ -10,11 +10,9 @@ Interpolant::Interpolant(void)
 }
 
 
-std::vector<Polynomial* >::iterator Interpolant::FindPolynomial(double x, Polynomial* pol)
-{ 
-  pol = polynomials[0];
-  return polynomials.begin(); 
-  
+unsigned int Interpolant::FindPolynomial(double x)
+{
+   return 0;
 }
 
 //InterpolantEq - EQUIDISTANT
@@ -28,12 +26,12 @@ InterpolantEq::InterpolantEq(std::vector< Polynomial* > &polynomials, double ste
 }
 
 
-std::vector<Polynomial* >::iterator InterpolantEq::FindPolynomial(double x, Polynomial* pol)
+unsigned int InterpolantEq::FindPolynomial(double x)
 {
   //counts in which interval x is (the last node before x) and saves that to i
   int i = floor((x - a) / step);	
-  pol = polynomials[i];
-  return polynomials.begin() + i;
+  //std::cout << "double=" << ((x - a) / step) << "    int i=" << i << std::endl; 
+  return i;
 }
 
 

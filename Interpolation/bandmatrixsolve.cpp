@@ -1,30 +1,39 @@
 
-
 #include "bandmatrixsolve.h"
 using namespace std;
 
 //*
 double* BandMatrixSolve::Solve()
 {
+  if (DEB)
+  {
+    WrMatrix(ab,ldab,n);
+    cout << endl;
+    WrMatrix(b,ldb,nrhs);
+  }
   if(!factorization)
   {
+    cout << "factorization dgbtrf_..." << endl;
     dgbtrf_(&m, &n, &kl, &ku, ab, &ldab, ipiv, &info);
     factorization = 1;
   }
   if(info < 0)
   { cout << "Error: The " << info*(-1) << 
 	"-th argument had an illegal value" << endl;
-    factorization = 0;
+    factorization = false;
     return 0;
   }	
   if(info > 0)
-  { cout << "Error: The factor U is singular" << endl;
-    factorization = 0;
+  { cout << "Error: The factor U is singular. (info=" << info << ")" << endl;
+    factorization = false;
     return 0;
   }
   
+  cout << "solving dgbtrs_..." << endl;
   dgbtrs_(&trans, &n, &kl, &ku, &nrhs, 
 		ab, &ldab, ipiv, b, &ldb, &info);
+  
+  if (DEB) WrMatrix(b,ldb,nrhs);
   return b;
 }
 //*/
@@ -41,31 +50,9 @@ BandMatrixSolve::BandMatrixSolve(long int n,long int ku,long int kl, long int nr
   ab = new double[ldab*n];
   b = new double[ldb];
   //pivot indices *************************************************
-  ipiv= new long int[n];
+  ipiv= new integer[n];
+  factorization = false;
 }
-//*/
-/*
-BandMatrixSolve::BandMatrixSolve(int number_of_nodes, int degree, int number_of_leftcond, 
-				 int number_of_rightcond, int number_of_functors)
-  : //n((degree+1)*number_of_nodes), 
-    //m((degree+1)*number_of_nodes), 	//a is square matrix
-    kl(1 + number_of_leftcond), 
-    ku(degree - number_of_rightcond),
-    nrhs(number_of_functors)
-    
-{
-  n = (degree+1)*number_of_nodes; 
-  m = (degree+1)*number_of_nodes; 	//a is square matrix
-  trans = 'N';
-  k = kl+ku+1;
-  ldab = 2*kl+ku+1;
-  ldb = n;
-  ab = new double[ldab*n];
-  b = new double[ldb*nrhs];
-  //pivot indices *************************************************
-  ipiv= new long int[(degree+1)*n];
-}
-//*/
 
 BandMatrixSolve::~BandMatrixSolve()
 {
@@ -78,13 +65,26 @@ void BandMatrixSolve::SetA(integer i, integer j, doublereal value)
 {
   #define AB(I,J) ab[(I) + ((J))*ldab]
   if((i < m) & (j < n))
-    AB(k+i-j,j) = value;
-  else cout << "Error: out of bounds" << endl;
+    AB(k-1+i-j,j) = value;
+  else cout << "Error: out of bounds /A" << endl;
 }
 
 void BandMatrixSolve::SetB(integer i, integer j, doublereal value)
 {
   if((i < ldb) & (j < nrhs))
     b[i + j*ldb] = value;
-  else cout << "Error: out of bounds" << endl;
+  else cout << "Error: out of bounds /B" << endl;
 }
+
+///can write matrix to console output
+void BandMatrixSolve::WrMatrix(double* a,int m, int n)
+{
+  for(int i = 0; i < m; i++)
+  {
+    for (int j = 0; j < n; j++)
+    {
+      cout << setw(5) << a[j*m+i] << " | ";
+    }
+    cout << endl;
+  }
+};

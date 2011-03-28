@@ -2,6 +2,8 @@
 #ifndef INTERPOLANTBASE_H
 #define INTERPOLANTBASE_H
 
+#include <iostream>
+
 #include "functordiffbase.h"
 #include "polynomial.h"
 
@@ -42,7 +44,7 @@ class InterpolantBase : public FunctorDiffBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual std::vector<Polynomial* >::iterator FindPolynomial(double x, Polynomial *pol) = 0;
+    virtual unsigned int FindPolynomial(double x) = 0;
  
   public:
     /// A function value.
@@ -71,7 +73,7 @@ class InterpolantBase : public FunctorDiffBase
       */
     double Integral(double a, double b); 
     
-    ///Set type of interpolation
+    ///Set type of extrapolation
     /** Sets the polynomials that should be counted when x is out of bounds a,b.
       * @param left a polynomial for x < a.
       * @param right a polynomial for b > b.

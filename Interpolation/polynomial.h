@@ -2,6 +2,7 @@
 #ifndef POLYNOMIAL_H
 #define POLYNOMIAL_H
 
+#include <iostream>
 #include <vector>
 #include "functordiffbase.h"
 
@@ -39,6 +40,17 @@ class Polynomial
       degree = coefs.size() - 1;
     }
     
+    Polynomial(Polynomial &pol)
+    {
+      std::cout << "---------copy------" << std::endl;
+      this->a = pol.a;
+      this->b = pol.b;
+      this->degree = pol.degree;
+      this->coefs.resize(pol.coefs.size());
+      for(unsigned int i = 0; i < pol.coefs.size(); i++)
+	this->coefs[i] = pol.coefs[i];
+    }
+    
     ///sets the interval for the polynomial
     void SetInterval(double a, double b)
     {
@@ -56,7 +68,9 @@ class Polynomial
     
     ///returns lower limit of the polynomial - "a"
     double GetLower()
-    {return a;}
+    {
+      return a;
+    }
     
     ///returns upper limit of the polynomial - "b"
     double GetUpper()
@@ -64,7 +78,6 @@ class Polynomial
     
     ///returns value of the polynomial P(x), uses Horner schema
     double Value(double x);
-
     
     ///returns derivate of the polynomial P'(x), uses Horner schema
     der Diff(double x);

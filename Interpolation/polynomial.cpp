@@ -6,7 +6,7 @@ namespace Interpolation
 double Polynomial::Value(double x)
 {
   double xx = x - a;	//placing x to the interval <0,step>
-  
+  std::cout << "xxxxxxxxxxx     " << "xx=" << xx << std::endl;
   //Horner's schema: ...(a[n]*x + a[n-1])*x + a[n-2])...
   //a[N]...coef[N], a[0]...coef[0]
   double result = coefs[degree];

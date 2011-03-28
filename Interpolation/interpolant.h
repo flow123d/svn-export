@@ -27,7 +27,7 @@ class Interpolant : public InterpolantBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual std::vector<Polynomial* >::iterator FindPolynomial(double x, Polynomial* pol);    
+    virtual unsigned int FindPolynomial(double x);    
   
   public:
     ///A constructor of the interpolant.
@@ -51,7 +51,7 @@ class InterpolantEq : public InterpolantBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual std::vector<Polynomial* >::iterator FindPolynomial(double x, Polynomial* pol);
+    virtual unsigned int FindPolynomial(double x);
   
   public:
     ///A constructor of the interpolant.

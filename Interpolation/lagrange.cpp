@@ -9,7 +9,7 @@ BCondition::BCondition()
 {
   count = 0;
 }
-void BCondition::AddCond(int derivate, double value)
+void BCondition::AddCond(unsigned int derivate, double value)
 {
   //checking size of vector
   if(condition.size() < derivate)
@@ -18,7 +18,7 @@ void BCondition::AddCond(int derivate, double value)
     //initialized with zeros
   }
   condition[derivate-1].value = value;
-  condition[derivate-1].defined = false;
+  condition[derivate-1].defined = true;
   count++;
 }
 void BCondition::AutoAdd(int number_of_conditions, int highest_order_of_derivate)
@@ -30,14 +30,18 @@ void BCondition::AutoAdd(int number_of_conditions, int highest_order_of_derivate
   }
   else
     n = number_of_conditions;
-  for(int i = 1; i <= n; i--)
+  condition.resize(highest_order_of_derivate);
+  for(int i = 1; i <= n; i++)
   {
-    if(condition[condition.size()-n].defined) 
+    if(condition[condition.size()-i].defined) 
+    {
       continue;
+    }
+    
     else 
     {
       //condition[i].value = 0 as initialized
-      condition[condition.size()-n].defined = true;
+      condition[condition.size()-i].defined = true;
       count++;
     }
   }
@@ -61,6 +65,12 @@ int BCondition::GetCount()
 
   
 //INTERPOLATION*******************************************************************
+Lagrange::Lagrange(void )
+{
+  leftcond = new BCondition();
+  rightcond = new BCondition();
+}
+
 void Lagrange::SetStep(double step)
 {
   this->step = step;
@@ -72,10 +82,10 @@ void Lagrange::SetInterval(double a, double b)
   this->b = b;
 }
 
-void Lagrange::AddCond(Lagrange::BCkind cond, int derivate, double value)
+void Lagrange::AddCond(Lagrange::BCkind cond, unsigned int derivate, double value)
 {
-  if(cond == 0) leftcond.AddCond(derivate,value);
-  if(cond == 1) rightcond.AddCond(derivate,value);
+  if(cond == Lagrange::LeftBC) leftcond->AddCond(derivate,value);
+  if(cond == Lagrange::RightBC) rightcond->AddCond(derivate,value);
 }
 
 }

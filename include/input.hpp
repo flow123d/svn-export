@@ -39,12 +39,20 @@ using namespace std;
 
 enum Value_type { type_generic, type_string, type_number, type_object, type_vector, type_bool, type_null };
 
+class Object_node;
+class Vector_node;
+class Value_node;
+
 /*!
  * @brief Generic node - represents any JSON construct
  */
 class Generic_node {
 protected:
     Value_type               value_type_;
+
+    //sem staticky instance Object_node, Vector_node, Value_node (od kazdeho jedna)
+    //pro neexistujici nody
+
 public:
     Generic_node() { value_type_ = type_generic; }
     Generic_node( Generic_node const & n ); //copy constructor - deep?
@@ -53,14 +61,28 @@ public:
     Value_type get_type() { return value_type_; }
     // hierarchicky projde cely podstrom do hloubky a vypise ho?
     // asi taky uzitecne pro vsechny...
-    ostream& operator<<( ostream& output ) { return output; }
+    //ostream& operator<<( ostream& output ) { return output; }
 
-    Generic_node & operator=( Generic_node const & n );
+    //Generic_node & operator=( Generic_node const & n );
 
+    virtual Generic_node & get_key( const string & key )
+    virtual Generic_node & get_item( const int id );
+
+    Object_node & as_object( void ) {
+        return dynamic_cast < Object_node & > &(*this);
+    }
+
+    Vector_node & as_vector( void ) {
+        return dynamic_cast < Vector_node & > &(*this);
+    }
+
+    Value_node & as_vector( void ) {
+        return dynamic_cast < Value_node & > &(*this);
+    }
     // data_typ = strom["klic"].get_data<typ>() bez defaultu, pri nepritomnosti spadne
     // data_typ = strom["klic"].get_data<typ>( typ & default ) probehne vzdy
-    template< typename T > T get_data();
-    template< typename T > T get_data( T & default_data );
+    //template< typename T > T get_data();
+    //template< typename T > T get_data( T & default_data );
 };
 
 /*!
@@ -68,14 +90,30 @@ public:
  *        with pairs of "string" : any_node
  */
 class Object_node: Generic_node {
-    map< string, Generic_node > object_;
+    map< string, Generic_node & > object_;
 public:
     Object_node() { value_type_ = type_object; }
+
+    virtual Generic_node & get_key( const string & key ) {
+        map< string, Generic_node & >::iterator it;
+
+        it = object_.find( key );
+        if (  it == map::end )
+        {
+            //odkaz na prazdnou instanci, vytvorena jen jedna, globalne
+        }
+        {
+            return it->second;
+        }
+    }
+    virtual Generic_node & get_item( const int id ) {
+        //pristup jako do vektoru, ale jsme v objektu => vzdy vrati prazdnou instanci
+    }
 
     //pro pristup stylem    gen_node_ref = muj_strom["klic"]
     // nebo data_typ = strom["klic"].get_data<typ>() bez defaultu, pri nepritomnosti spadne
     //      data_typ = strom["klic"].get_data<typ>( typ & default ) probehne vzdy
-    Generic_node & operator[]( const string & key );
+    //Generic_node & operator[]( const string & key );
 };
 
 /*!
@@ -83,13 +121,27 @@ public:
  *        that is heterogeneous vector of any JSON construct
  */
 class Vector_node : Generic_node {
-    vector< Generic_node >  value_array_;
+    vector< Generic_node & >  value_array_;
 public:
     Vector_node () { value_type_ = type_vector; }
 
-    bool get_vector( vector<Generic_node> & ret_vector );
-    Generic_node & operator[]( const int & id );
+    virtual Generic_node & get_item( const int id ) {
+        if (  id >= value_array_.size() )
+        {
+            //mimo rozsah pole
+            //odkaz na prazdnou instanci, vytvorena jen jedna, globalne
+        }
+        {
+            return value_array[id];
+        }
+    }
+    virtual Generic_node & get_key( const string & key ) {
+        //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati prazdnou instanci
+    }
+
+    //Generic_node & operator[]( const int & id );
     // get_vector pres template, aby se snazil dodat vse v konkretnim typu ??
+    //bool get_vector( vector<Generic_node> & ret_vector );
 };
 
 /*!
@@ -102,6 +154,15 @@ class Value_node : Generic_node {
     bool                value_bool_;
 public:
     Value_node() { value_type_ = type_null; }
+
+    virtual Generic_node & get_item( const int id ) {
+        //pristup jako do vektoru, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+    }
+    virtual Generic_node & get_key( const string & key ) {
+        //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+    }
+
+    //pokazde kontrolovat, zda je to skutecne Value_node, a ne jen pretypovany jiny?
 
     //pro ziskani uz finalnich skalarnich hodnot, s defaultni hodnotou a bez
     //bez def: pri nemoznosti konverze vrati false

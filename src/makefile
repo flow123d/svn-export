@@ -56,6 +56,8 @@ $(OBJS)/local_matrix.o\
 $(OBJS)/calculation.o\
 $(OBJS)/darcy_flow_mh.o\
 $(OBJS)/output.o\
+$(OBJS)/output_vtk.o\
+$(OBJS)/output_pos.o\
 $(OBJS)/concentrations.o\
 $(OBJS)/postprocess.o\
 $(OBJS)/preprocess.o\

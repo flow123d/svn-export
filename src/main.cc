@@ -233,7 +233,7 @@ void main_compute_mh_unsteady_saturated(struct Problem *problem) {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
     int t, i;
-    output_flow_field_init(problem);
+    output_flow_field_init(problem->out_fname_2);
     //        output_flow_field_in_time(problem,0);
     calculation_mh(problem);
 
@@ -405,7 +405,7 @@ void main_compute_mh_density(struct Problem *problem) {
     transport_output_init(problem->transport);
     transport_output(problem->transport, 0.0, ++frame);
 
-    output_init(problem); // time variable flow field
+    output_init(); // time variable flow field
 
     //    btc_check(trans);
 
@@ -471,7 +471,7 @@ void main_compute_mh_density(struct Problem *problem) {
 
         if ((trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
             transport_output(problem->transport, (i + 1) * problem->stop_time, ++frame);
-            output_time(problem, (i + 1) * problem->stop_time);
+            output_time((i + 1) * problem->stop_time);
 
             //                      output_transport_time_BTC(trans, (i+1) * trans->time_step);
 

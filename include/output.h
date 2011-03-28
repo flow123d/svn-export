@@ -66,35 +66,63 @@ typedef std::vector<tripple> VectorFloatVector;
 
 /* TODO: convert to class */
 typedef struct OutScalar {
-    ScalarFloatVector *scalars;
-    char name[32];
+    ScalarFloatVector	*scalars;
+    char				name[32];
 } OutScalars;
 
 /* TODO: convert to class */
 typedef struct OutVector {
-    VectorFloatVector *vectors;
-    char name[32];
+    VectorFloatVector	*vectors;
+    char				name[32];
 } OutVector;
+
+/**
+ * Class of output data storing name of data and units
+ */
+class BaseOutputData{
+public:
+    char            *name;  ///< Name of data
+    char            *unit;  ///< Units of data
+};
+
+typedef std::vector<BaseOutputData> BaseOutputDataVec;
+
+/**
+ * Class of output data storing reference on data
+ */
+template <typename _Data> class OutputData : public BaseOutputData {
+private:
+    vector<_Data>   *data;  ///< Pointer at data
+    OutputData() {};    // Un-named constructor can't be called
+public:
+    OutputData(char *name, char *unit, vector<_Data> *data);
+    ~OutputData();
+};
 
 /**
  * Class of output
  */
 class Output {
 private:
-    FILE    *out;
-    char    *filename;
+    FILE    *file;          ///< Pointer at structure with output file
+    char    *filename;      ///< String with output filename
+    char    format_type;    ///< Type of output
+    BaseOutputDataVec *node_data;    ///< List of data on nodes
+    BaseOutputDataVec *elem_data;    ///< List of data on elements
+
+    Output() {};            // Un-named constructor can't be called
 public:
     Output(char *filename);
     ~Output();
 
     // Methods
-    int write_mesh(void);
+    int write_data(void);   ///< It writes geometry, topology of mesh and all data to the file
 
-    template <typename OutputData>
-    int write_node_data(char *name, char *unit, vector<OutputData> *data);
+    template <typename _Data>
+    int register_node_data(char *name, char *unit, vector<_Data> *data);
 
-    template <typename OutputData>
-    int write_elem_data(char *name, char *unit, vector<OutputData> *data);
+    template <typename _Data>
+    int register_elem_data(char *name, char *unit, vector<_Data> *data);
 };
 
 typedef std::vector<OutScalar> OutScalarsVector;
@@ -139,24 +167,30 @@ typedef std::vector<OutVector> OutVectorsVector;
 #define BOTH_OUTPUT 3
 
 void output( struct Problem *problem );
-void output_flow_field_init(struct Problem *problem);
+void output_flow_field_init(char *fname);
 void output_flow_field_in_time(struct Problem *problem,double time);
-void output_init(struct Problem *problem);
-void output_time(struct Problem *problem, double time);
+void output_init(void);
+void output_time(double time);
 FILE **open_temp_files(struct Transport *transport,const char *fileext,const char *open_param);
 
-void output_msh_init_bin(Mesh*, char*);
-void output_msh_init_ascii(Mesh*, char*);
+void output_msh_init_bin(char *file);
+void output_msh_init_ascii(char *file);
 
-void output_msh_init_vtk_serial_ascii(char *file);
-void output_msh_finish_vtk_serial_ascii(char *file);
+void write_trans_init_vtk_serial_ascii(char *file);
+void write_trans_finish_vtk_serial_ascii(char *file);
 
 void output_transport_time_bin(struct Transport *transport, double time,int step,char *file);
 void output_transport_time_ascii(struct Transport *transport, double time,int step,char *file);
-void output_transport_time_vtk_serial_ascii(struct Transport *transport, double time, int step, char *file);
+void write_trans_time_vtk_serial_ascii(struct Transport *transport, double time, int step, char *file);
 void write_ascii_header(struct Problem *problem, FILE *out);
 void write_transport_ascii_data(FILE *out,struct Problem *problem,struct TTNode **nodes,struct TElement **elements,int time_steps,int ph);
 void write_transport_binary_data(FILE *out,struct Problem *problem,struct TTNode **nodes,struct TElement **elements,int time_steps,int ph);
+
+void output_compute_mh(struct Problem *problem);
+void output_flow_field_in_time_2(struct Problem *problem,double time);
+void write_flow_binary_data(FILE *out,struct Problem *problem);
+void write_flow_ascii_data(FILE *out,struct Problem *problem);
+void write_flow_vtk_serial(FILE *out);
 
 #endif
 //-----------------------------------------------------------------------------

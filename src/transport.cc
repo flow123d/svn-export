@@ -1031,7 +1031,7 @@ void convection(struct Transport *trans) {
             output_vector_gather(trans);
             if (rank == 0) transport_output(trans, t * trans->time_step, ++frame);
             if (ConstantDB::getInstance()->getInt("Problem_type") != STEADY_SATURATED)
-                output_time(problem, t * trans->time_step); // time variable flow field
+                output_time(t * trans->time_step); // time variable flow field
             //	output_transport_time_BTC(trans, t * trans->time_step); // BTC test - spatne vypisuje casy
             //output_transport_time_CS(problem, t * problem->time_step);
             step = 0;
@@ -1090,7 +1090,7 @@ void transport_output(struct Transport *transport, double time, int frame) {
         output_transport_time_ascii(transport, time, frame, transport->transport_out_fname);
         break;
     case VTK_SERIAL_ASCII:
-        output_transport_time_vtk_serial_ascii(transport, time, frame, transport->transport_out_fname);
+        write_trans_time_vtk_serial_ascii(transport, time, frame, transport->transport_out_fname);
         break;
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");
@@ -1100,18 +1100,17 @@ void transport_output(struct Transport *transport, double time, int frame) {
 //=============================================================================
 //      TRANSPORT OUTPUT INIT
 //=============================================================================
-void transport_output_init(struct Transport *transport) {
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
+void transport_output_init(struct Transport *transport)
+{
     switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
     case POS_BIN:
-        output_msh_init_bin(mesh, transport->transport_out_fname);
+        output_msh_init_bin(transport->transport_out_fname);
         break;
     case POS_ASCII:
-        output_msh_init_ascii(mesh, transport->transport_out_fname);
+        output_msh_init_ascii(transport->transport_out_fname);
         break;
     case VTK_SERIAL_ASCII:
-        output_msh_init_vtk_serial_ascii(transport->transport_out_fname);
+        write_trans_init_vtk_serial_ascii(transport->transport_out_fname);
         break;
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");
@@ -1131,7 +1130,7 @@ void transport_output_finish(struct Transport *transport) {
         /* There is no need to do anything for this file format */
         break;
     case VTK_SERIAL_ASCII:
-        output_msh_finish_vtk_serial_ascii(transport->transport_out_fname);
+        write_trans_finish_vtk_serial_ascii(transport->transport_out_fname);
         break;
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");

@@ -31,6 +31,7 @@
 #define OUTPUT_H
 
 #include <vector>
+#include <string>
 
 #include "system.hh"
 
@@ -76,28 +77,35 @@ typedef struct OutVector {
     char				name[32];
 } OutVector;
 
-/**
- * Class of output data storing name of data and units
- */
-class BaseOutputData{
-public:
-    char            *name;  ///< Name of data
-    char            *unit;  ///< Units of data
-};
-
-typedef std::vector<BaseOutputData> BaseOutputDataVec;
+#define OUT_INT         1
+#define OUT_INT_VEC     2
+#define OUT_FLOAT       3
+#define OUT_FLOAT_VEC   4
+#define OUT_DOUBLE      5
+#define OUT_DOUBLE_VEC  6
 
 /**
  * Class of output data storing reference on data
  */
-template <typename _Data> class OutputData : public BaseOutputData {
+class OutputData {
 private:
-    vector<_Data>   *data;  ///< Pointer at data
-    OutputData() {};    // Un-named constructor can't be called
+    string          name;
+    string          units;
+    void            *data;
+    unsigned char   type;
+    OutputData() {};          // Un-named constructor can't be called
 public:
-    OutputData(char *name, char *unit, vector<_Data> *data);
+    string getName(void) { return name; };
+    string getUnits(void) { return units; };
+    void writeData(void);
+    OutputData(std::string name, std::string unit, std::vector<int> &data);
+    OutputData(std::string name, std::string unit, std::vector< vector<int> > &data);
+    OutputData(std::string name, std::string unit, std::vector<float> &data);
+    OutputData(std::string name, std::string unit, std::vector< vector<float> > &data);
     ~OutputData();
 };
+
+typedef std::vector<OutputData> OutputDataVec;
 
 /**
  * Class of output
@@ -107,8 +115,8 @@ private:
     FILE    *file;          ///< Pointer at structure with output file
     char    *filename;      ///< String with output filename
     char    format_type;    ///< Type of output
-    BaseOutputDataVec *node_data;    ///< List of data on nodes
-    BaseOutputDataVec *elem_data;    ///< List of data on elements
+    std::vector<OutputData> *node_data;    ///< List of data on nodes
+    std::vector<OutputData> *elem_data;    ///< List of data on elements
 
     Output() {};            // Un-named constructor can't be called
 public:
@@ -119,10 +127,10 @@ public:
     int write_data(void);   ///< It writes geometry, topology of mesh and all data to the file
 
     template <typename _Data>
-    int register_node_data(char *name, char *unit, vector<_Data> *data);
+    int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
 
     template <typename _Data>
-    int register_elem_data(char *name, char *unit, vector<_Data> *data);
+    int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
 };
 
 typedef std::vector<OutScalar> OutScalarsVector;

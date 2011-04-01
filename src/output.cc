@@ -43,6 +43,8 @@
 
 #include <stdarg.h>
 
+#include <string>
+
 #include "ppfcs.h"  //FCS - DOPLNIT
 
 // following deps. should probably be removed
@@ -63,49 +65,85 @@
 // TODO: prevod do pos (pokud ho vubec podporovat) by mel byt proveden pri destrukci vystupniho objektu
 void output( struct Problem *problem )
 {
-	// TODO - tohle by melo asi prijit jinam
-        int my_proc;
-        MPI_Comm_rank(PETSC_COMM_WORLD,&my_proc);
-        if (my_proc != 0) return;
+    // TODO - tohle by melo asi prijit jinam
+    int my_proc;
+    MPI_Comm_rank(PETSC_COMM_WORLD,&my_proc);
+    if (my_proc != 0) return;
 
-        if ((ConstantDB::getInstance()->getInt("Goal") == COMPUTE_MH) &&
-                (ConstantDB::getInstance()->getInt("Problem_type") == STEADY_SATURATED || ConstantDB::getInstance()->getInt("Problem_type") == PROBLEM_DENSITY)){
-                switch (ConstantDB::getInstance()->getInt("Out_file_type"))
-                {
-                        case GMSH_STYLE:
-                                output_compute_mh( problem );
-                        break;
-                        case FLOW_DATA_FILE:
-                                output_flow_field_init(problem->out_fname_2);
-                                output_flow_field_in_time( problem, 0 );
-                        break;
-                        case BOTH_OUTPUT:
-                        // pridano -- upravy Ji. -- oba soubory najednou
-                                output_compute_mh( problem );
-                                output_flow_field_init(problem->out_fname_2);
-                                output_flow_field_in_time_2( problem, 0 );
-                        break;
-                }
+    printf("****** 'new Output()' *****\n");
 
+    Output *output = new Output(problem->out_fname_2);
+    string node_name = "node_data_name";
+    string node_unit = "node_data_unit";
+    string elem_name = "elem_data_name";
+    string elem_unit = "elem_data_unit";
+    std::vector<int> node_scalar_data(6);
+    std::vector< vector<int> > node_vector_data;
+    std::vector<float> elem_scalar_data(6);
+    std::vector< vector<float> > elem_vector_data;
 
-// FTRANS           if (problem->ftrans_out == true && problem->type == STEADY_SATURATED)
-//                	output_veloc_ftrans(problem, 0);
+    std::vector<int> vec;
+    vec.push_back(0); vec.push_back(1); vec.push_back(2);
+    node_vector_data.push_back(vec);
+    node_vector_data.push_back(vec);
+    node_vector_data.push_back(vec);
 
+    std::vector<float> fvec;
+    fvec.push_back(0.0); fvec.push_back(1.1); fvec.push_back(2.2);
+    elem_vector_data.push_back(fvec);
+    elem_vector_data.push_back(fvec);
+    elem_vector_data.push_back(fvec);
 
-                if (OptGetBool("Transport", "Transport_on", "no") == true)
-                        {
-                //        output_transport_convert(problem);
-                        //if (problem->type == PROBLEM_DENSITY)
-                        //	output_convert(problem);    // time variable flow field
-                        }
+    node_scalar_data[0] = 0;
+    node_scalar_data[1] = 1;
+    node_scalar_data[2] = 2;
+    node_scalar_data[3] = 3;
+    node_scalar_data[4] = 4;
+    node_scalar_data[5] = 5;
 
+    elem_scalar_data[0] = 0.1;
+    elem_scalar_data[1] = 1.1;
+    elem_scalar_data[2] = 2.1;
+    elem_scalar_data[3] = 3.1;
+    elem_scalar_data[4] = 4.1;
+    elem_scalar_data[5] = 5.1;
 
+    // Test of new Output system
+    output->register_node_data(node_name, node_unit, node_scalar_data);
+    output->register_node_data(node_name, node_unit, node_vector_data);
+    output->register_elem_data(elem_name, elem_unit, elem_scalar_data);
+    output->register_elem_data(elem_name, elem_unit, elem_vector_data);
+
+    output->write_data();
+
+    delete output;
+
+    printf("****** 'delete Output()' *****\n");
+
+    if ((ConstantDB::getInstance()->getInt("Goal") == COMPUTE_MH) &&
+            (ConstantDB::getInstance()->getInt("Problem_type") == STEADY_SATURATED ||
+             ConstantDB::getInstance()->getInt("Problem_type") == PROBLEM_DENSITY))
+    {
+        switch (ConstantDB::getInstance()->getInt("Out_file_type"))
+        {
+        case GMSH_STYLE:
+            output_compute_mh( problem );
+            break;
+        case FLOW_DATA_FILE:
+            output_flow_field_init(problem->out_fname_2);
+            output_flow_field_in_time( problem, 0 );
+            break;
+        case BOTH_OUTPUT:
+            // pridano -- upravy Ji. -- oba soubory najednou
+            output_compute_mh( problem );
+            output_flow_field_init(problem->out_fname_2);
+            output_flow_field_in_time_2( problem, 0 );
+            break;
         }
-        if (ConstantDB::getInstance()->getInt("Goal") == CONVERT_TO_POS)
-                output_convert_to_pos(problem);
+    }
 
-        //flow_cs(problem);
-
+    if (ConstantDB::getInstance()->getInt("Goal") == CONVERT_TO_POS)
+        output_convert_to_pos(problem);
 }
 //=============================================================================
 // OUTPUT ROUTINE FOR COMPUTING_MH
@@ -155,37 +193,108 @@ void output_compute_mh(struct Problem *problem)
  * \brief Constructor for OutputData storing names of output data and their
  * units.
  */
-template <typename _Data>
-OutputData<_Data>::OutputData(char *data_name,
-        char *data_unit,
-        vector<_Data> *data_data)
+OutputData::OutputData(string data_name,
+        string data_units,
+        std::vector<int> &data_data)
 {
-    name = xstrcpy(data_name);
-    unit = xstrcpy(data_unit);
-    data = data_data;
+    name = data_name;
+    units = data_units;
+    data = (void*)&data_data;
+    type = OUT_INT;
+}
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        std::vector< vector<int> > &data_data)
+{
+    name = data_name;
+    units = data_units;
+    data = (void*)&data_data;
+    type = OUT_INT_VEC;
+}
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        std::vector<float> &data_data)
+{
+    name = data_name;
+    units = data_units;
+    data = (void*)&data_data;
+    type = OUT_FLOAT;
+}
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        std::vector< vector<float> > &data_data)
+{
+    name = data_name;
+    units = data_units;
+    data = (void*)&data_data;
+    type = OUT_FLOAT_VEC;
+}
+
+void OutputData::writeData(void)
+{
+    switch(type) {
+    case OUT_INT:
+        for( std::vector<int>::iterator item = ((std::vector<int>*)data)->begin();
+                item != ((std::vector<int>*)data)->end();
+                item++) {
+            cout << *item << " ";
+        }
+        break;
+    case OUT_INT_VEC:
+        for( std::vector< vector<int> >::iterator vec = ((std::vector< vector<int> >*)data)->begin();
+                vec != ((std::vector< vector<int> >*)data)->end();
+                vec++) {
+            for (std::vector<int>::iterator item = vec->begin();
+                    item != vec->end();
+                    item++) {
+                cout << *item << " ";
+            }
+            cout << "  ";
+        }
+        break;
+    case OUT_FLOAT:
+        for( std::vector<float>::iterator item = ((std::vector<float>*)data)->begin();
+                item != ((std::vector<float>*)data)->end();
+                item++) {
+            cout << *item << " ";
+        }
+        break;
+    case OUT_FLOAT_VEC:
+        for( std::vector< vector<float> >::iterator vec = ((std::vector< vector<float> >*)data)->begin();
+                vec != ((std::vector< vector<float> >*)data)->end();
+                vec++) {
+            for (std::vector<float>::iterator item = vec->begin();
+                    item != vec->end();
+                    item++) {
+                cout << *item << " ";
+            }
+            cout << "  ";
+        }
+        break;
+    }
 }
 
 /**
  * \brief Destructor for OutputData
  */
-template <typename _Data>
-OutputData<_Data>::~OutputData()
+OutputData::~OutputData()
 {
-    xfree(name);
-    xfree(unit);
-}
-
-/**
- * \brief Register data on elements. This function will add reference on the
- * data to the Output object. Own data will be writen to the file, when
- * write_data method will be called.
- */
-template <typename OutputData>
-int Output::register_elem_data(char *name, char *unit, vector<OutputData> *data)
-{
-    OutputData *out_data = new OutputData(name, unit, data);
-    elem_data->push_back(out_data);
-    return 1;
+///
 }
 
 /**
@@ -193,11 +302,29 @@ int Output::register_elem_data(char *name, char *unit, vector<OutputData> *data)
  * to the Output object. Own data will be writen to the file, when write_data
  * method will be called.
  */
-template <typename OutputData>
-int Output::register_node_data(char *name, char *unit, vector<OutputData> *data)
+template <typename _Data>
+int Output::register_node_data(std::string name, std::string unit, std::vector<_Data> &data)
 {
     OutputData *out_data = new OutputData(name, unit, data);
-    node_data->push_back(out_data);
+    node_data->push_back(*out_data);
+    return 1;
+}
+
+void pokus(char *name, char *units, std::vector<int> &data)
+{
+    OutputData out_data(name, units, data);
+}
+
+/**
+ * \brief Register data on elements. This function will add reference on the
+ * data to the Output object. Own data will be writen to the file, when
+ * write_data method will be called.
+ */
+template <typename _Data>
+int Output::register_elem_data(std::string name, std::string unit, std::vector<_Data> &data)
+{
+    OutputData *out_data = new OutputData(name, unit, data);
+    elem_data->push_back(*out_data);
     return 1;
 }
 
@@ -207,18 +334,26 @@ int Output::register_node_data(char *name, char *unit, vector<OutputData> *data)
  */
 int Output::write_data(void)
 {
+    /* Write data on nodes */
     if(node_data != NULL) {
-        for(BaseOutputDataVec::iterator dta = node_data->begin();
+        for(OutputDataVec::iterator dta = node_data->begin();
                 dta != node_data->end(); dta++) {
-            xprintf(MsgDbg, "Node name: %s, units: %s\n", dta->name, dta->unit);
+            cout << "Node name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
+            dta->writeData();
+            cout << endl;
         }
     }
+
+    /* Write data on elements */
     if(elem_data != NULL) {
-        for(BaseOutputDataVec::iterator dta = elem_data->begin();
+        for(OutputDataVec::iterator dta = elem_data->begin();
                 dta != elem_data->end(); dta++) {
-            xprintf(MsgDbg, "Elem name: %s, units: %s\n", dta->name, dta->unit);
+            cout << "Elem name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
+            dta->writeData();
+            cout << endl;
         }
     }
+
     return 1;
 }
 
@@ -235,8 +370,8 @@ Output::Output(char *fname)
         return;
     }
 
-    node_data = new BaseOutputDataVec;
-    elem_data = new BaseOutputDataVec;
+    node_data = new OutputDataVec;
+    elem_data = new OutputDataVec;
 
     format_type = ConstantDB::getInstance()->getInt("Pos_format_id");
 

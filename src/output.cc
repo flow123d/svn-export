@@ -42,7 +42,6 @@
 #include <petsc.h>
 
 #include <stdarg.h>
-
 #include <string>
 
 #include "ppfcs.h"  //FCS - DOPLNIT
@@ -62,25 +61,24 @@
 // GENERAL OUTPUT ROUTINE
 //=============================================================================
 // TODO: zrusit. Kazdy modul by mel mit vlastni volani vystupnich funkci
-// TODO: prevod do pos (pokud ho vubec podporovat) by mel byt proveden pri destrukci vystupniho objektu
 void output( struct Problem *problem )
 {
-    // TODO - tohle by melo asi prijit jinam
+    // Do output only in first process
     int my_proc;
     MPI_Comm_rank(PETSC_COMM_WORLD,&my_proc);
     if (my_proc != 0) return;
 
     printf("****** 'new Output()' *****\n");
 
-    Output *output = new Output(problem->out_fname_2);
+    Output *output = new Output("pokus.txt");
     string node_name = "node_data_name";
     string node_unit = "node_data_unit";
     string elem_name = "elem_data_name";
     string elem_unit = "elem_data_unit";
     std::vector<int> node_scalar_data(6);
     std::vector< vector<int> > node_vector_data;
-    std::vector<float> elem_scalar_data(6);
-    std::vector< vector<float> > elem_vector_data;
+    std::vector<double> elem_scalar_data(6);
+    std::vector< vector<double> > elem_vector_data;
 
     std::vector<int> vec;
     vec.push_back(0); vec.push_back(1); vec.push_back(2);
@@ -88,7 +86,7 @@ void output( struct Problem *problem )
     node_vector_data.push_back(vec);
     node_vector_data.push_back(vec);
 
-    std::vector<float> fvec;
+    std::vector<double> fvec;
     fvec.push_back(0.0); fvec.push_back(1.1); fvec.push_back(2.2);
     elem_vector_data.push_back(fvec);
     elem_vector_data.push_back(fvec);
@@ -142,6 +140,7 @@ void output( struct Problem *problem )
         }
     }
 
+    // Deprecated: this should be removed in the future (new input system)
     if (ConstantDB::getInstance()->getInt("Goal") == CONVERT_TO_POS)
         output_convert_to_pos(problem);
 }
@@ -160,31 +159,25 @@ void output_compute_mh(struct Problem *problem)
     const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
     xprintf( Msg, "Writing flow output files: %s ... ", out_fname);
 
-/*
-    // Temporary for debugging, necessary to find better more complicated solution for output of flow time steps
-    if ( problem->type == PROBLEM_DENSITY)
-        out = xfopen( out_fname, "at" );
-*/
-
-    switch(ConstantDB::getInstance()->getInt("Pos_format_id")){
+    switch(ConstantDB::getInstance()->getInt("Pos_format_id")) {
     case POS_ASCII:
-        out = xfopen( out_fname, "wt" );
-        write_flow_ascii_data(out,problem);
+        // Not supported
+        xprintf(Msg, "This method is not supported\n");
         break;
     case POS_BIN:
-        out = xfopen( out_fname, "wb" );
-        write_flow_binary_data(out,problem);
+        // Not supported
+        xprintf(Msg, "This method is not supported\n");
         break;
     case VTK_SERIAL_ASCII:
         out = xfopen( out_fname, "wt");
         write_flow_vtk_serial(out);
+        xfclose( out );
         break;
     case VTK_PARALLEL_ASCII:
         xprintf(Msg, "VTK_PARALLEL_ASCII file format not supported yet\n.");
         break;
     }
 
-    xfclose( out );
 
     xprintf( Msg, "O.K.\n");
 }
@@ -197,8 +190,7 @@ OutputData::OutputData(string data_name,
         string data_units,
         std::vector<int> &data_data)
 {
-    name = data_name;
-    units = data_units;
+    name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_INT;
 }
@@ -211,8 +203,7 @@ OutputData::OutputData(string data_name,
         string data_units,
         std::vector< vector<int> > &data_data)
 {
-    name = data_name;
-    units = data_units;
+    name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_INT_VEC;
 }
@@ -225,8 +216,7 @@ OutputData::OutputData(string data_name,
         string data_units,
         std::vector<float> &data_data)
 {
-    name = data_name;
-    units = data_units;
+    name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_FLOAT;
 }
@@ -239,20 +229,48 @@ OutputData::OutputData(string data_name,
         string data_units,
         std::vector< vector<float> > &data_data)
 {
-    name = data_name;
-    units = data_units;
+    name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_FLOAT_VEC;
 }
 
-void OutputData::writeData(void)
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        std::vector<double> &data_data)
+{
+    name = data_name; units = data_units;
+    data = (void*)&data_data;
+    type = OUT_DOUBLE;
+}
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        std::vector< vector<double> > &data_data)
+{
+    name = data_name; units = data_units;
+    data = (void*)&data_data;
+    type = OUT_DOUBLE_VEC;
+}
+
+/**
+ * \brief This function
+ */
+void OutputData::writeData(ofstream &file, string item_sep, string vec_sep)
 {
     switch(type) {
     case OUT_INT:
         for( std::vector<int>::iterator item = ((std::vector<int>*)data)->begin();
                 item != ((std::vector<int>*)data)->end();
                 item++) {
-            cout << *item << " ";
+            file << *item << item_sep;
         }
         break;
     case OUT_INT_VEC:
@@ -262,16 +280,16 @@ void OutputData::writeData(void)
             for (std::vector<int>::iterator item = vec->begin();
                     item != vec->end();
                     item++) {
-                cout << *item << " ";
+                file << *item << item_sep;
             }
-            cout << "  ";
+            file << vec_sep;
         }
         break;
     case OUT_FLOAT:
         for( std::vector<float>::iterator item = ((std::vector<float>*)data)->begin();
                 item != ((std::vector<float>*)data)->end();
                 item++) {
-            cout << *item << " ";
+            file << *item << item_sep;
         }
         break;
     case OUT_FLOAT_VEC:
@@ -281,9 +299,28 @@ void OutputData::writeData(void)
             for (std::vector<float>::iterator item = vec->begin();
                     item != vec->end();
                     item++) {
-                cout << *item << " ";
+                file << *item << item_sep;
             }
-            cout << "  ";
+            file << vec_sep;
+        }
+        break;
+    case OUT_DOUBLE:
+        for( std::vector<double>::iterator item = ((std::vector<double>*)data)->begin();
+                item != ((std::vector<double>*)data)->end();
+                item++) {
+            file << *item << item_sep;
+        }
+        break;
+    case OUT_DOUBLE_VEC:
+        for( std::vector< vector<double> >::iterator vec = ((std::vector< vector<double> >*)data)->begin();
+                vec != ((std::vector< vector<double> >*)data)->end();
+                vec++) {
+            for (std::vector<double>::iterator item = vec->begin();
+                    item != vec->end();
+                    item++) {
+                file << *item << item_sep;
+            }
+            file << vec_sep;
         }
         break;
     }
@@ -334,13 +371,17 @@ int Output::register_elem_data(std::string name, std::string unit, std::vector<_
  */
 int Output::write_data(void)
 {
+    if(file == NULL) {
+        return 0;
+    }
+
     /* Write data on nodes */
     if(node_data != NULL) {
         for(OutputDataVec::iterator dta = node_data->begin();
                 dta != node_data->end(); dta++) {
-            cout << "Node name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
-            dta->writeData();
-            cout << endl;
+            *file << "Node name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
+            dta->writeData(*file, " ", "  ");
+            *file << endl;
         }
     }
 
@@ -348,9 +389,9 @@ int Output::write_data(void)
     if(elem_data != NULL) {
         for(OutputDataVec::iterator dta = elem_data->begin();
                 dta != elem_data->end(); dta++) {
-            cout << "Elem name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
-            dta->writeData();
-            cout << endl;
+            *file << "Elem name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
+            dta->writeData(*file, " ", "  ");
+            *file << endl;
         }
     }
 
@@ -361,7 +402,7 @@ int Output::write_data(void)
  * \brief Constructor of the Output object
  * \param[in]   *fname  The name of the output file
  */
-Output::Output(char *fname)
+Output::Output(string fname)
 {
     if( OptGetBool("Output", "Write_output_file", "no") == false ) {
         filename = NULL;
@@ -370,21 +411,36 @@ Output::Output(char *fname)
         return;
     }
 
+    file = new ofstream;
+
+    file->open(fname.c_str());
+    if(file->is_open() == false) {
+        cout << "Could not write output to the file: " << fname << endl;
+        filename = NULL;
+        delete file;
+        file = NULL;
+
+        return;
+    } else {
+        cout << "Writing flow output file: " << fname << "..." << endl;
+    }
+
     node_data = new OutputDataVec;
     elem_data = new OutputDataVec;
 
     format_type = ConstantDB::getInstance()->getInt("Pos_format_id");
 
-    filename = (char *)xmalloc(strlen(fname)+1);
-    strcpy(filename, fname);
-
-    file = xfopen(filename, "wt");
-    if(file == NULL) {
-        xprintf( Msg, "Could not write output to the file: %s\n", fname);
-    } else {
-        xprintf( Msg, "Writing flow output file: %s ...\n", fname);
+    switch(format_type) {
+    case VTK_SERIAL_ASCII:
+    case VTK_PARALLEL_ASCII:
+        _write_data = write_vtk_data;
+        break;
+    default:
+        _write_data = NULL;
+        break;
     }
 
+    filename = new string(fname);
 }
 
 /**
@@ -396,12 +452,21 @@ Output::~Output()
     if(node_data != NULL) {
         delete node_data;
     }
+
     if(elem_data != NULL) {
         delete elem_data;
     }
 
-    if(file != NULL) xfclose(file);
-    if(filename != NULL) xfree(filename);
+    if(filename!=NULL) {
+        delete filename;
+        filename = NULL;
+    }
+
+    if(file!=NULL) {
+        file->close();
+        delete file;
+        file = NULL;
+    }
 }
 
 //-----------------------------------------------------------------------------

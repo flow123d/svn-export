@@ -32,6 +32,7 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 
 #include "system.hh"
 
@@ -97,11 +98,13 @@ private:
 public:
     string getName(void) { return name; };
     string getUnits(void) { return units; };
-    void writeData(void);
+    void writeData(ofstream &file, string item_sep, string vec_sep);
     OutputData(std::string name, std::string unit, std::vector<int> &data);
     OutputData(std::string name, std::string unit, std::vector< vector<int> > &data);
     OutputData(std::string name, std::string unit, std::vector<float> &data);
     OutputData(std::string name, std::string unit, std::vector< vector<float> > &data);
+    OutputData(std::string name, std::string unit, std::vector<double> &data);
+    OutputData(std::string name, std::string unit, std::vector< vector<double> > &data);
     ~OutputData();
 };
 
@@ -112,23 +115,27 @@ typedef std::vector<OutputData> OutputDataVec;
  */
 class Output {
 private:
-    FILE    *file;          ///< Pointer at structure with output file
-    char    *filename;      ///< String with output filename
-    char    format_type;    ///< Type of output
+    ofstream    *file;          ///< Output stream
+    string      *filename;      ///< String with output filename
+    char        format_type;    ///< Type of output
     std::vector<OutputData> *node_data;    ///< List of data on nodes
     std::vector<OutputData> *elem_data;    ///< List of data on elements
 
     Output() {};            // Un-named constructor can't be called
+
+    // Internal API for file formats
+    int (*_write_data)(Output *output);
 public:
-    Output(char *filename);
+    Output(string filename);
     ~Output();
 
-    // Methods
-    int write_data(void);   ///< It writes geometry, topology of mesh and all data to the file
-
+    ///< This method writes geometry, topology of mesh and all data to the file
+    int write_data(void);
+    ///< This method registers node data, that will be written to the file,
+    ///< when write_data() will be called
     template <typename _Data>
     int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
-
+    ///< This method register element data
     template <typename _Data>
     int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
 };
@@ -196,9 +203,10 @@ void write_transport_binary_data(FILE *out,struct Problem *problem,struct TTNode
 
 void output_compute_mh(struct Problem *problem);
 void output_flow_field_in_time_2(struct Problem *problem,double time);
-void write_flow_binary_data(FILE *out,struct Problem *problem);
-void write_flow_ascii_data(FILE *out,struct Problem *problem);
+
 void write_flow_vtk_serial(FILE *out);
+
+int write_vtk_data(Output *output);
 
 #endif
 //-----------------------------------------------------------------------------

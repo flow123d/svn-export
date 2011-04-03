@@ -614,3 +614,8 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport,
     delete element_scalar_arrays;
     delete element_vector_arrays;
 }
+
+int write_vtk_data(Output *output)
+{
+    return 1;
+}

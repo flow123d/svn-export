@@ -29,12 +29,11 @@ class InterpolantBase : public FunctorDiffBase
     Polynomial* left;
     Polynomial* right;
     
-    /**	"a" and "b" are lower and upper bounds of polynom
-      */
+    ///	"a" and "b" are lower and upper bounds of polynom
     double a,b;
 
     ///is the same as vector.size() of polynomials
-    int polynomialcount;
+    unsigned long polynomialcount;
     
     /// A private pure virtual method.
     /** Goes through the vector of polynomials and looks for the
@@ -44,9 +43,36 @@ class InterpolantBase : public FunctorDiffBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual unsigned int FindPolynomial(double x) = 0;
+    virtual unsigned long FindPolynomial(double &x) = 0;
+    
+    ///Math Power x^n
+    template<class T>
+    T Power(T x, unsigned int n)
+    {
+      T result = 1;
+      for(unsigned int i = 0; i < n; i++)
+      {
+	result = result*x;
+      }
+      return result;
+    }
+    
+    ///Factorial
+    unsigned long Fact(unsigned int x)
+    {     
+      if (x > 1)
+	return x*Fact(x-1);
+      else
+	return 1;
+    }
  
   public:
+    ///returns left bound of the interval
+    double GetA();
+    
+    ///returns right bound of the interval
+    double GetB();
+    
     /// A function value.
     /** Counts the function value of the interpolant in "x".
       * Is evaluated by a polynom using the Horner schema. 
@@ -73,17 +99,21 @@ class InterpolantBase : public FunctorDiffBase
       */
     double Integral(double a, double b); 
     
-    ///Set type of extrapolation
+    ///Sets type of extrapolation
     /** Sets the polynomials that should be counted when x is out of bounds a,b.
       * @param left a polynomial for x < a.
       * @param right a polynomial for b > b.
-      * @return  value of the integral.
       */
-    void SetExtrapolation(Polynomial *left, Polynomial *right)
-    {
-      this->left = left;
-      this->right = right;
-    }
+    void SetExtrapolation(Polynomial *left, Polynomial *right);
+    
+    ///Sets type of extrapolation
+    /** Creates the polynomials that should be counted when x is out of bounds a,b.
+      * Extrapolation depends on the degree of BC by default (during interpolation)
+      * or can be set explicitly.
+      * @param left_degree degree of extrapolation for x <= a.
+      * @param right_degree degree of extrapolation for b >= b.
+      */
+    void SetExtrapolation ( unsigned char left_degree, unsigned char right_degree );
 };
 
 

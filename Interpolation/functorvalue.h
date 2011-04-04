@@ -6,9 +6,9 @@
 
 namespace Interpolation
 {
+  
 //class templated by the mathematical functor, that returns its value
 template<class Func>
-
 class FunctorValue : public FunctorValueBase
 {
   private:

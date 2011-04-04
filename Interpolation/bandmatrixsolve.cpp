@@ -17,16 +17,18 @@ double* BandMatrixSolve::Solve()
     dgbtrf_(&m, &n, &kl, &ku, ab, &ldab, ipiv, &info);
     factorization = 1;
   }
+ 
   if(info < 0)
   { cout << "Error: The " << info*(-1) << 
 	"-th argument had an illegal value" << endl;
     factorization = false;
-    return 0;
+    return NULL;
   }	
+  
   if(info > 0)
   { cout << "Error: The factor U is singular. (info=" << info << ")" << endl;
     factorization = false;
-    return 0;
+    return NULL;
   }
   
   cout << "solving dgbtrs_..." << endl;

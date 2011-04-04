@@ -68,6 +68,26 @@ public:
   ///A destructor.
   ~BandMatrixSolve();
   
+  ///returns the m dimension of the matrix A
+  int GetM()
+  {return m;}
+  
+  ///returns the n dimension of the matrix A
+  int GetN()
+  {return n;}
+  
+  ///returns the number of superdiagonals of the matrix A
+  int GetKU()
+  {return ku;}
+  
+  ///returns the number of subdiagonals of the matrix A
+  int GetKL()
+  {return kl;}
+  
+  ///returns the number of right hand sizes of the matrix A
+  int GetNRHS()
+  {return nrhs;}
+  
   /// A method for filling the matrix A.
   /** @param i is the row
     * @param j is the column
@@ -80,6 +100,11 @@ public:
     */
   void SetB(integer i, integer j, doublereal value);
   
+  ///Solves the band matrix.
+  /** First uses dgbtrf_ to do LU factorization
+    * and if there isno error uses dgbtrs_ 
+    * to solve the band matrix.
+    */
   double* Solve();
 
   void WrMatrix(double* a, int m, int n);

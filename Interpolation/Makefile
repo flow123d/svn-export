@@ -17,15 +17,31 @@ FADBAD = ../FADBAD++
 INCFADBAD = $(FADBAD)/badiff.h $(FADBAD)/fadbad.h
 
 OBJS = main.o bandmatrixsolve.o functorvaluebase.o functorvalue.o functordiffbase.o \
-	functordiff.o polynomial.o interpolantbase.o interpolant.o myfunction.o lagrange.o
+	functordiff.o polynomial.o interpolantbase.o interpolant.o myfunction.o \
+	bcondition.o lagrange.o iinterpolation.o adaptive.o adaptivesimpson.o
 
 $(NAME): $(OBJS)
 	$(CCC) $(CFLAGS) $^ $(LIBCLAPACK) -o $(NAME)
 
 myfunction.o: myfunction.cpp myfunction.h
-	$(CCC) $(CFLAGS) $< -c 
+	$(CCC) $(CFLAGS) $< -c  
 
-lagrange.o: lagrange.cpp lagrange.h functorvaluebase.h interpolant.h bandmatrixsolve.h
+iinterpolation.o: iinterpolation.cpp iinterpolation.h functorvaluebase.h interpolantbase.h \
+		  massert.h
+	$(CCC) $(CFLAGS) $< -c
+
+adaptivesimpson.o: adaptivesimpson.cpp functorvaluebase.h interpolantbase.h
+	$(CCC) $(CFLAGS) $< -c
+
+adaptive.o: adaptive.cpp adaptive.h functorvaluebase.h interpolantbase.h interpolant.h \
+	    iinterpolation.h massert.h
+	$(CCC) $(CFLAGS) $< -c
+
+lagrange.o: lagrange.cpp lagrange.h functorvaluebase.h interpolantbase.h interpolant.h \
+	    iinterpolation.h bandmatrixsolve.h massert.h
+	$(CCC) $(CFLAGS) $< -c
+
+bcondition.o: bcondition.cpp bcondition.h
 	$(CCC) $(CFLAGS) $< -c
 
 interpolant.o: interpolant.cpp interpolant.h interpolantbase.h polynomial.h

@@ -3,10 +3,57 @@
 namespace Interpolation
 {
   
-double Polynomial::Value(double x)
+Polynomial::Polynomial(const unsigned char &degree)
+  : degree(degree) 
+{}
+  
+Polynomial::Polynomial(const double &a, const double &b, const std::vector< double > &coefs)
+  : degree(coefs.size()-1), a(a), b(b), coefs(coefs)
+{
+  std::cout << a << b << std::endl;
+}
+
+Polynomial::Polynomial(const Interpolation::Polynomial &pol)
+  : degree(pol.degree), a(pol.a), b(pol.b), coefs(pol.coefs)
+{
+}
+
+void Polynomial::SetInterval(const double &a, const double &b)
+{
+  MASSERT(a!=b,"Bounds overlap.");
+  MASSERT(a<b,"a must be lower and b must be upper bound.");
+  this->a = a;
+  this->b = b;
+}
+
+double Polynomial::GetLower()
+{
+  return a;
+}
+
+double Polynomial::GetUpper()
+{
+  return b;
+}
+
+void Polynomial::SetCoeficients(double* coeficients, const unsigned int &size)
+{
+  coefs.resize(size);
+  for(unsigned int i = 0; i < size; i++)
+  {
+    coefs[i] = *(coeficients + i);
+  }
+}
+
+std::vector< double >* Polynomial::GetCoefs()
+{
+  return &coefs;
+}
+  
+double Polynomial::Value(const double &x)
 {
   double xx = x - a;	//placing x to the interval <0,step>
-  std::cout << "xxxxxxxxxxx     " << "xx=" << xx << std::endl;
+  //std::cout << "xxxxxxxxxxx     " << "xx=" << xx << std::endl;
   //Horner's schema: ...(a[n]*x + a[n-1])*x + a[n-2])...
   //a[N]...coef[N], a[0]...coef[0]
   double result = coefs[degree];
@@ -19,7 +66,7 @@ double Polynomial::Value(double x)
   return result;
 }
 
-der Polynomial::Diff(double x)
+der Polynomial::Diff(const double &x)
 {
   double xx = x - a;		//placing x to the interval <0,step>
   //Horner's schema: ...(a[n]*x + a[n-1])*x + a[n-2])...
@@ -40,7 +87,7 @@ der Polynomial::Diff(double x)
   return result;
 }
 
-double Polynomial::Integral(double a, double b)
+double Polynomial::Integral(const double &a, const double &b)
 {
   if(a > b) 
     return Integral(b,a); //replace limits (lower < upper)
@@ -70,6 +117,5 @@ double Polynomial::Integral(void )
   return Polynomial::Integral(a,b);
 }
 
-
-}
+}	//namespace Interpolation
 

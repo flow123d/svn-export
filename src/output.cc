@@ -44,140 +44,80 @@
 #include <stdarg.h>
 #include <string>
 
-#include "ppfcs.h"  //FCS - DOPLNIT
-
-// following deps. should probably be removed
-#include "boundaries.h"
-#include "problem.h"
-#include "sources.h"
-#include "concentrations.h"
-#include "boundaries.h"
-#include "transport_bcd.h"
-#include "transport.h"
-#include "postprocess.h"
-#include "neighbours.h"
-
-//=============================================================================
-// GENERAL OUTPUT ROUTINE
-//=============================================================================
-// TODO: zrusit. Kazdy modul by mel mit vlastni volani vystupnich funkci
+/**
+ * \brief This function get data from Mesh to temporary structure It creates
+ * object Output and write all static data to the file
+ */
 void output( struct Problem *problem )
+/* TODO: This is temporary solution. This should be removed in the future */
 {
     // Do output only in first process
     int my_proc;
     MPI_Comm_rank(PETSC_COMM_WORLD,&my_proc);
     if (my_proc != 0) return;
 
-    printf("****** 'new Output()' *****\n");
+    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+    xprintf( Msg, "Writing flow output files: %s ... ", out_fname);
 
-    Output *output = new Output("pokus.txt");
-    string node_name = "node_data_name";
-    string node_unit = "node_data_unit";
-    string elem_name = "elem_data_name";
-    string elem_unit = "elem_data_unit";
-    std::vector<int> node_scalar_data(6);
-    std::vector< vector<int> > node_vector_data;
-    std::vector<double> elem_scalar_data(6);
-    std::vector< vector<double> > elem_vector_data;
-
-    std::vector<int> vec;
-    vec.push_back(0); vec.push_back(1); vec.push_back(2);
-    node_vector_data.push_back(vec);
-    node_vector_data.push_back(vec);
-    node_vector_data.push_back(vec);
-
-    std::vector<double> fvec;
-    fvec.push_back(0.0); fvec.push_back(1.1); fvec.push_back(2.2);
-    elem_vector_data.push_back(fvec);
-    elem_vector_data.push_back(fvec);
-    elem_vector_data.push_back(fvec);
-
-    node_scalar_data[0] = 0;
-    node_scalar_data[1] = 1;
-    node_scalar_data[2] = 2;
-    node_scalar_data[3] = 3;
-    node_scalar_data[4] = 4;
-    node_scalar_data[5] = 5;
-
-    elem_scalar_data[0] = 0.1;
-    elem_scalar_data[1] = 1.1;
-    elem_scalar_data[2] = 2.1;
-    elem_scalar_data[3] = 3.1;
-    elem_scalar_data[4] = 4.1;
-    elem_scalar_data[5] = 5.1;
-
-    // Test of new Output system
-    output->register_node_data(node_name, node_unit, node_scalar_data);
-    output->register_node_data(node_name, node_unit, node_vector_data);
-    output->register_elem_data(elem_name, elem_unit, elem_scalar_data);
-    output->register_elem_data(elem_name, elem_unit, elem_vector_data);
-
-    output->write_data();
-
-    delete output;
-
-    printf("****** 'delete Output()' *****\n");
-
-    if ((ConstantDB::getInstance()->getInt("Goal") == COMPUTE_MH) &&
-            (ConstantDB::getInstance()->getInt("Problem_type") == STEADY_SATURATED ||
-             ConstantDB::getInstance()->getInt("Problem_type") == PROBLEM_DENSITY))
-    {
-        switch (ConstantDB::getInstance()->getInt("Out_file_type"))
-        {
-        case GMSH_STYLE:
-            output_compute_mh( problem );
-            break;
-        case FLOW_DATA_FILE:
-            output_flow_field_init(problem->out_fname_2);
-            output_flow_field_in_time( problem, 0 );
-            break;
-        case BOTH_OUTPUT:
-            // pridano -- upravy Ji. -- oba soubory najednou
-            output_compute_mh( problem );
-            output_flow_field_init(problem->out_fname_2);
-            output_flow_field_in_time_2( problem, 0 );
-            break;
-        }
-    }
-
-    // Deprecated: this should be removed in the future (new input system)
-    if (ConstantDB::getInstance()->getInt("Goal") == CONVERT_TO_POS)
-        output_convert_to_pos(problem);
-}
-//=============================================================================
-// OUTPUT ROUTINE FOR COMPUTING_MH
-//=============================================================================
-// TODO: prepinani typu vystupu by melo byt dano pri konstrukci; vystup presunout do proudeni
-void output_compute_mh(struct Problem *problem)
-{
-    FILE *out;
+    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    NodeIter node;
+    OutScalarsVector *node_scalar_arrays = new OutScalarsVector;
+    OutScalarsVector *element_scalar_arrays = new OutScalarsVector;
+    OutVectorsVector *element_vector_arrays = new OutVectorsVector;
+    struct OutScalar node_scalar;
+    struct OutScalar element_scalar;
+    struct OutVector element_vector;
 
     ASSERT(!( problem == NULL ),"NULL as argument of function output_compute_mh()\n");
     if( OptGetBool("Output", "Write_output_file", "no") == false )
         return;
 
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
-    xprintf( Msg, "Writing flow output files: %s ... ", out_fname);
-
-    switch(ConstantDB::getInstance()->getInt("Pos_format_id")) {
-    case POS_ASCII:
-        // Not supported
-        xprintf(Msg, "This method is not supported\n");
-        break;
-    case POS_BIN:
-        // Not supported
-        xprintf(Msg, "This method is not supported\n");
-        break;
-    case VTK_SERIAL_ASCII:
-        out = xfopen( out_fname, "wt");
-        write_flow_vtk_serial(out);
-        xfclose( out );
-        break;
-    case VTK_PARALLEL_ASCII:
-        xprintf(Msg, "VTK_PARALLEL_ASCII file format not supported yet\n.");
-        break;
+    /* Fill temporary vector of node scalars */
+    node_scalar.scalars = new ScalarFloatVector;
+    node_scalar.name = "node_scalars";
+    node_scalar.unit = "";
+    /* Generate vector for scalar data of nodes */
+    node_scalar.scalars->reserve(mesh->node_vector.size());   // reserver memory for vector
+    FOR_NODES( node ) {
+        node_scalar.scalars->push_back(node->scalar);
     }
 
+    /* Fill vectors of element scalars and vectors */
+    element_scalar.scalars = new ScalarFloatVector;
+    element_scalar.name = "element_scalars";
+    element_scalar.unit = "";
+    element_vector.vectors = new VectorFloatVector;
+    element_vector.name = "element_vectors";
+    element_vector.unit = "";
+    /* Generate vectors for scalar and vector data of nodes */
+    element_scalar.scalars->reserve(mesh->n_elements());
+    element_vector.vectors->reserve(mesh->n_elements());
+    FOR_ELEMENTS(ele) {
+        /* Add scalar */
+        element_scalar.scalars->push_back(ele->scalar);
+        /* Add vector */
+        vector<double> vec;
+        vec.reserve(3);
+        vec.push_back(ele->vector[0]);
+        vec.push_back(ele->vector[1]);
+        vec.push_back(ele->vector[2]);
+        element_vector.vectors->push_back(vec);
+    }
+
+    Output *output = new Output(mesh, string(out_fname));
+
+    output->register_node_data(node_scalar.name, node_scalar.unit, *node_scalar.scalars);
+    output->register_elem_data(element_scalar.name, element_scalar.unit, *element_scalar.scalars);
+    output->register_elem_data(element_vector.name, element_vector.unit, *element_vector.vectors);
+
+    output->write_data(output);
+
+    /* Delete temporary object */
+    delete output;
+
+    delete node_scalar.scalars;
+    delete element_scalar.scalars;
+    delete element_vector.vectors;
 
     xprintf( Msg, "O.K.\n");
 }
@@ -193,6 +133,7 @@ OutputData::OutputData(string data_name,
     name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_INT;
+    comp_num = 1;
 }
 
 /**
@@ -206,6 +147,7 @@ OutputData::OutputData(string data_name,
     name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_INT_VEC;
+    comp_num = 3;
 }
 
 /**
@@ -219,6 +161,7 @@ OutputData::OutputData(string data_name,
     name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_FLOAT;
+    comp_num = 1;
 }
 
 /**
@@ -232,6 +175,7 @@ OutputData::OutputData(string data_name,
     name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_FLOAT_VEC;
+    comp_num = 3;
 }
 
 /**
@@ -245,6 +189,7 @@ OutputData::OutputData(string data_name,
     name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_DOUBLE;
+    comp_num = 1;
 }
 
 /**
@@ -258,6 +203,7 @@ OutputData::OutputData(string data_name,
     name = data_name; units = data_units;
     data = (void*)&data_data;
     type = OUT_DOUBLE_VEC;
+    comp_num = 3;
 }
 
 /**
@@ -366,47 +312,15 @@ int Output::register_elem_data(std::string name, std::string unit, std::vector<_
 }
 
 /**
- * \brief This function writes geometry and topology of Mesh to the output file
- * as well all data on nodes and elements.
- */
-int Output::write_data(void)
-{
-    if(file == NULL) {
-        return 0;
-    }
-
-    /* Write data on nodes */
-    if(node_data != NULL) {
-        for(OutputDataVec::iterator dta = node_data->begin();
-                dta != node_data->end(); dta++) {
-            *file << "Node name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
-            dta->writeData(*file, " ", "  ");
-            *file << endl;
-        }
-    }
-
-    /* Write data on elements */
-    if(elem_data != NULL) {
-        for(OutputDataVec::iterator dta = elem_data->begin();
-                dta != elem_data->end(); dta++) {
-            *file << "Elem name: " << dta->getName() << ", units: " << dta->getUnits() << endl;
-            dta->writeData(*file, " ", "  ");
-            *file << endl;
-        }
-    }
-
-    return 1;
-}
-
-/**
  * \brief Constructor of the Output object
  * \param[in]   *fname  The name of the output file
  */
-Output::Output(string fname)
+Output::Output(Mesh *_mesh, string fname)
 {
     if( OptGetBool("Output", "Write_output_file", "no") == false ) {
         filename = NULL;
         file = NULL;
+        mesh = NULL;
 
         return;
     }
@@ -419,12 +333,14 @@ Output::Output(string fname)
         filename = NULL;
         delete file;
         file = NULL;
+        mesh = NULL;
 
         return;
     } else {
         cout << "Writing flow output file: " << fname << "..." << endl;
     }
 
+    mesh = _mesh;
     node_data = new OutputDataVec;
     elem_data = new OutputDataVec;
 
@@ -433,10 +349,10 @@ Output::Output(string fname)
     switch(format_type) {
     case VTK_SERIAL_ASCII:
     case VTK_PARALLEL_ASCII:
-        _write_data = write_vtk_data;
+        write_data = write_vtk_data;
         break;
     default:
-        _write_data = NULL;
+        write_data = NULL;
         break;
     }
 

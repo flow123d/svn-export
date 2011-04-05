@@ -40,83 +40,81 @@
  * \brief Write header of VTK file (.vtu)
  * \param[in]	out	The output file
  */
-static void write_flow_vtk_header(FILE *out)
+static void write_flow_vtk_header(Output *output)
 {
-    xfprintf(out, "<?xml version=\"1.0\"?>\n");
+    output->get_file() << "<?xml version=\"1.0\"?>" << endl;
     // TODO: test endianess of platform (this is important, when raw data are
     // saved to the VTK file)
-    xfprintf(out, "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n");
-    xfprintf(out, "<UnstructuredGrid>\n");
+    output->get_file() << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+    output->get_file() << "<UnstructuredGrid>" << endl;
 }
 
 /**
  * \brief Write geometry (position of nodes) to the VTK file (.vtu)
  * \param[in] *out The output file
  */
-static void write_flow_vtk_geometry(FILE *out)
+static void write_flow_vtk_geometry(Output *output)
 {
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    Mesh *mesh = output->get_mesh();
 
     NodeIter node;
-    char dbl_fmt[16];
+    //char dbl_fmt[16];
     int tmp;
 
-    /* Digit precision */
-    sprintf(dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));
+    /* TODO: digit precision */
 
     /* Write Points begin*/
-    xfprintf(out, "<Points>\n");
+    output->get_file() << "<Points>" << endl;
     /* Write DataArray begin */
-    xfprintf(out, "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n");
+    output->get_file() << "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
     /* Write own coordinates */
     tmp = 0;
     FOR_NODES( node ) {
         node->aux = tmp;   /* store index in the auxiliary variable */
 
-        xfprintf(out, dbl_fmt, node->getX());
-        xfprintf(out, dbl_fmt, node->getY());
-        xfprintf(out, dbl_fmt, node->getZ());
+        output->get_file() << node->getX() << " ";
+        output->get_file() << node->getY() << " ";
+        output->get_file() << node->getZ() << " ";
 
         tmp++;
     }
     /* Write DataArray end */
-    xfprintf(out, "\n</DataArray>\n");
+    output->get_file() << endl << "</DataArray>" << endl;
     /* Write Points end*/
-    xfprintf(out, "</Points>\n");
+    output->get_file() << "</Points>" << endl;
 }
 
 /**
  * \brief Write topology (connection of nodes) to the VTK file (.vtu)
  * \param[in] *out The output file
  */
-static void write_flow_vtk_topology(FILE *out)
+static void write_flow_vtk_topology(Output *output)
 {
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    //Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    Mesh *mesh = output->get_mesh();
 
     Node* node;
     ElementIter ele;
-    char dbl_fmt[16];
     int li, tmp;
 
-    /* Digit precision */
-    sprintf(dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));
+    /* TODO: digit precision */
 
     /* Write Cells begin*/
-    xfprintf(out, "<Cells>\n");
+    output->get_file() << "<Cells>" << endl;
     /* Write DataArray begin */
-    xfprintf(out, "<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n");
+    output->get_file() << "<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" << endl;
     /* Write own coordinates */
     FOR_ELEMENTS(ele) {
         FOR_ELEMENT_NODES(ele, li) {
             node = ele->node[li];
-            xfprintf(out, "%d ", node->aux);   /* Write connectivity */
+            output->get_file() << node->aux << " ";   /* Write connectivity */
         }
     }
     /* Write DataArray end */
-    xfprintf(out, "\n</DataArray>\n");
+    output->get_file() << endl << "</DataArray>" << endl;
 
     /* Write DataArray begin */
-    xfprintf(out, "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n");
+    output->get_file() << "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" << endl;
     /* Write number of nodes for each element */
     tmp = 0;
     FOR_ELEMENTS(ele) {
@@ -131,220 +129,182 @@ static void write_flow_vtk_topology(FILE *out)
             tmp += VTK_TETRA_SIZE;
             break;
         }
-        xfprintf(out, "%d ", tmp);
+        output->get_file() << tmp << " ";
     }
     /* Write DataArray end */
-    xfprintf(out, "\n</DataArray>\n");
+    output->get_file() << endl << "</DataArray>" << endl;
 
     /* Write DataArray begin */
-    xfprintf(out, "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n");
+    output->get_file() << "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" << endl;
     /* Write type of nodes for each element */
     FOR_ELEMENTS(ele) {
         switch(ele->type) {
         case LINE:
-            xfprintf(out, "%d ", VTK_LINE);
+            output->get_file() << (int)VTK_LINE << " ";
             break;
         case TRIANGLE:
-            xfprintf(out, "%d ", VTK_TRIANGLE);
+            output->get_file() << (int)VTK_TRIANGLE << " ";
             break;
         case TETRAHEDRON:
-            xfprintf(out, "%d ", VTK_TETRA);
+            output->get_file() << (int)VTK_TETRA << " ";
             break;
         }
     }
     /* Write DataArray end */
-    xfprintf(out, "\n</DataArray>\n");
+    output->get_file() << endl << "</DataArray>" << endl;
 
     /* Write Cells end*/
-    xfprintf(out, "</Cells>\n");
+    output->get_file() << "</Cells>" << endl;
 }
 
 /**
  * \brief Write scalar data to the VTK file (.vtu)
  * \param[in]	out		The output file
- * \param[in]	*name	The name of scalar data
- * \param[in]	digit	The digit precision
- * \param[in]	*vector	The vector of scalar values
  */
-static void write_flow_vtk_scalar_ascii(FILE *out, const char *name, const int digit, ScalarFloatVector *vector)
+static void write_flow_vtk_scalar_ascii(Output *output, OutputData *data/*FILE *out, const char *name, const int digit, ScalarFloatVector *vector*/)
 {
-    char dbl_fmt[16];
-
-    /* Digit precision */
-    sprintf(dbl_fmt, "%%.%dg ", digit);
-
     /* Write DataArray begin */
-    xfprintf(out, "<DataArray type=\"Float64\" Name=\"%s\" format=\"ascii\">\n", name);
+    output->get_file() << "<DataArray type=\"Float64\" Name=\"" << data->getName() << " " << data->getUnits() <<"\" format=\"ascii\">" << endl;//, name);
     /* Write own data */
-    for(ScalarFloatVector::iterator val=vector->begin(); val != vector->end(); val++) {
-        xfprintf(out, dbl_fmt, *val);
-    }
+    data->writeData(output->get_file(), " ", "  ");
+
     /* Write DataArray end */
-    xfprintf(out, "\n</DataArray>\n");
+    output->get_file() << endl << "</DataArray>" << endl;
 }
 
 /**
  * \brief Write vector data to VTK file (.vtu)
  * \param[in]	out		The output file
- * \param[in]	*name	The name of vector data
- * \param[in]	digit	The digit precision
- * \param[in]	*vector	The vector of vectors
  */
-static void write_flow_vtk_vector_ascii(FILE *out, const char *name, const int digit, VectorFloatVector *vector)
+static void write_flow_vtk_ascii(Output *output, OutputData *data)
 {
-    char dbl_fmt[16];
-
-    /* Digit precision */
-    sprintf(dbl_fmt, "%%.%dg ", digit);
-
     /* Write DataArray begin */
-    xfprintf(out, "<DataArray type=\"Float64\" Name=\"%s\" NumberOfComponents=\"3\" format=\"ascii\">\n", name);
+    output->get_file() << "<DataArray type=\"Float64\" Name=\"" << data->getName() << "_" << data->getUnits() << "\" NumberOfComponents=\"" << data->getCompNum() << "\" format=\"ascii\">" << endl;
+
     /* Write own data */
-    for(VectorFloatVector::iterator val=vector->begin(); val != vector->end(); val++) {
-        xfprintf(out, dbl_fmt, val->d[0]);
-        xfprintf(out, dbl_fmt, val->d[1]);
-        xfprintf(out, dbl_fmt, val->d[2]);
-    }
+    data->writeData(output->get_file(), " ", "  ");
+
     /* Write DataArray end */
-    xfprintf(out, "\n</DataArray>\n");
+    output->get_file() << endl << "</DataArray>" << endl;
 }
 
 /**
  * \brief Go through all vectors of scalars and vectors and call functions that
  * write these data to VTK file (.vtu)
  * \param[in]	*out		The output file
- * \param[in]	*scalars	The vector of scalars
- * \param[in]	*vectors	The vector of vectors
  */
-static void write_flow_vtk_data(FILE *out, OutScalarsVector *scalars, OutVectorsVector *vectors)
+static void write_flow_vtk_data(Output *output, std::vector<OutputData> *data)
 {
-    int digit = ConstantDB::getInstance()->getInt("Out_digit");
-
-    /* Write to the file all scalar arrays if any */
-    if(scalars != NULL) {
-        for(OutScalarsVector::iterator sca = scalars->begin();
-                sca != scalars->end(); sca++) {
-            write_flow_vtk_scalar_ascii(out, sca->name, digit , sca->scalars);
+    /* Write data on nodes or elements */
+    if(data != NULL) {
+        for(OutputDataVec::iterator dta = data->begin();
+                dta != data->end(); dta++) {
+            write_flow_vtk_ascii(output, &(*dta));
         }
-    }
-
-    /* Write to the file all vector arrays if any */
-    if(vectors != NULL) {
-       for(OutVectorsVector::iterator vec = vectors->begin();
-                vec != vectors->end(); vec++) {
-            write_flow_vtk_vector_ascii(out, vec->name, digit, vec->vectors);
-        }
-
     }
 }
 
 /**
  * \brief Write names of scalar and vector values to the VTK file (.vtu)
  * \param[in]	*out		The output file
- * \param[in]	*scalars	The vector of scalars
- * \param[in]	*vectors	The vector of vectors
  */
-static void write_flow_vtk_data_names(FILE *out, OutScalarsVector *scalars, OutVectorsVector *vectors)
+static void write_flow_vtk_data_names(Output *output, vector<OutputData> *data)
 {
-    /* Write list of scalar array names if any */
-    if(scalars != NULL) {
-        xfprintf(out, "Scalars=\"");
-        /* Write all names of scalar arrays first */
-        for(OutScalarsVector::iterator sca = scalars->begin();
-                sca != scalars->end(); sca++) {
-            xfprintf(out, "%s", sca->name);
-            if((sca+1) != scalars->end()) {
-                xfprintf(out, ",");
+    /* Write names of scalars */
+    output->get_file() << "Scalars=\"";
+    for(OutputDataVec::iterator dta = data->begin();
+                dta != data->end(); dta++) {
+        if(dta->getCompNum() == 1) {
+            output->get_file() << dta->getName() << "_" << dta->getUnits();
+            if((dta+1) != data->end()) {
+                output->get_file() << ",";
             }
         }
-        xfprintf(out, "\"");
     }
+    output->get_file() << "\" ";
 
-    /* Write list of vector array names if any */
-    if(vectors != NULL) {
-        /* Write list of vector array names */
-        xfprintf(out, " Vectors=\"");
-        /* Write all names of scalar arrays first */
-        for(OutVectorsVector::iterator vec = vectors->begin();
-                vec != vectors->end(); vec++) {
-            xfprintf(out, "%s", vec->name);
-            if((vec+1) != vectors->end()) {
-                xfprintf(out, ",");
+    /* Write names of vectors */
+    output->get_file() << "Vectors=\"";
+    for(OutputDataVec::iterator dta = data->begin();
+                dta != data->end(); dta++) {
+        if(dta->getCompNum() == 3) {
+            output->get_file() << dta->getName() << "_" << dta->getUnits();
+            if((dta+1) != data->end()) {
+                output->get_file() << ",";
             }
         }
-        xfprintf(out, "\"");
     }
+    output->get_file() << "\"";
 }
 
 /**
  * \brief Write data on nodes to the VTK file (.vtu)
  * \param[in]	*out		The output file
- * \param[in]	*scalars	The vector of scalars
- * \param[in]	*vectors	The vector of vectors
  */
-static void write_flow_vtk_node_data(FILE *out, OutScalarsVector *scalars, OutVectorsVector *vectors)
+static void write_flow_vtk_node_data(Output *output)
 {
+    std::vector<OutputData> *node_data = output->get_node_data();
+
     /* Write PointData begin */
-    xfprintf(out, "<PointData ");
-    write_flow_vtk_data_names(out, scalars, vectors);
-    xfprintf(out, ">\n");
+    output->get_file() << "<PointData ";
+    write_flow_vtk_data_names(output, node_data);
+    output->get_file() << ">" << endl;
 
     /* Write own data */
-    write_flow_vtk_data(out, scalars, vectors);
+    write_flow_vtk_data(output, node_data);
 
     /* Write PointData end */
-    xfprintf(out, "</PointData>\n");
+    output->get_file() << "</PointData>" << endl;
 }
 
 /**
  * \brief Write data on elements to the VTK file (.vtu)
- * \param[in]	*out		The output file
- * \param[in]	*scalars	The vector of scalars
- * \param[in]	*vectors	The vector of vectors
+ * \param[in]	*output		The output object
  */
-static void write_flow_vtk_element_data(FILE *out, OutScalarsVector *scalars, OutVectorsVector *vectors)
+static void write_flow_vtk_element_data(Output *output)
 {
+    std::vector<OutputData> *elem_data = output->get_elem_data();
+
     /* Write PointData begin */
-    xfprintf(out, "<CellData ");
-    write_flow_vtk_data_names(out, scalars, vectors);
-    xfprintf(out, ">\n");
+    output->get_file() << "<CellData ";
+    write_flow_vtk_data_names(output, elem_data);
+    output->get_file() << ">" << endl;
 
     /* Write own data */
-    write_flow_vtk_data(out, scalars, vectors);
+    write_flow_vtk_data(output, elem_data);
 
     /* Write PointData end */
-    xfprintf(out, "</CellData>\n");
+    output->get_file() << "</CellData>" << endl;
 }
 
 /**
  * \brief Write tail of VTK file (.vtu)
  * \param[in]	*out	The output file
  */
-static void write_flow_vtk_tail(FILE *out)
+static void write_flow_vtk_tail(Output *output)
 {
-    xfprintf(out, "</UnstructuredGrid>\n");
-    xfprintf(out, "</VTKFile>\n");
+    output->get_file() << "</UnstructuredGrid>" << endl;
+    output->get_file() << "</VTKFile>" << endl;
 }
 
 /**
  * \brief This function writes mesh to the output file
  * \param[in]   *out    The output file
  */
-void write_vtk_mesh(FILE *out)
+void write_vtk_mesh(Output *output)
 {
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    //Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+
+    Mesh *mesh = output->get_mesh();
 
     /* Write Piece begin */
-    xfprintf(out,
-            "<Piece NumberOfPoints=\"%d\" NumberOfCells=\"%d\">\n",
-            mesh->node_vector.size(),
-            mesh->n_elements());
+    output->get_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
 
     /* Write VTK Geometry */
-    write_flow_vtk_geometry(out);
+    write_flow_vtk_geometry(output);
 
     /* Write VTK Topology */
-    write_flow_vtk_topology(out);
+    write_flow_vtk_topology(output);
 }
 
 /**
@@ -352,83 +312,34 @@ void write_vtk_mesh(FILE *out)
  * to the VTK file (.vtu)
  * \param[in]	*out	The output file
  */
-void write_flow_vtk_serial(FILE *out)
+void write_flow_vtk_serial(Output *output)
 {
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
-    NodeIter node;
-    OutScalarsVector *node_scalar_arrays = new OutScalarsVector;
-    OutScalarsVector *element_scalar_arrays = new OutScalarsVector;
-    OutVectorsVector *element_vector_arrays = new OutVectorsVector;
-    struct OutScalar node_out_scalar;
-    struct OutScalar element_out_scalar;
-    struct OutVector element_out_vector;
-
-    node_out_scalar.scalars = new ScalarFloatVector;
-    element_out_scalar.scalars = new ScalarFloatVector;
-    element_out_vector.vectors = new VectorFloatVector;
+    Mesh *mesh = output->get_mesh();
 
     /* Write header */
-    write_flow_vtk_header(out);
+    write_flow_vtk_header(output);
 
     /* Write Piece begin */
-    xfprintf(out,
-            "<Piece NumberOfPoints=\"%d\" NumberOfCells=\"%d\">\n",
-            mesh->node_vector.size(),
-            mesh->n_elements());
+    output->get_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
 
     /* Write VTK Geometry */
-    write_flow_vtk_geometry(out);
+    write_flow_vtk_geometry(output);
 
     /* Write VTK Topology */
-    write_flow_vtk_topology(out);
-
-    /* Fill vector of node scalars */
-    strcpy(node_out_scalar.name, "node_scalars");
-    /* Generate vector for scalar data of nodes */
-    node_out_scalar.scalars->reserve(mesh->node_vector.size());   // reserver memory for vector
-    FOR_NODES( node ) {
-        node_out_scalar.scalars->push_back(node->scalar);
-    }
-    node_scalar_arrays->push_back(node_out_scalar);
+    write_flow_vtk_topology(output);
 
     /* Write VTK scalar and vector data on nodes to the file */
-    write_flow_vtk_node_data(out, node_scalar_arrays, NULL);
-
-    /* Fill vectors of element scalars and vectors */
-    strcpy(element_out_scalar.name, "element_scalars");
-    strcpy(element_out_vector.name, "element_vectors");
-    /* Generate vectors for scalar and vector data of nodes */
-    element_out_scalar.scalars->reserve(mesh->n_elements());
-    element_out_vector.vectors->reserve(mesh->n_elements());
-    FOR_ELEMENTS(ele) {
-        tripple t;  /* TODO: more effective */
-        t.d[0] = ele->vector[0];
-        t.d[1] = ele->vector[1];
-        t.d[2] = ele->vector[2];
-        element_out_scalar.scalars->push_back(ele->scalar);
-        element_out_vector.vectors->push_back(t);
-    }
-    element_scalar_arrays->push_back(element_out_scalar);
-    element_vector_arrays->push_back(element_out_vector);
+    write_flow_vtk_node_data(output);
 
     /* Write VTK data on elements */
-    write_flow_vtk_element_data(out, element_scalar_arrays, element_vector_arrays);
+    write_flow_vtk_element_data(output);
 
     /* Write Piece end */
-    xfprintf(out, "</Piece>\n");
+    output->get_file() << "</Piece>" << endl;
 
     /* Write tail */
-    write_flow_vtk_tail(out);
+    write_flow_vtk_tail(output);
 
-    /* Delete unused object */
-    delete node_out_scalar.scalars;
-    delete element_out_scalar.scalars;
-    delete element_out_vector.vectors;
-
-    delete node_scalar_arrays;
-    delete element_scalar_arrays;
-    delete element_vector_arrays;
 }
 
 /**
@@ -487,6 +398,7 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport,
         int step,
         char *file)
 {
+#if 0
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
     OutScalarsVector *element_scalar_arrays = new OutScalarsVector;
@@ -496,7 +408,6 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport,
     FILE *p_out, *s_out;
     char frame_file[PATH_MAX];
     int  subst_id, i;
-    tripple t;
 
     sprintf(frame_file, "%s-%d.vtu", file, step);
 
@@ -584,10 +495,12 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport,
     /* Copy data */
     FOR_ELEMENTS(ele) {
         /* Add vector data do vector of vectors */
-        t.d[0] = ele->vector[0];
-        t.d[1] = ele->vector[1];
-        t.d[2] = ele->vector[2];
-        element_out_vector.vectors->push_back(t);
+        vector<double> vec;
+        vec.reserve(3);
+        vec.push_back(ele->vector[0]);
+        vec.push_back(ele->vector[1]);
+        vec.push_back(ele->vector[2]);
+        element_out_vector.vectors->push_back(vec);
     }
     element_vector_arrays->push_back(element_out_vector);
 
@@ -613,9 +526,11 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport,
 
     delete element_scalar_arrays;
     delete element_vector_arrays;
+#endif
 }
 
 int write_vtk_data(Output *output)
 {
+    write_flow_vtk_serial(output);
     return 1;
 }

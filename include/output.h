@@ -36,112 +36,10 @@
 
 #include "system.hh"
 
-/// external types
+/// External types
 struct Problem;
-struct Element;
 struct Transport;
 class Mesh;
-
-//=============================================================================
-// TEMPORARY STRUCTURES
-//=============================================================================
-
-/* TODO: remove */
-struct TTNode{
-    double **conc;
-    double *scalar;
-};
-
-/* TODO: remove */
-struct TElement{
-    double **conc;
-    double *scalar;
-    double **vector;
-};
-
-/* TODO: replace with something better */
-struct tripple {
-    double d[3];
-};
-typedef std::vector<double> ScalarFloatVector;
-typedef std::vector<tripple> VectorFloatVector;
-
-/* TODO: convert to class */
-typedef struct OutScalar {
-    ScalarFloatVector	*scalars;
-    char				name[32];
-} OutScalars;
-
-/* TODO: convert to class */
-typedef struct OutVector {
-    VectorFloatVector	*vectors;
-    char				name[32];
-} OutVector;
-
-#define OUT_INT         1
-#define OUT_INT_VEC     2
-#define OUT_FLOAT       3
-#define OUT_FLOAT_VEC   4
-#define OUT_DOUBLE      5
-#define OUT_DOUBLE_VEC  6
-
-/**
- * Class of output data storing reference on data
- */
-class OutputData {
-private:
-    string          name;
-    string          units;
-    void            *data;
-    unsigned char   type;
-    OutputData() {};          // Un-named constructor can't be called
-public:
-    string getName(void) { return name; };
-    string getUnits(void) { return units; };
-    void writeData(ofstream &file, string item_sep, string vec_sep);
-    OutputData(std::string name, std::string unit, std::vector<int> &data);
-    OutputData(std::string name, std::string unit, std::vector< vector<int> > &data);
-    OutputData(std::string name, std::string unit, std::vector<float> &data);
-    OutputData(std::string name, std::string unit, std::vector< vector<float> > &data);
-    OutputData(std::string name, std::string unit, std::vector<double> &data);
-    OutputData(std::string name, std::string unit, std::vector< vector<double> > &data);
-    ~OutputData();
-};
-
-typedef std::vector<OutputData> OutputDataVec;
-
-/**
- * Class of output
- */
-class Output {
-private:
-    ofstream    *file;          ///< Output stream
-    string      *filename;      ///< String with output filename
-    char        format_type;    ///< Type of output
-    std::vector<OutputData> *node_data;    ///< List of data on nodes
-    std::vector<OutputData> *elem_data;    ///< List of data on elements
-
-    Output() {};            // Un-named constructor can't be called
-
-    // Internal API for file formats
-    int (*_write_data)(Output *output);
-public:
-    Output(string filename);
-    ~Output();
-
-    ///< This method writes geometry, topology of mesh and all data to the file
-    int write_data(void);
-    ///< This method registers node data, that will be written to the file,
-    ///< when write_data() will be called
-    template <typename _Data>
-    int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
-    ///< This method register element data
-    template <typename _Data>
-    int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
-};
-
-typedef std::vector<OutScalar> OutScalarsVector;
-typedef std::vector<OutVector> OutVectorsVector;
 
 // FILE formats
 #define POS_ASCII           1
@@ -176,17 +74,136 @@ typedef std::vector<OutVector> OutVectorsVector;
 #define VTK_TRIANGLE_SIZE   3
 #define VTK_TETRA_SIZE      4
 
-// types of output files
+// Types of output files
 #define GMSH_STYLE  1
 #define FLOW_DATA_FILE 2
 #define BOTH_OUTPUT 3
 
+// Types of data, that could be written to output file
+#define OUT_INT         1
+#define OUT_INT_VEC     2
+#define OUT_FLOAT       3
+#define OUT_FLOAT_VEC   4
+#define OUT_DOUBLE      5
+#define OUT_DOUBLE_VEC  6
+
+/* Temporary structure for storing data */
+typedef std::vector<double> ScalarFloatVector;
+typedef std::vector< vector<double> > VectorFloatVector;
+
+/* Temporary structure for storing data */
+typedef struct OutScalar {
+    ScalarFloatVector   *scalars;
+    string              name;
+    string              unit;
+} OutScalars;
+
+/* Temporary structure for storing data */
+typedef struct OutVector {
+    VectorFloatVector   *vectors;
+    string              name;
+    string              unit;
+} OutVector;
+
+/**
+ * Class of output data storing reference on data
+ */
+class OutputData {
+private:
+    string          name;
+    string          units;
+    void            *data;
+    unsigned char   type;
+    int             comp_num;
+    OutputData() {};          // Un-named constructor can't be called
+public:
+    string getName(void) { return name; };
+    string getUnits(void) { return units; };
+    int getCompNum(void) { return comp_num; };
+    void writeData(ofstream &file, string item_sep, string vec_sep);
+    OutputData(std::string name, std::string unit, std::vector<int> &data);
+    OutputData(std::string name, std::string unit, std::vector< vector<int> > &data);
+    OutputData(std::string name, std::string unit, std::vector<float> &data);
+    OutputData(std::string name, std::string unit, std::vector< vector<float> > &data);
+    OutputData(std::string name, std::string unit, std::vector<double> &data);
+    OutputData(std::string name, std::string unit, std::vector< vector<double> > &data);
+    ~OutputData();
+};
+
+typedef std::vector<OutputData> OutputDataVec;
+
+/**
+ * Class of output
+ */
+class Output {
+private:
+    ofstream    *file;          ///< Output stream
+    string      *filename;      ///< String with output filename
+    char        format_type;    ///< Type of output
+    Mesh        *mesh;
+    std::vector<OutputData> *node_data;    ///< List of data on nodes
+    std::vector<OutputData> *elem_data;    ///< List of data on elements
+
+    Output() {};            // Un-named constructor can't be called
+
+    // Internal API for file formats
+public:
+    Output(Mesh *mesh, string filename);
+    ~Output();
+
+    ///< This method writes geometry, topology of mesh and all data to the file
+    //int write_data(void);
+    int (*write_data)(Output *output);
+
+    ///< This method registers node data, that will be written to the file,
+    ///< when write_data() will be called
+    template <typename _Data>
+    int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
+
+    ///< This method register element data
+    template <typename _Data>
+    int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
+
+    // Getters
+    std::vector<OutputData> *get_node_data(void) { return node_data; };
+    std::vector<OutputData> *get_elem_data(void) { return elem_data; };
+    ofstream& get_file(void) { return *file; };
+    Mesh *get_mesh(void) { return mesh; };
+};
+
+/**
+ * Class of output of during time
+ */
+class OutputTime : public Output {
+    int         current_step;
+public:
+    OutputTime(string filename);
+    ~OutputTime();
+
+    ///< This method writes geometry, topology of mesh and all data to the file
+    int write_data(double time, int step);
+    ///< This method registers node data, that will be written to the file,
+    ///< when write_data() will be called
+    template <typename _Data>
+    int register_node_data(std::string name, std::string unit, int step, std::vector<_Data> &data);
+    ///< This method register element data
+    template <typename _Data>
+    int register_elem_data(std::string name, std::string unit, int step, std::vector<_Data> &data);
+};
+
+typedef std::vector<OutScalar> OutScalarsVector;
+typedef std::vector<OutVector> OutVectorsVector;
+
+/* TODO: remove this function prototype (temporary solution) */
 void output( struct Problem *problem );
+
+/* TODO: remove following function prototype from this .h file */
+
 void output_flow_field_init(char *fname);
 void output_flow_field_in_time(struct Problem *problem,double time);
+
 void output_init(void);
 void output_time(double time);
-FILE **open_temp_files(struct Transport *transport,const char *fileext,const char *open_param);
 
 void output_msh_init_bin(char *file);
 void output_msh_init_ascii(char *file);
@@ -194,18 +211,11 @@ void output_msh_init_ascii(char *file);
 void write_trans_init_vtk_serial_ascii(char *file);
 void write_trans_finish_vtk_serial_ascii(char *file);
 
-void output_transport_time_bin(struct Transport *transport, double time,int step,char *file);
-void output_transport_time_ascii(struct Transport *transport, double time,int step,char *file);
+void output_transport_time_bin(struct Transport *transport, double time, int step, char *file);
+void output_transport_time_ascii(struct Transport *transport, double time, int step, char *file);
 void write_trans_time_vtk_serial_ascii(struct Transport *transport, double time, int step, char *file);
-void write_ascii_header(struct Problem *problem, FILE *out);
-void write_transport_ascii_data(FILE *out,struct Problem *problem,struct TTNode **nodes,struct TElement **elements,int time_steps,int ph);
-void write_transport_binary_data(FILE *out,struct Problem *problem,struct TTNode **nodes,struct TElement **elements,int time_steps,int ph);
-
-void output_compute_mh(struct Problem *problem);
-void output_flow_field_in_time_2(struct Problem *problem,double time);
 
 void write_flow_vtk_serial(FILE *out);
-
 int write_vtk_data(Output *output);
 
 #endif

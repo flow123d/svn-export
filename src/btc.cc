@@ -125,7 +125,7 @@ int *BTC_elm_list( int n_btc, char *line )
 //==============================================================================
 //      OPEN TEMP FILES
 //==============================================================================
-FILE **open_temp_files(struct Transport *transport,const char *fileext,const char *open_param)
+static FILE **open_temp_files(struct Transport *transport,const char *fileext,const char *open_param)
 {
     FILE **out=NULL;
     char filename0[255],filename1[255],filename2[255],filename3[255];

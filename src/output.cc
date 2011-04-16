@@ -51,22 +51,24 @@
 void output( struct Problem *problem )
 /* TODO: This is temporary solution. This should be removed in the future */
 {
+    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    NodeIter node;
+
     // Do output only in first process
     int my_proc;
     MPI_Comm_rank(PETSC_COMM_WORLD,&my_proc);
     if (my_proc != 0) return;
 
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
-    xprintf( Msg, "Writing flow output files: %s ... ", out_fname);
-
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-    NodeIter node;
     OutScalarsVector *node_scalar_arrays = new OutScalarsVector;
     OutScalarsVector *element_scalar_arrays = new OutScalarsVector;
     OutVectorsVector *element_vector_arrays = new OutVectorsVector;
     struct OutScalar node_scalar;
     struct OutScalar element_scalar;
     struct OutVector element_vector;
+
+    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+
+    xprintf( Msg, "Writing flow output files: %s ... ", out_fname);
 
     ASSERT(!( problem == NULL ),"NULL as argument of function output_compute_mh()\n");
     if( OptGetBool("Output", "Write_output_file", "no") == false )
@@ -318,26 +320,26 @@ int Output::register_elem_data(std::string name, std::string unit, std::vector<_
 Output::Output(Mesh *_mesh, string fname)
 {
     if( OptGetBool("Output", "Write_output_file", "no") == false ) {
-        filename = NULL;
-        file = NULL;
+        base_filename = NULL;
+        base_file = NULL;
         mesh = NULL;
 
         return;
     }
 
-    file = new ofstream;
+    base_file = new ofstream;
 
-    file->open(fname.c_str());
-    if(file->is_open() == false) {
-        cout << "Could not write output to the file: " << fname << endl;
-        filename = NULL;
-        delete file;
-        file = NULL;
+    base_file->open(fname.c_str());
+    if(base_file->is_open() == false) {
+        xprintf(Msg, "Could not write output to the file: %s\n", fname.c_str());
+        base_filename = NULL;
+        delete base_file;
+        base_file = NULL;
         mesh = NULL;
 
         return;
     } else {
-        cout << "Writing flow output file: " << fname << "..." << endl;
+        xprintf(Msg, "Writing flow output file: %s ... ", fname.c_str());
     }
 
     mesh = _mesh;
@@ -356,7 +358,7 @@ Output::Output(Mesh *_mesh, string fname)
         break;
     }
 
-    filename = new string(fname);
+    base_filename = new string(fname);
 }
 
 /**
@@ -373,17 +375,44 @@ Output::~Output()
         delete elem_data;
     }
 
-    if(filename!=NULL) {
-        delete filename;
-        filename = NULL;
+    if(base_filename!=NULL) {
+        delete base_filename;
     }
 
-    if(file!=NULL) {
-        file->close();
-        delete file;
-        file = NULL;
+    if(base_file!=NULL) {
+        base_file->close();
+        delete base_file;
     }
 }
 
-//-----------------------------------------------------------------------------
-// vim: set cindent:
+/**
+ * \brief This method write output to the file for specific time
+ */
+int OutputTime::write_data(double time, int step)
+{
+    //
+}
+
+/**
+ * \brief Constructor of OutputTime object. It opens base file for writing.
+ */
+OutputTime::OutputTime(Mesh *_mesh, string fname)
+{
+    switch(get_format_type()) {
+    case VTK_SERIAL_ASCII:
+    case VTK_PARALLEL_ASCII:
+        write_head = write_vtk_head;
+        write_tail = write_vtk_tail;
+        break;
+    default:
+        write_head = NULL;
+        write_tail = NULL;
+        break;
+    }
+
+}
+
+OutputTime::~OutputTime(void)
+{
+
+}

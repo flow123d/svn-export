@@ -1102,6 +1102,7 @@ void transport_output(struct Transport *transport, double time, int frame) {
 //=============================================================================
 void transport_output_init(struct Transport *transport)
 {
+    // TODO: use OutputTime object
     switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
     case POS_BIN:
         output_msh_init_bin(transport->transport_out_fname);
@@ -1110,7 +1111,7 @@ void transport_output_init(struct Transport *transport)
         output_msh_init_ascii(transport->transport_out_fname);
         break;
     case VTK_SERIAL_ASCII:
-        write_trans_init_vtk_serial_ascii(transport->transport_out_fname);
+        // write_trans_init_vtk_serial_ascii(transport->transport_out_fname);
         break;
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");
@@ -1130,7 +1131,7 @@ void transport_output_finish(struct Transport *transport) {
         /* There is no need to do anything for this file format */
         break;
     case VTK_SERIAL_ASCII:
-        write_trans_finish_vtk_serial_ascii(transport->transport_out_fname);
+        //write_trans_finish_vtk_serial_ascii(transport->transport_out_fname);
         break;
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");

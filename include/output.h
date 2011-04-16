@@ -105,6 +105,10 @@ typedef struct OutVector {
     string              unit;
 } OutVector;
 
+/* Temporary structure for storing data */
+typedef std::vector<OutScalar> OutScalarsVector;
+typedef std::vector<OutVector> OutVectorsVector;
+
 /**
  * Class of output data storing reference on data
  */
@@ -137,51 +141,67 @@ typedef std::vector<OutputData> OutputDataVec;
  */
 class Output {
 private:
-    ofstream    *file;          ///< Output stream
-    string      *filename;      ///< String with output filename
-    char        format_type;    ///< Type of output
+    ofstream    *base_file;         ///< Base output stream
+    string      *base_filename;     ///< Name of base output file
+    ofstream    *data_file;         ///< Data output stream (could be same as base_file)
+    string      *data_filename;     ///< Name of data output file
+    char        format_type;        ///< Type of output
     Mesh        *mesh;
     std::vector<OutputData> *node_data;    ///< List of data on nodes
     std::vector<OutputData> *elem_data;    ///< List of data on elements
 
-    Output() {};            // Un-named constructor can't be called
-
-    // Internal API for file formats
 public:
+    Output() {};            // Un-named constructor can't be called
     Output(Mesh *mesh, string filename);
     ~Output();
 
-    ///< This method writes geometry, topology of mesh and all data to the file
-    //int write_data(void);
-    int (*write_data)(Output *output);
-
-    ///< This method registers node data, that will be written to the file,
-    ///< when write_data() will be called
+    /**
+     * \brief This method registers node data, that will be written to the file,
+     * when write_data() will be called.
+     */
     template <typename _Data>
     int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
 
-    ///< This method register element data
+    /**
+     * This method register element data
+     */
     template <typename _Data>
     int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
 
     // Getters
     std::vector<OutputData> *get_node_data(void) { return node_data; };
     std::vector<OutputData> *get_elem_data(void) { return elem_data; };
-    ofstream& get_file(void) { return *file; };
+    ofstream& get_base_file(void) { return *base_file; };
+    string& get_base_filename(void) { return *base_filename; };
+    ofstream& get_data_file(void) { return *data_file; };
+    string& get_data_filename(void) { return *data_filename; };
     Mesh *get_mesh(void) { return mesh; };
+    char get_format_type(void) { return format_type; };
+
+    // Setters
+    void set_data_file(ofstream *_data_file) { data_file = _data_file; };
+
+    // Internal API for file formats
+
+    /// This method writes geometry, topology of mesh and all data to the file
+    int (*write_data)(Output *output);
 };
 
 /**
  * Class of output of during time
  */
 class OutputTime : public Output {
-    int         current_step;
+    ofstream    *step_file;         ///< Stream for output for current step
+    string      *step_filename;     ///< Name of file for current step
+    int         current_step;       ///< Current step
+//    OutputTime() {};
 public:
-    OutputTime(string filename);
+    OutputTime(Mesh *mesh, string filename);
     ~OutputTime();
 
     ///< This method writes geometry, topology of mesh and all data to the file
     int write_data(double time, int step);
+
     ///< This method registers node data, that will be written to the file,
     ///< when write_data() will be called
     template <typename _Data>
@@ -189,10 +209,14 @@ public:
     ///< This method register element data
     template <typename _Data>
     int register_elem_data(std::string name, std::string unit, int step, std::vector<_Data> &data);
-};
 
-typedef std::vector<OutScalar> OutScalarsVector;
-typedef std::vector<OutVector> OutVectorsVector;
+    // Internal API for file formats
+
+    ///< This method writes geometry, topology of mesh and all data to the file
+    //int write_data(void);
+    int (*write_head)(OutputTime *output);
+    int (*write_tail)(OutputTime *output);
+};
 
 /* TODO: remove this function prototype (temporary solution) */
 void output( struct Problem *problem );
@@ -216,8 +240,10 @@ void output_transport_time_ascii(struct Transport *transport, double time, int s
 void write_trans_time_vtk_serial_ascii(struct Transport *transport, double time, int step, char *file);
 
 void write_flow_vtk_serial(FILE *out);
+
+/* TODO: move to new output_vtk.hh */
 int write_vtk_data(Output *output);
+int write_vtk_head(OutputTime *output);
+int write_vtk_tail(OutputTime *output);
 
 #endif
-//-----------------------------------------------------------------------------
-// vim: set cindent:

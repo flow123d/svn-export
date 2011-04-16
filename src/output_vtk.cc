@@ -42,11 +42,11 @@
  */
 static void write_flow_vtk_header(Output *output)
 {
-    output->get_file() << "<?xml version=\"1.0\"?>" << endl;
+    output->get_data_file() << "<?xml version=\"1.0\"?>" << endl;
     // TODO: test endianess of platform (this is important, when raw data are
     // saved to the VTK file)
-    output->get_file() << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
-    output->get_file() << "<UnstructuredGrid>" << endl;
+    output->get_data_file() << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+    output->get_data_file() << "<UnstructuredGrid>" << endl;
 }
 
 /**
@@ -64,24 +64,24 @@ static void write_flow_vtk_geometry(Output *output)
     /* TODO: digit precision */
 
     /* Write Points begin*/
-    output->get_file() << "<Points>" << endl;
+    output->get_data_file() << "<Points>" << endl;
     /* Write DataArray begin */
-    output->get_file() << "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+    output->get_data_file() << "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">" << endl;
     /* Write own coordinates */
     tmp = 0;
     FOR_NODES( node ) {
         node->aux = tmp;   /* store index in the auxiliary variable */
 
-        output->get_file() << node->getX() << " ";
-        output->get_file() << node->getY() << " ";
-        output->get_file() << node->getZ() << " ";
+        output->get_data_file() << node->getX() << " ";
+        output->get_data_file() << node->getY() << " ";
+        output->get_data_file() << node->getZ() << " ";
 
         tmp++;
     }
     /* Write DataArray end */
-    output->get_file() << endl << "</DataArray>" << endl;
+    output->get_data_file() << endl << "</DataArray>" << endl;
     /* Write Points end*/
-    output->get_file() << "</Points>" << endl;
+    output->get_data_file() << "</Points>" << endl;
 }
 
 /**
@@ -100,21 +100,21 @@ static void write_flow_vtk_topology(Output *output)
     /* TODO: digit precision */
 
     /* Write Cells begin*/
-    output->get_file() << "<Cells>" << endl;
+    output->get_data_file() << "<Cells>" << endl;
     /* Write DataArray begin */
-    output->get_file() << "<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" << endl;
+    output->get_data_file() << "<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" << endl;
     /* Write own coordinates */
     FOR_ELEMENTS(ele) {
         FOR_ELEMENT_NODES(ele, li) {
             node = ele->node[li];
-            output->get_file() << node->aux << " ";   /* Write connectivity */
+            output->get_data_file() << node->aux << " ";   /* Write connectivity */
         }
     }
     /* Write DataArray end */
-    output->get_file() << endl << "</DataArray>" << endl;
+    output->get_data_file() << endl << "</DataArray>" << endl;
 
     /* Write DataArray begin */
-    output->get_file() << "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" << endl;
+    output->get_data_file() << "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" << endl;
     /* Write number of nodes for each element */
     tmp = 0;
     FOR_ELEMENTS(ele) {
@@ -129,32 +129,32 @@ static void write_flow_vtk_topology(Output *output)
             tmp += VTK_TETRA_SIZE;
             break;
         }
-        output->get_file() << tmp << " ";
+        output->get_data_file() << tmp << " ";
     }
     /* Write DataArray end */
-    output->get_file() << endl << "</DataArray>" << endl;
+    output->get_data_file() << endl << "</DataArray>" << endl;
 
     /* Write DataArray begin */
-    output->get_file() << "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" << endl;
+    output->get_data_file() << "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" << endl;
     /* Write type of nodes for each element */
     FOR_ELEMENTS(ele) {
         switch(ele->type) {
         case LINE:
-            output->get_file() << (int)VTK_LINE << " ";
+            output->get_data_file() << (int)VTK_LINE << " ";
             break;
         case TRIANGLE:
-            output->get_file() << (int)VTK_TRIANGLE << " ";
+            output->get_data_file() << (int)VTK_TRIANGLE << " ";
             break;
         case TETRAHEDRON:
-            output->get_file() << (int)VTK_TETRA << " ";
+            output->get_data_file() << (int)VTK_TETRA << " ";
             break;
         }
     }
     /* Write DataArray end */
-    output->get_file() << endl << "</DataArray>" << endl;
+    output->get_data_file() << endl << "</DataArray>" << endl;
 
     /* Write Cells end*/
-    output->get_file() << "</Cells>" << endl;
+    output->get_data_file() << "</Cells>" << endl;
 }
 
 /**
@@ -164,12 +164,12 @@ static void write_flow_vtk_topology(Output *output)
 static void write_flow_vtk_scalar_ascii(Output *output, OutputData *data/*FILE *out, const char *name, const int digit, ScalarFloatVector *vector*/)
 {
     /* Write DataArray begin */
-    output->get_file() << "<DataArray type=\"Float64\" Name=\"" << data->getName() << " " << data->getUnits() <<"\" format=\"ascii\">" << endl;//, name);
+    output->get_data_file() << "<DataArray type=\"Float64\" Name=\"" << data->getName() << " " << data->getUnits() <<"\" format=\"ascii\">" << endl;//, name);
     /* Write own data */
-    data->writeData(output->get_file(), " ", "  ");
+    data->writeData(output->get_data_file(), " ", "  ");
 
     /* Write DataArray end */
-    output->get_file() << endl << "</DataArray>" << endl;
+    output->get_data_file() << endl << "</DataArray>" << endl;
 }
 
 /**
@@ -179,13 +179,13 @@ static void write_flow_vtk_scalar_ascii(Output *output, OutputData *data/*FILE *
 static void write_flow_vtk_ascii(Output *output, OutputData *data)
 {
     /* Write DataArray begin */
-    output->get_file() << "<DataArray type=\"Float64\" Name=\"" << data->getName() << "_" << data->getUnits() << "\" NumberOfComponents=\"" << data->getCompNum() << "\" format=\"ascii\">" << endl;
+    output->get_data_file() << "<DataArray type=\"Float64\" Name=\"" << data->getName() << "_" << data->getUnits() << "\" NumberOfComponents=\"" << data->getCompNum() << "\" format=\"ascii\">" << endl;
 
     /* Write own data */
-    data->writeData(output->get_file(), " ", "  ");
+    data->writeData(output->get_data_file(), " ", "  ");
 
     /* Write DataArray end */
-    output->get_file() << endl << "</DataArray>" << endl;
+    output->get_data_file() << endl << "</DataArray>" << endl;
 }
 
 /**
@@ -211,30 +211,30 @@ static void write_flow_vtk_data(Output *output, std::vector<OutputData> *data)
 static void write_flow_vtk_data_names(Output *output, vector<OutputData> *data)
 {
     /* Write names of scalars */
-    output->get_file() << "Scalars=\"";
+    output->get_data_file() << "Scalars=\"";
     for(OutputDataVec::iterator dta = data->begin();
                 dta != data->end(); dta++) {
         if(dta->getCompNum() == 1) {
-            output->get_file() << dta->getName() << "_" << dta->getUnits();
+            output->get_data_file() << dta->getName() << "_" << dta->getUnits();
             if((dta+1) != data->end()) {
-                output->get_file() << ",";
+                output->get_data_file() << ",";
             }
         }
     }
-    output->get_file() << "\" ";
+    output->get_data_file() << "\" ";
 
     /* Write names of vectors */
-    output->get_file() << "Vectors=\"";
+    output->get_data_file() << "Vectors=\"";
     for(OutputDataVec::iterator dta = data->begin();
                 dta != data->end(); dta++) {
         if(dta->getCompNum() == 3) {
-            output->get_file() << dta->getName() << "_" << dta->getUnits();
+            output->get_data_file() << dta->getName() << "_" << dta->getUnits();
             if((dta+1) != data->end()) {
-                output->get_file() << ",";
+                output->get_data_file() << ",";
             }
         }
     }
-    output->get_file() << "\"";
+    output->get_data_file() << "\"";
 }
 
 /**
@@ -246,15 +246,15 @@ static void write_flow_vtk_node_data(Output *output)
     std::vector<OutputData> *node_data = output->get_node_data();
 
     /* Write PointData begin */
-    output->get_file() << "<PointData ";
+    output->get_data_file() << "<PointData ";
     write_flow_vtk_data_names(output, node_data);
-    output->get_file() << ">" << endl;
+    output->get_data_file() << ">" << endl;
 
     /* Write own data */
     write_flow_vtk_data(output, node_data);
 
     /* Write PointData end */
-    output->get_file() << "</PointData>" << endl;
+    output->get_data_file() << "</PointData>" << endl;
 }
 
 /**
@@ -266,15 +266,15 @@ static void write_flow_vtk_element_data(Output *output)
     std::vector<OutputData> *elem_data = output->get_elem_data();
 
     /* Write PointData begin */
-    output->get_file() << "<CellData ";
+    output->get_data_file() << "<CellData ";
     write_flow_vtk_data_names(output, elem_data);
-    output->get_file() << ">" << endl;
+    output->get_data_file() << ">" << endl;
 
     /* Write own data */
     write_flow_vtk_data(output, elem_data);
 
     /* Write PointData end */
-    output->get_file() << "</CellData>" << endl;
+    output->get_data_file() << "</CellData>" << endl;
 }
 
 /**
@@ -283,8 +283,8 @@ static void write_flow_vtk_element_data(Output *output)
  */
 static void write_flow_vtk_tail(Output *output)
 {
-    output->get_file() << "</UnstructuredGrid>" << endl;
-    output->get_file() << "</VTKFile>" << endl;
+    output->get_data_file() << "</UnstructuredGrid>" << endl;
+    output->get_data_file() << "</VTKFile>" << endl;
 }
 
 /**
@@ -298,7 +298,7 @@ void write_vtk_mesh(Output *output)
     Mesh *mesh = output->get_mesh();
 
     /* Write Piece begin */
-    output->get_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
+    output->get_data_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
 
     /* Write VTK Geometry */
     write_flow_vtk_geometry(output);
@@ -320,7 +320,7 @@ void write_flow_vtk_serial(Output *output)
     write_flow_vtk_header(output);
 
     /* Write Piece begin */
-    output->get_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
+    output->get_data_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
 
     /* Write VTK Geometry */
     write_flow_vtk_geometry(output);
@@ -335,7 +335,7 @@ void write_flow_vtk_serial(Output *output)
     write_flow_vtk_element_data(output);
 
     /* Write Piece end */
-    output->get_file() << "</Piece>" << endl;
+    output->get_data_file() << "</Piece>" << endl;
 
     /* Write tail */
     write_flow_vtk_tail(output);
@@ -344,21 +344,14 @@ void write_flow_vtk_serial(Output *output)
 
 /**
  * \brief	This function create VTK file (.pvd) and writes header to it
- * \param[in]	*file The name of output file
  */
-void write_trans_init_vtk_serial_ascii(char *file)
+void write_trans_init_vtk_serial_ascii(OutputTime *output)
 {
-    FILE *out;
+    xprintf( Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str() );
 
-    xprintf( Msg, "%s: Writing output file %s ... ", __func__, file);
-
-    out = xfopen(file, "wt");
-
-    xfprintf(out, "<?xml version=\"1.0\"?>\n");
-    xfprintf(out, "<VTKFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">\n");
-    xfprintf(out, "<Collection>\n");
-
-    xfclose(out);
+    output->get_base_file() << "<?xml version=\"1.0\"?>" << endl;
+    output->get_base_file() << "<VTKFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+    output->get_base_file() << "<Collection>" << endl;
 
     xprintf( Msg, "O.K.\n");
 }
@@ -367,18 +360,12 @@ void write_trans_init_vtk_serial_ascii(char *file)
  * \brief	This function writes tail of VTK file (.pvd)
  * \param[in]	*file The name of output file
  */
-void write_trans_finish_vtk_serial_ascii(char *file)
+void write_trans_finish_vtk_serial_ascii(OutputTime *output)
 {
-    FILE *out;
+    xprintf( Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str() );
 
-    xprintf( Msg, "%s: Writing output file %s ... ", __func__, file);
-
-    out = xfopen(file, "at");
-
-    xfprintf(out, "</Collection>\n");
-    xfprintf(out, "</VTKFile>\n");
-
-    xfclose(out);
+    output->get_base_file() << "</Collection>" << endl;
+    output->get_base_file() << "</VTKFile>" << endl;
 
     xprintf( Msg, "O.K.\n");
 }
@@ -529,8 +516,102 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport,
 #endif
 }
 
+/**
+ * \brief This function output data to serial VTK file format
+ */
 int write_vtk_data(Output *output)
 {
+    /* Serial VTK file format uses only one file */
+    output->set_data_file( &output->get_base_file() );
+
     write_flow_vtk_serial(output);
     return 1;
+}
+
+int write_vtk_time_data(OutputTime *output, double time, int step)
+{
+    Mesh *mesh = output->get_mesh();
+    char frame_file_name[PATH_MAX];
+    ofstream *data_file = new ofstream;
+    int i;
+
+    sprintf(frame_file_name, "%s-%d.vtu", output->get_base_filename().c_str(), step);
+
+    data_file->open(frame_file_name);
+    if(data_file->is_open() == false) {
+        xprintf(Msg, "Could not write output to the file: %s\n", frame_file_name);
+        return 0;
+    } else {
+        /* Set upd data file */
+        output->set_data_file(data_file);
+
+        xprintf(Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str());
+
+        /* Find first directory delimiter */
+        for(i=strlen(frame_file_name); i>=0; i--) {
+            if(frame_file_name[i]==DIR_DELIMITER) {
+                break;
+            }
+        }
+
+        /* Write reference to .vtu file of current frame to pvd file */
+        if(i>0) {
+            /* Strip out relative path, because vtu file is in the same directory as pvd file*/
+            output->get_base_file() << "<DataSet timestep=\"" << step << "\" group=\"\" part=\"0\" file=\"" << &frame_file_name[i+1] <<"\"/>\n" << endl;
+        } else {
+            /* No path was found in string "frame_file_name" */
+            output->get_base_file() << "<DataSet timestep=\"" << step << "\" group=\"\" part=\"0\" file=\"" << frame_file_name <<"\"/>\n" << endl;
+        }
+
+        xprintf(Msg, "O.K.\n");
+
+        xprintf(Msg, "%s: Writing output (frame %d) file %s ... ", __func__, step, frame_file_name);
+
+        /* Write header */
+        write_flow_vtk_header(output);
+
+        /* Write Piece begin */
+        output->get_data_file() << "<Piece NumberOfPoints=\"" << mesh->node_vector.size() << "\" NumberOfCells=\"" << mesh->n_elements() <<"\">" << endl;
+
+        /* Write VTK Geometry */
+        write_flow_vtk_geometry(output);
+        /* Write VTK Topology */
+        write_flow_vtk_topology(output);
+
+        /* Write VTK scalar and vector data on nodes */
+        write_flow_vtk_node_data(output);
+        /* Write VTK scalar and vector data on elements */
+        write_flow_vtk_element_data(output);
+
+        /* Write Piece end */
+        output->get_data_file() << "</Piece>" << endl;
+
+        /* Write tail */
+        write_flow_vtk_tail(output);
+
+        xprintf( Msg, "O.K.\n");
+    }
+
+    return 1;
+}
+
+int write_vtk_head(OutputTime *output)
+{
+    xprintf( Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str() );
+
+    output->get_base_file() << "<?xml version=\"1.0\"?>" << endl;
+    output->get_base_file() << "<VTKFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
+    output->get_base_file() << "<Collection>" << endl;
+
+    xprintf( Msg, "O.K.\n");
+}
+
+int write_vtk_tail(OutputTime *output)
+{
+    xprintf( Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str() );
+
+    output->get_base_file() << "</Collection>" << endl;
+    output->get_base_file() << "</VTKFile>" << endl;
+
+    xprintf( Msg, "O.K.\n");
 }

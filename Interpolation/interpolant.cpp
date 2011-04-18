@@ -7,15 +7,11 @@ namespace Interpolation
 {
   
 //InterpolantAdapt - ADAPTIVE
-InterpolantAdapt::InterpolantAdapt(const vector< Polynomial* > &polynomials)
-{
-  this->polynomials = polynomials;
-  this->polynomialcount = polynomials.size();
-  this->a = polynomials[0]->GetLower();
-  this->b = polynomials[polynomialcount-1]->GetUpper();
-}
+InterpolantAdapt::InterpolantAdapt(vector< Polynomial> &polynomials)
+  : InterpolantBase(polynomials)
+{}
 
-unsigned long InterpolantAdapt::FindPolynomial(double& x)
+unsigned long InterpolantAdapt::FindPolynomial(const double& x)
 {
 //Numerical Recipes in C, 3.4 How to Search an Ordered Table, hunt method
 /*
@@ -121,31 +117,26 @@ to indicate that x is out of range.
   while (ju-jl > 1) 
   { //If we are not yet done,
     jm = (ju+jl) >> 1;		//compute a midpoint,
-    if (x >= polynomials[jm]->GetLower())
+    if (x >= polynomials[jm].GetLower())
       jl = jm;		//and replace either the lower limit
     else
       ju = jm;		//or the upper limit, as appropriate.
   } //Repeat until the test condition is satisﬁed.
 
   //Then set the output
-  if (x == polynomials[0]->GetLower()) return 0;
-  else if(x == polynomials[polynomialcount-1]->GetLower()) return polynomialcount-1;
+  if (x == polynomials[0].GetLower()) return 0;
+  else if(x == polynomials[polynomialcount-1].GetLower()) return polynomialcount-1;
   else return jl;
 }
 
 
 //InterpolantEq - EQUIDISTANT
-InterpolantEq::InterpolantEq(vector< Polynomial* > &polynomials, const double &step)
-  : step(step)
-{
-  this->polynomials = polynomials;
-  this->polynomialcount = polynomials.size();
-  this->a = polynomials[0]->GetLower();
-  this->b = polynomials[polynomialcount-1]->GetUpper();
-}
+InterpolantEq::InterpolantEq(vector< Polynomial> &polynomials, const double &step)
+  : InterpolantBase(polynomials), step(step)
+{}
 
 
-unsigned long InterpolantEq::FindPolynomial(double& x)
+unsigned long InterpolantEq::FindPolynomial(const double& x)
 {
   //counts in which interval x is (the last node before x)
   return  floor((x - a) / step);

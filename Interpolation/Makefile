@@ -18,7 +18,7 @@ INCFADBAD = $(FADBAD)/badiff.h $(FADBAD)/fadbad.h
 
 OBJS = main.o bandmatrixsolve.o functorvaluebase.o functorvalue.o functordiffbase.o \
 	functordiff.o polynomial.o interpolantbase.o interpolant.o myfunction.o \
-	bcondition.o lagrange.o iinterpolation.o adaptive.o adaptivesimpson.o
+	bcondition.o lagrange.o iinterpolation.o adaptive.o adaptivesimpson.o norm.o
 
 $(NAME): $(OBJS)
 	$(CCC) $(CFLAGS) $^ $(LIBCLAPACK) -o $(NAME)
@@ -28,6 +28,9 @@ myfunction.o: myfunction.cpp myfunction.h
 
 iinterpolation.o: iinterpolation.cpp iinterpolation.h functorvaluebase.h interpolantbase.h \
 		  massert.h
+	$(CCC) $(CFLAGS) $< -c
+
+norm.o: norm.cpp functorvaluebase.h interpolantbase.h
 	$(CCC) $(CFLAGS) $< -c
 
 adaptivesimpson.o: adaptivesimpson.cpp functorvaluebase.h interpolantbase.h

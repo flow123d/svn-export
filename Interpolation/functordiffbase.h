@@ -18,8 +18,8 @@ struct der
 class FunctorDiffBase : public FunctorValueBase
 {
   public:
-    virtual der Diff(double x) = 0;	//returns df(x)/dx
-    virtual double Value(double x) = 0;	//returns f(x)
+    virtual der Diff(const double &x) = 0;	//returns df(x)/dx
+    virtual double operator() ( const double &x ) = 0;
 };
 
 }

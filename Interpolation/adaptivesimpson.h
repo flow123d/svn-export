@@ -2,9 +2,9 @@
 #define ADAPTIVESIMPSON_H
 
 #include <math.h>
+#include <iostream>
 
 #include "functorvaluebase.h"
-#include "interpolantbase.h"
 
 namespace Interpolation
 {
@@ -12,45 +12,19 @@ namespace Interpolation
 class AdaptiveSimpson
 {
   private:
-    
-    double a,b;
-    double tol;
-    
-    FunctorValueBase *func;
-    InterpolantBase *interpolant;
-    
-    double Simpson ( const double& h, double &fa, double &fc, double &fb );
 
-  
-    double SimpsonAd( double (AdaptiveSimpson::*fce)(double&), 
-		      const double& h, double &a, double &c, double &b,
-		      double &fa, double &fc, double &fb, 
-		      double &sx, double &tol );
-  
-    double L2norm ( double& x );
-  
-    double W1_1norm ( double& x );
-    
+    static double Simpson ( const double& h, const double &fa, const double &fc, const double &fb );
+
+    static double SimpsonAd( FunctorValueBase &func, 
+		      const double& h, const double &a, const double &c, const double &b,
+		      const double &fa, const double &fc, const double &fb, 
+		      const double &sx, const double &tol, long &recursion );
+      
   public:
-  
-    enum Norm{ L2 = 0, 
-	       W1_1 = 1, 
-	       W1_2 = 2};
 	       
-    AdaptiveSimpson( FunctorValueBase *func,
+    static double AdaptSimpson( FunctorValueBase &func,
 		     const double& a, const double& b, 
-		     const double& tol );
-		     
-    void SetInterpolant( InterpolantBase *interpolant );
-		    
-    AdaptiveSimpson( FunctorValueBase *func, 	
-		     InterpolantBase *interpolant, 
-		     const double& a, const double& b, 
-		     const double& tol );
-	       
-    double AdaptSimpson( AdaptiveSimpson::Norm type);
-			
-  
+		     const double& tol );	    		
 };
   
 }

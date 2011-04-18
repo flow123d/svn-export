@@ -20,20 +20,21 @@ class InterpolantBase : public FunctorDiffBase
 {
   protected:
     ///vector of polynomials      
-    std::vector<Polynomial* > polynomials;
+    std::vector<Polynomial> polynomials;
     
     /** Polynomials of the extrapolation outside the bounds a,b.
       * Left polynomial is counted when x < a.
       * Right polynomial is counted when x > b.
       */
-    Polynomial* left;
-    Polynomial* right;
+    Polynomial left;
+    Polynomial right;
+    
+    ///is the same as vector.size() of polynomials
+    unsigned long polynomialcount;
     
     ///	"a" and "b" are lower and upper bounds of polynom
     double a,b;
 
-    ///is the same as vector.size() of polynomials
-    unsigned long polynomialcount;
     
     /// A private pure virtual method.
     /** Goes through the vector of polynomials and looks for the
@@ -43,7 +44,7 @@ class InterpolantBase : public FunctorDiffBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual unsigned long FindPolynomial(double &x) = 0;
+    virtual unsigned long FindPolynomial(const double &x) = 0;
     
     ///Math Power x^n
     template<class T>
@@ -67,11 +68,21 @@ class InterpolantBase : public FunctorDiffBase
     }
  
   public:
+    InterpolantBase(std::vector<Polynomial> &polynomials);
+    
     ///returns left bound of the interval
     double GetA();
     
     ///returns right bound of the interval
     double GetB();
+    
+    ///returns the polynomialcount
+    inline unsigned long GetCount()
+    { return polynomialcount; }
+    
+    ///returns the pointer to the vector of polynomials
+    inline Polynomial* GetPol(unsigned long i)
+    { return &(polynomials[i]); }
     
     /// A function value.
     /** Counts the function value of the interpolant in "x".
@@ -79,7 +90,7 @@ class InterpolantBase : public FunctorDiffBase
       * @param x is dependent variable.
       * @return  value of interpolant in "x".
       */ 
-    virtual double Value(double x);
+    virtual double operator() ( const double &x );
 
     /// A Derivate.
     /** Counts the derivate of the interpolant in "x"
@@ -88,7 +99,7 @@ class InterpolantBase : public FunctorDiffBase
       * @return structure "der" which includes the function
       * value and the derivate of interpolant.
       */    
-    virtual der Diff(double x);
+    virtual der Diff(const double &x);
     
     /// An integral.
     /** Counts the integral of the interpolant between limits "a" and "b".
@@ -97,14 +108,14 @@ class InterpolantBase : public FunctorDiffBase
       * @param a an upper limit.
       * @return  value of the integral.
       */
-    double Integral(double a, double b); 
+    double Integral(const double &a, const double &b); 
     
     ///Sets type of extrapolation
     /** Sets the polynomials that should be counted when x is out of bounds a,b.
       * @param left a polynomial for x < a.
       * @param right a polynomial for b > b.
       */
-    void SetExtrapolation(Polynomial *left, Polynomial *right);
+    void SetExtrapolation(const Polynomial &left, const Polynomial &right);
     
     ///Sets type of extrapolation
     /** Creates the polynomials that should be counted when x is out of bounds a,b.
@@ -113,7 +124,7 @@ class InterpolantBase : public FunctorDiffBase
       * @param left_degree degree of extrapolation for x <= a.
       * @param right_degree degree of extrapolation for b >= b.
       */
-    void SetExtrapolation ( unsigned char left_degree, unsigned char right_degree );
+    void SetExtrapolation ( const unsigned char &left_degree, const unsigned char &right_degree );
 };
 
 

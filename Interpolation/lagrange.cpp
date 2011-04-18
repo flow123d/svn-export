@@ -16,6 +16,7 @@ bool Lagrange::Check()
   1..b
   2..step/tolerance
   */
+  
   bool res = true;
   for(unsigned int i = 0; i < CH; i++)
   {
@@ -35,7 +36,7 @@ bool Lagrange::Check()
   return res;
 }
 
-void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase* func )
+void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase& func )
 {
   int nodescount;
   
@@ -51,7 +52,7 @@ void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase* func )
     //filling the vector x and f
     for(int i = 0; i < nodescount; i++)		
     {
-      f[i] = func->Value(x[i]);
+      f[i] = func(x[i]);
     }  
   }
   else
@@ -62,16 +63,24 @@ void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase* func )
     nodescount = floor((double)(b-a)/step)+1;	//number of nodes
     if (DEB)
       cout << "number_of_nodes=" << floor((double)(b-a)/step)+1 << endl;
-      
+    
     x.resize(nodescount);	//nodes
     f.resize(nodescount);	//function values in the nodes
   
     //filling the vector x and f
-    for(int i = 0; i < nodescount; i++)		
+    for(long i = 0; i < nodescount; i++)		
     {
       x[i] = a+step*i;
-      f[i] = func->Value(x[i]);
+      f[i] = func(x[i]);
     }  
+    
+    //finish the interval
+    if(x[x.size()-1] < b)
+    {
+      x.push_back(b);
+      f.push_back(func(b));
+      nodescount++;
+    }
   }
       if (DEB)
 	cout << nodescount << " nodes defined, x and f filled" << endl;
@@ -144,7 +153,7 @@ void Lagrange::PutEquations ( const unsigned char &M )
       int pos = 0;	
       int number_of_leftcond = leftcond->GetCount();
       //goes through submatrixes
-      for(uint i = 0; i < x.size()-2; i++)
+      for(unsigned long i = 0; i < x.size()-2; i++)
       {
 	pos = i*(M+1);
 	band->SetA(pos+number_of_leftcond,pos,1.0);		//eqn for x = 0 
@@ -181,15 +190,15 @@ void Lagrange::PutEquations ( const unsigned char &M )
 InterpolantBase* Lagrange::CreateInterpolant ( double* bandres, const unsigned char &M )
 {
   //creation of polynoms for an interpolant******************
-      vector<Polynomial* > polynomials (x.size()-1);
-      for(uint i = 0; i < x.size()-1; i++)
+      vector<Polynomial> polynomials (x.size()-1);
+      for(unsigned long i = 0; i < x.size()-1; i++)
       {
 	//creation, polynomial degree M
-	polynomials[i] = new Polynomial(M);	
+	polynomials[i] = Polynomial(M);	
 	//setting of polynomials intervals
-	polynomials[i]->SetInterval(x[i],x[i+1]);
+	polynomials[i].SetInterval(x[i],x[i+1]);
 	//Gets results of dgbtrs and fills the vectors of coeficients of the polynomials
-	polynomials[i]->SetCoeficients((double*)(bandres + i*(M+1)), M+1);
+	polynomials[i].SetCoeficients((double*)(bandres + i*(M+1)), M+1);
 	
 	if (DEB)
 	{

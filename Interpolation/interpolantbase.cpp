@@ -5,6 +5,12 @@
 namespace Interpolation
 {
   
+InterpolantBase::InterpolantBase(std::vector< Polynomial >& polynomials)
+  : polynomials(polynomials),polynomialcount(polynomials.size()),
+    a(polynomials[0].GetLower()), b(polynomials[polynomials.size()-1].GetUpper())
+{}
+
+  
 double InterpolantBase::GetA()
 {
   return a;
@@ -15,13 +21,13 @@ double InterpolantBase::GetB()
   return b;
 }
 
-void InterpolantBase::SetExtrapolation(Polynomial* left, Polynomial* right)
+void InterpolantBase::SetExtrapolation(const Polynomial &left, const Polynomial &right)
 {
   this->left = left;
   this->right = right;
 }
 
-double InterpolantBase::Integral(double a, double b)
+double InterpolantBase::Integral(const double &a, const double &b)
 {
     /*
     std::vector<Polynomial* >::iterator iterator;
@@ -38,7 +44,7 @@ double InterpolantBase::Integral(double a, double b)
     return 0.0;
 }
 
-der InterpolantBase::Diff(double x)
+der InterpolantBase::Diff(const double &x)
 {
     //Horner schema in Polynomials
     der d;
@@ -47,17 +53,17 @@ der InterpolantBase::Diff(double x)
     return d;    	// Return function value
 }
 
-double InterpolantBase::Value(double x)
+double InterpolantBase::operator() ( const double &x )
 {
     if (x <= a)
-      return left->Value(x);
+      return left(x);
     if (x >= b)
-      return right->Value(x);
+      return right(x);
     
-    return polynomials[FindPolynomial(x)]->Value(x); //Horner schema in Polynomials
+    return polynomials[FindPolynomial(x)](x); //Horner schema in Polynomials
 }
   
-void InterpolantBase::SetExtrapolation( unsigned char left_degree, unsigned char right_degree)
+void InterpolantBase::SetExtrapolation( const unsigned char &left_degree, const unsigned char &right_degree)
 {
     std::vector<double> l(left_degree+1);
     std::vector<double> r(right_degree+1);
@@ -68,7 +74,7 @@ void InterpolantBase::SetExtrapolation( unsigned char left_degree, unsigned char
     */
     for(int i = 0; i <= left_degree; i++)
     {
-      l[i] = (*polynomials[0]->GetCoefs())[i];
+      l[i] = (*polynomials[0].GetCoefs())[i];
       std::cout << l[i]<< "|";
     }
     std::cout << "]"<< std::endl;
@@ -87,8 +93,8 @@ void InterpolantBase::SetExtrapolation( unsigned char left_degree, unsigned char
     {
       for(int j = i; j <= right_degree; j++)
       {
-	r[i] += (*polynomials[polynomialcount-1]->GetCoefs())[j] *
-		  Power(b-polynomials[polynomialcount-1]->GetLower(),j-i) *
+	r[i] += (*polynomials[polynomialcount-1].GetCoefs())[j] *
+		  Power(b-polynomials[polynomialcount-1].GetLower(),j-i) *
 		  Fact(j)/Fact(j-i);
       }
       r[i] /= Fact(i);
@@ -96,8 +102,8 @@ void InterpolantBase::SetExtrapolation( unsigned char left_degree, unsigned char
     }
     std::cout << "]"<< std::endl;
     
-    left = new Polynomial(a,a,l);
-    right = new Polynomial(b,b,r);
+    left = Polynomial(a,a,l);
+    right = Polynomial(b,b,r);
     
 }
 

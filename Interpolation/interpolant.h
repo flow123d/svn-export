@@ -33,11 +33,11 @@ class InterpolantAdapt : public InterpolantBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual unsigned long FindPolynomial(double& x);    
+    virtual unsigned long FindPolynomial(const double& x);    
   
   public:
     ///A constructor of the interpolant.
-    InterpolantAdapt(const std::vector<Polynomial* > &polynomials);
+    InterpolantAdapt(std::vector<Polynomial> &polynomials);
 };
 
 
@@ -58,11 +58,11 @@ class InterpolantEq : public InterpolantBase
       * @param *pol pointer to polynomial
       * @return  vector iterator in the vector polynomials.
       */ 
-    virtual unsigned long FindPolynomial(double& x);
+    virtual unsigned long FindPolynomial(const double& x);
   
   public:
     ///A constructor of the interpolant.
-    InterpolantEq(std::vector<Polynomial* > &polynomials, const double &step);
+    InterpolantEq(std::vector<Polynomial> &polynomials, const double &step);
     
 };
 

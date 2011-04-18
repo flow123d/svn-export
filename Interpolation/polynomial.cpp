@@ -3,20 +3,22 @@
 namespace Interpolation
 {
   
+Polynomial::Polynomial()
+{
+}
+  
 Polynomial::Polynomial(const unsigned char &degree)
   : degree(degree) 
 {}
   
 Polynomial::Polynomial(const double &a, const double &b, const std::vector< double > &coefs)
   : degree(coefs.size()-1), a(a), b(b), coefs(coefs)
-{
-  std::cout << a << b << std::endl;
-}
+{}
 
 Polynomial::Polynomial(const Interpolation::Polynomial &pol)
   : degree(pol.degree), a(pol.a), b(pol.b), coefs(pol.coefs)
-{
-}
+{}
+
 
 void Polynomial::SetInterval(const double &a, const double &b)
 {
@@ -50,7 +52,7 @@ std::vector< double >* Polynomial::GetCoefs()
   return &coefs;
 }
   
-double Polynomial::Value(const double &x)
+double Polynomial::operator() ( const double &x )
 {
   double xx = x - a;	//placing x to the interval <0,step>
   //std::cout << "xxxxxxxxxxx     " << "xx=" << xx << std::endl;

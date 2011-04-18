@@ -4,6 +4,8 @@
 
 #include <vector>
 #include <iostream>
+#include <math.h>
+#include <queue>
 
 #ifndef DEB
 #define DEB true
@@ -15,10 +17,25 @@
 #include "interpolantbase.h"
 #include "lagrange.h"
 #include "adaptivesimpson.h"
+#include "norm.h"
 
 
 namespace Interpolation
 {
+
+struct ErrorNum {
+    double err;
+    unsigned long i;
+};
+
+class CompareErrorNum {
+    public:
+    bool operator()(ErrorNum& err1, ErrorNum& err2) // Returns true if t1 is earlier than t2
+    {
+       if (err1.err < err2.err) return true;
+       return false;
+    }
+};
   
 class Adaptive : public IInterpolation
 {
@@ -42,15 +59,11 @@ class Adaptive : public IInterpolation
 	* @param func is the functor that is being interpolated
 	*/
     template<unsigned char M>
-    InterpolantBase* Interpolate ( Interpolation::FunctorValueBase *func )
+    InterpolantBase* Interpolate ( Interpolation::FunctorValueBase &func )
     {
       MASSERT(Check(),"Not all parameters has been set.");
       
-      double simpsontol = 1e-6;	//tolerance for evaluating of adaptivesimpson
-      double err = tolerance + 1.0; //err must be > tolerance at first
-      
       InterpolantBase *result;
-      AdaptiveSimpson *norm = new AdaptiveSimpson(func,a,b,simpsontol);
       
       //setting initial Lagrange interpolation:
       Lagrange *lag = new Lagrange();
@@ -63,22 +76,57 @@ class Adaptive : public IInterpolation
       lag->AddCond(IInterpolation::RightBC, *rightcond);
       lag->SetExtrapolation(left_degree, right_degree);
       
-      int n=1;	//iteration cycle of adaption
-      while (1)
+      double simpsontol = 1e-6;	//tolerance for evaluating of adaptivesimpson
+      double max_rel_err = tolerance / (b-a); //relative error
+      double tot_err;	// absolute error on <a,b>
+      ErrorNum p_err;	// relative polynomial error on its interval
+      
+      int n=2;	//iteration cycle of adaption
+      while (n)
       {
 	result = lag->Interpolate<M>(func);	//interpolation with actual nodes
-	norm->SetInterpolant(result);
-	err = norm->AdaptSimpson(AdaptiveSimpson::L2);
-	std::cout << "interation = " << n << "  err = " << err<< std::endl;
 	
-	if (err <= tolerance) break;	//end of adaption
+	tot_err = 0;
+	p_err.i = 0;
+	p_err.err = 0;
+	std::priority_queue<ErrorNum, std::vector<ErrorNum>, CompareErrorNum> pq;
+	
+	for(unsigned long i = 0; i < result->GetCount(); i++ )
+	{
+	  LP_Norm norm(&func,result->GetPol(i),2);
+	  // p_err = e/(b-a)
+	  p_err.i = i;
+	  p_err.err = sqrt(AdaptiveSimpson::AdaptSimpson( norm,
+						     result->GetPol(i)->GetLower(), 
+						     result->GetPol(i)->GetUpper(),
+						     simpsontol) )
+		 / (result->GetPol(i)->GetUpper()-result->GetPol(i)->GetLower());
+	  std::cout << "\t p_err=" << p_err.err << std::endl;
+	  if(p_err.err > max_rel_err) pq.push(p_err);
+	  tot_err += p_err.err;
+	}
+	
+	std::cout << "interation = " << n << "  err = " << tot_err << std::endl;
+	
+	
+	if (tot_err <= tolerance) break;	//end of adaption
 	else
 	{ //continue adaption
 	  x = *(lag->GetNodes());
 	  //changing nodes
 	  
+	  for(int k = 0; k < 1; k++)
+	  {
+	    unsigned long i = pq.top().i;
+	    std::cout << "getting top of priority _queued: i=" << i << std::endl;
+	    pq.pop();
+	    x.insert(x.begin()+i+1, (x[i+1]+x[i])*0.5);
+	  }
+	  
 	  lag->SetNodes(x);
 	}
+	n--;
+	//*/
       }
 
       return result;

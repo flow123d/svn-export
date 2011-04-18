@@ -23,7 +23,7 @@ public:
   
   //returns 1st grade derivate
   //virtual double Diff(double x);
-  virtual der Diff(double i_x)
+  virtual der Diff ( const double &i_x )
   {
     B<double> x(i_x); 	// Initialize arguments
     Func func;       	// Instantiate functor
@@ -36,10 +36,11 @@ public:
     return d;    		// Return function value
   }
 
-  virtual double Value(double x)
+  virtual double operator() ( const double &x )
   {
     return fce(x);
   }
+  
 };
 
 }

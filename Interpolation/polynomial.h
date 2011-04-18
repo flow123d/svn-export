@@ -19,7 +19,7 @@ namespace Interpolation
   * in chosen point. Can be constructed by several types of constructors
   * with different parameters.
   */
-class Polynomial
+class Polynomial : public FunctorDiffBase
 {
   private:
     ///degree of the polynomial
@@ -35,6 +35,8 @@ class Polynomial
     std::vector<double> coefs;
     
   public:   
+    Polynomial();
+    
     /** Constructor.
       * @param degree is the degree of the polynomial
       */
@@ -67,7 +69,8 @@ class Polynomial
     std::vector<double> *GetCoefs();
     
     ///returns value of the polynomial P(x), uses Horner schema
-    double Value(const double &x);
+    virtual double operator() ( const double &x );
+    //virtual double operator() ( const double &x );
     
     ///returns derivate of the polynomial P'(x), uses Horner schema
     der Diff(const double &x);

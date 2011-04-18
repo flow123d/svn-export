@@ -36,7 +36,7 @@ class Lagrange	: public IInterpolation
     /** Evaluates function in nodes.
       * @param func is the functor that isbeing interpolated
       */
-    void SetFunctionvalues ( Interpolation::FunctorValueBase *func );
+    void SetFunctionvalues ( Interpolation::FunctorValueBase &func );
     
     ///Fills the BC, computes dimensions a then create the BandMatrixSolve object
     /** @param M is a degree of polynomials
@@ -85,7 +85,7 @@ class Lagrange	: public IInterpolation
       * @param func is the functor that is being interpolated
       */   
     template<unsigned char M>
-    InterpolantBase* Interpolate ( Interpolation::FunctorValueBase *func )
+    InterpolantBase* Interpolate ( Interpolation::FunctorValueBase &func )
     {
       MASSERT(Check(),"Not all parameters has been set.");
       

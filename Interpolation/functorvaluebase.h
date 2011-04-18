@@ -9,7 +9,7 @@ namespace Interpolation
 class FunctorValueBase
 {
   public:
-    virtual double Value(double x) = 0;
+    virtual double operator() ( const double &x ) = 0;
 };
 
 }

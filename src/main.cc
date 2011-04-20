@@ -205,8 +205,8 @@ int main(int argc, char **argv) {
  * FUNCTION "MAIN" FOR CONVERTING FILES TO POS
  */
 void main_convert_to_pos(struct Problem *problem) {
-    // Write outputs
-    output(problem);
+    // TODO: write outputs
+    xprintf(Err, "Not implemented yet in this version\n");
 }
 
 /**
@@ -254,7 +254,8 @@ void main_compute_mh_unsteady_saturated(struct Problem *problem) {
 /**
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR STEADY SATURATED FLOW
  */
-void main_compute_mh_steady_saturated(struct Problem *problem) {
+void main_compute_mh_steady_saturated(struct Problem *problem)
+{
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
     struct Transport *transport;
@@ -281,9 +282,9 @@ void main_compute_mh_steady_saturated(struct Problem *problem) {
 
 	xprintf( Msg, "O.K.\n")/*orig verb 2*/;
 
-
     postprocess(problem);
-    output(problem);
+
+    output();
 
     // pracovni vystup nekompatibilniho propojeni
     // melo by to byt ve water*
@@ -351,14 +352,20 @@ void main_compute_mh_steady_saturated(struct Problem *problem) {
      */
 
     if (OptGetBool("Transport", "Transport_on", "no") == true) {
+        OutputTime *_output_time = NULL;
 
         if (transport->reaction_on == true) { /* tohle presunu na rozumnejsi misto, jen co takove bude */
             read_reaction_list(transport);
         }
 
         if (rank == 0) {
-            transport_output_init(transport);
-            transport_output(transport, 0.0, 0);
+            _output_time = new OutputTime(mesh, transport->transport_out_fname);
+            _output_time->write_head(_output_time);
+            //transport_output_init(transport);
+            _output_time->get_data_from_transport(transport, 0);
+            _output_time->write_data(_output_time, 0.0, 0);
+            _output_time->free_data_from_transport(transport);
+            //transport_output(transport, 0.0, 0);
         }
 	
         
@@ -373,7 +380,7 @@ void main_compute_mh_steady_saturated(struct Problem *problem) {
         // not strictly dependent on Transport.
         //btc_check(transport);
 
-        convection(transport);
+        convection(transport, _output_time);
         /*
                 if(problem->cross_section == true)
                 {
@@ -382,7 +389,11 @@ void main_compute_mh_steady_saturated(struct Problem *problem) {
                     output_transport_time_CS(problem, 0 * problem->time_step);
                 }
          */
-        transport_output_finish(transport);
+        //transport_output_finish(transport);
+        if(_output_time != NULL) {
+            _output_time->write_tail(_output_time);
+            delete _output_time;
+        }
     }
 }
 
@@ -393,30 +404,25 @@ void main_compute_mh_steady_saturated(struct Problem *problem) {
 /**
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR UNSTEADY SATURATED FLOW
  */
-void main_compute_mh_density(struct Problem *problem) {
-  Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
+void main_compute_mh_density(struct Problem *problem)
+{
+    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
     int i, j, dens_step, n_step, frame = 0;
     double save_step, stop_time; // update_dens_time
     char statuslog[255];
     struct Transport *trans = problem->transport;
     FILE *log;
 
-    transport_output_init(problem->transport);
-    transport_output(problem->transport, 0.0, ++frame);
+    OutputTime *_output_time = new OutputTime(mesh ,trans->transport_out_fname);
 
-    output_init(); // time variable flow field
+    _output_time->write_head(_output_time);
+    // transport_output_init(problem->transport); TODO: remove
 
-    //    btc_check(trans);
+    _output_time->get_data_from_transport(trans, 0);
+    _output_time->write_data(_output_time, 0.0, ++frame);
+    _output_time->free_data_from_transport(trans);
+    // transport_output(problem->transport, 0.0, ++frame); TODO: remove
 
-    /*
-            if(problem->cross_section == true)
-            {
-            select_cross_section_element(problem);
-            output_transport_init_CS(problem);
-            output_transport_time_CS(problem,0);
-            }
-     */
     save_step = problem->save_step;
     stop_time = problem->stop_time;
     trans->update_dens_time = problem->save_step / (ceil(problem->save_step / trans->dens_step));
@@ -425,8 +431,6 @@ void main_compute_mh_density(struct Problem *problem) {
 
     // DF problem - I don't understend to this construction !!!
     problem->save_step = problem->stop_time = trans->update_dens_time;
-    /*  printf("\n%d\t%d\t%f\n",dens_step,n_step,update_dens_time );
-      getchar(); */
 
     //------------------------------------------------------------------------------
     //      Status LOG head
@@ -453,8 +457,7 @@ void main_compute_mh_density(struct Problem *problem) {
             problem->water->solve();
             restart_iteration_C(problem);
             postprocess(problem);
-            convection(trans);
-            // 	      	output( problem );
+            convection(trans, _output_time);
 
             if (trans->dens_implicit == 0) {
                 xprintf(Msg, "no density iterations (explicit)", j);
@@ -463,28 +466,32 @@ void main_compute_mh_density(struct Problem *problem) {
             if (compare_dens_iter(problem) && (j > 0)) {
                 break; //at least one repeat of iteration is necessary to update both conc and pressure
             }
-            //xprintf( Msg, "repeat dens iter %d \n", j );
         }
         if (trans -> write_iterations == 0) {
-            transport_output(problem->transport, i * problem->time_step, ++frame);
+            //transport_output(problem->transport, i * problem->time_step, ++frame);
+            _output_time->get_data_from_transport(trans, ++frame);
+            // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
+            // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
+            _output_time->write_data(_output_time, i * problem->time_step, frame);
+            _output_time->free_data_from_transport(trans);
         }
 
         if ((trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
-            transport_output(problem->transport, (i + 1) * problem->stop_time, ++frame);
-            output_time((i + 1) * problem->stop_time);
-
-            //                      output_transport_time_BTC(trans, (i+1) * trans->time_step);
-
-            /*
-                                    if(problem->cross_section == true)
-                                    output_transport_time_CS(problem, (i+1) * problem->stop_time);
-             */
+            //transport_output(problem->transport, (i + 1) * problem->stop_time, ++frame);
+            _output_time->get_data_from_transport(trans, ++frame);
+            // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
+            // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
+            _output_time->write_data(_output_time, (i + 1) * problem->stop_time, frame);
+            _output_time->free_data_from_transport(trans);
         }
         xprintf(Msg, "step %d finished at %d density iterations\n", i, j);
         xfprintf(log, "%f \t %d\n", (i + 1) * trans->update_dens_time, j); // Status LOG
     }
 
-    transport_output_finish(problem->transport);
-    output(problem);
+    //transport_output_finish(problem->transport);
+    _output_time->write_tail(_output_time);
+    delete _output_time;
+
+    output();
     xfclose(log);
 }

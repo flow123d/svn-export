@@ -153,96 +153,6 @@ void output_flow_field_in_time_2(struct Problem *problem,double time)
     xprintf( Msg, "O.K.\n");
 }
 
-
-//==============================================================================
-//      OUTPUT INIT
-//==============================================================================
-void output_init(void)
-{
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
-    FILE *out;
-    int i;
-    ElementIter ele;
-    NodeIter nod;
-    char dbl_fmt[ 16 ];
-    char filename[255];
-
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
-    xprintf( Msg, "%s: Writing output file %s ... ", __func__, out_fname);
-
-    sprintf( dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));
-    sprintf( filename,"%s.tmp", out_fname);
-    out = xfopen( filename, "wt" );
-
-    xfprintf( out, "Nodes {\n");
-    FOR_NODES( nod ) {
-        xfprintf(out,"%d   ",nod->id);
-        xfprintf(out,dbl_fmt,nod->getX());xfprintf(out,"  ");
-        xfprintf(out,dbl_fmt,nod->getY());xfprintf(out,"  ");
-        xfprintf(out,dbl_fmt,nod->getZ());xfprintf(out,"\n");
-    }
-    xfprintf( out, "};\n");
-    xfprintf( out, "Elements {\n");
-    FOR_ELEMENTS(ele){
-        xfprintf(out,"%d  %d  %d   ",ele.id(),ele->type,ele->rid);
-        FOR_ELEMENT_NODES(ele,i) {
-            xfprintf(out,"%d  ",ele->node[i]->id);
-        }
-        xfprintf(out,"\n");
-    }
-    xfprintf( out, "};\nVALUES\n");
-    xfclose(out);
-
-    xprintf( Msg, "O.K.\n");
-}
-
-//==============================================================================
-//      OUTPUT FLOW IN THE TIME
-//==============================================================================
-void output_time(double time)
-{
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
-    FILE *out;
-    ElementIter ele;
-    NodeIter nod;
-    char dbl_fmt[16];
-    char filename[PATH_MAX];
-
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
-    xprintf( Msg, "%s: Writing output file %s ... ", __func__, out_fname);
-
-    sprintf( dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));
-    sprintf( filename,"%s.tmp", out_fname);
-    out = xfopen( filename, "at" );
-
-    xfprintf( out, "Time =");
-    xfprintf( out, dbl_fmt, time);
-    xfprintf( out, "{\n");
-    xfprintf( out, "  Nodes {\n" );
-    FOR_NODES( nod ){
-        xfprintf(out,"  %d   ",nod->id);
-        xfprintf(out,dbl_fmt,nod->scalar);
-        xfprintf(out,"\n");
-    }
-    xfprintf( out, "  };\n" );
-    xfprintf( out, "  Elements {\n" );
-    FOR_ELEMENTS( ele ){
-        xfprintf(out,"  %d   ",ele.id());
-        xfprintf(out,dbl_fmt,ele->scalar);
-        xfprintf(out,dbl_fmt,ele->vector[0]);
-        xfprintf(out,dbl_fmt,ele->vector[1]);
-        xfprintf(out,dbl_fmt,ele->vector[2]);
-        xfprintf(out,"\n");
-    }
-    xfprintf( out, "  };\n" );
-    xfprintf( out, "};\n" );
-    xfclose( out );
-
-    xprintf( Msg, "O.K.\n");
-}
-
 //==============================================================================
 //	INITIALIZE OUTPUT MSH-like FILES (BINARY)
 //==============================================================================
@@ -445,7 +355,7 @@ void output_transport_time_bin(struct Transport *transport,
         xfprintf(out,"%f\n",time);                                // first real tag = time
         xfprintf(out,"%d\n",itags);                                   // 3 int tags
         xfprintf(out,"%d\n",step);                              // step number (start = 0)
-        xfprintf(out,"%d\n",vcomp);                                   // one component - scalar field
+        xfprintf(out,"%d\n",vcomp);                                   // three components - vector field
         xfprintf(out,"%d\n",mesh->n_elements());                    // n follows elements
         FOR_ELEMENTS(ele) {
             if(vector_length(ele->vector) > ZERO){
@@ -516,4 +426,195 @@ void output_transport_time_ascii(struct Transport *transport,
     xfclose(out);
 
     xprintf( Msg, "O.K.\n");
+}
+
+void write_msh_header(Output *output)
+{
+    // Write simple header
+    output->get_base_file() << "$MeshFormat" << endl;
+    output->get_base_file() << "2" << " 0 " << sizeof(double) << endl;
+    output->get_base_file() << "$EndMeshFormat" << endl;
+}
+
+void write_msh_geometry(Output *output)
+{
+    Mesh* mesh = output->get_mesh();
+    NodeIter nod;
+    int i;
+
+    // Write information about nodes
+    output->get_base_file() << "$Nodes" << endl;
+    output->get_base_file() <<  mesh->node_vector.size() << endl;
+    FOR_NODES( nod ) {
+        output->get_base_file() << nod->id << " " << nod->getX() << " " << nod->getY() << " " << nod->getZ() << endl;
+    }
+    output->get_base_file() << "$EndNodes" << endl;
+}
+
+void write_msh_topology(Output *output)
+{
+    Mesh* mesh = output->get_mesh();
+    ElementIter elm;
+    int i;
+
+    // Write information about elements
+    output->get_base_file() << "$Elements" << endl;
+    output->get_base_file() << mesh->n_elements() << endl;
+    FOR_ELEMENTS(elm) {
+        output->get_base_file() << elm.id() << " " << elm->type << " 3 " << elm->mid << " " << elm->rid << " " << elm->pid;
+        FOR_ELEMENT_NODES(elm,i)
+            output->get_base_file() << " " << elm->node[i]->id;
+        output->get_base_file() << endl;
+    }
+    output->get_base_file() << "$EndElements" << endl;
+}
+
+void write_msh_ascii_data(Output *output, OutputData *out_data)
+{
+    ofstream &file = output->get_base_file();
+    int id = 1;
+
+    switch(out_data->type) {
+    case OUT_INT:
+        for( std::vector<int>::iterator item = ((std::vector<int>*)out_data->data)->begin();
+                item != ((std::vector<int>*)out_data->data)->end();
+                item++, id++) {
+            file << id << " " << *item << endl;
+        }
+        break;
+    case OUT_INT_VEC:
+        for( std::vector< vector<int> >::iterator vec = ((std::vector< vector<int> >*)out_data->data)->begin();
+                vec != ((std::vector< vector<int> >*)out_data->data)->end();
+                vec++, id++)
+        {
+            file << id << " ";
+            for (std::vector<int>::iterator item = vec->begin();
+                    item != vec->end();
+                    item++) {
+                file << *item << " ";
+            }
+            file << endl;
+        }
+        break;
+    case OUT_FLOAT:
+        for( std::vector<float>::iterator item = ((std::vector<float>*)out_data->data)->begin();
+                item != ((std::vector<float>*)out_data->data)->end();
+                item++, id++) {
+            file << id << " " << *item << endl;
+        }
+        break;
+    case OUT_FLOAT_VEC:
+        for( std::vector< vector<float> >::iterator vec = ((std::vector< vector<float> >*)out_data->data)->begin();
+                vec != ((std::vector< vector<float> >*)out_data->data)->end();
+                vec++)
+        {
+            file << id << " ";
+            for (std::vector<float>::iterator item = vec->begin();
+                    item != vec->end();
+                    item++) {
+                file << *item << " ";
+            }
+            file << endl;
+        }
+        break;
+    case OUT_DOUBLE:
+        for( std::vector<double>::iterator item = ((std::vector<double>*)out_data->data)->begin();
+                item != ((std::vector<double>*)out_data->data)->end();
+                item++, id++) {
+            file << id << " " << *item << endl;
+        }
+        break;
+    case OUT_DOUBLE_VEC:
+        for( std::vector< vector<double> >::iterator vec = ((std::vector< vector<double> >*)out_data->data)->begin();
+                vec != ((std::vector< vector<double> >*)out_data->data)->end();
+                vec++, id++)
+        {
+            file << id << " ";
+            for (std::vector<double>::iterator item = vec->begin();
+                    item != vec->end();
+                    item++) {
+                file << *item << " ";
+            }
+            file << endl;
+        }
+        break;
+    }
+}
+
+void write_msh_node_data(OutputTime *output, double time, int step)
+{
+}
+
+void write_msh_elem_data(Output *output, double time, int step)
+{
+    std::vector<OutputData> *elem_data = output->get_elem_data();
+
+    if(elem_data != NULL) {
+        for(OutputDataVec::iterator dta = elem_data->begin();
+                    dta != elem_data->end();
+                    dta++)
+        {
+            output->get_base_file() << "$ElementData" << endl;
+
+            output->get_base_file() << "1" << endl;     // one string tag
+            output->get_base_file() << "\"" << *dta->getName() << "_" << *dta->getUnits() <<"\"" << endl;
+
+            output->get_base_file() << "1" << endl;     // one real tag
+            output->get_base_file() << time << endl;    // first real tag = time
+
+            output->get_base_file() << "3" << endl;     // 3 integer tags
+            output->get_base_file() << step << endl;     // step number (start = 0)
+            output->get_base_file() << dta->getCompNum() << endl;   // number of components
+            output->get_base_file() << dta->getValueNum() << endl;  // number of values
+
+            write_msh_ascii_data(output, &(*dta));
+
+            output->get_base_file() << "$EndElementData" << endl;
+        }
+    }
+}
+
+/**
+ * \brief Write head of .msh file format
+ */
+int write_msh_head(OutputTime *output)
+{
+    xprintf( Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str());
+
+    write_msh_header(output);
+
+    write_msh_geometry(output);
+
+    write_msh_topology(output);
+
+    xprintf( Msg, "O.K.\n");
+
+    return 1;
+}
+
+/**
+ * \brief Write head of .msh file format
+ */
+int write_msh_data(OutputTime *output, double time, int step)
+{
+    xprintf( Msg, "%s: Writing output file %s ... ", __func__, output->get_base_filename().c_str());
+
+    write_msh_node_data(output, time, step);
+
+    write_msh_elem_data(output, time, step);
+
+    xprintf( Msg, "O.K.\n");
+
+    return 1;
+}
+
+/**
+ * \brief Write tail of .msh file format
+ */
+int write_msh_tail(OutputTime *output)
+{
+    // It is stupid file format. It doesn't write anything special at the end of
+    // the file
+
+    return 1;
 }

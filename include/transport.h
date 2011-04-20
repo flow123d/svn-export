@@ -39,6 +39,8 @@ struct Problem;
 struct TMatrix;
 struct BTC;
 struct Reaction;
+class OutputTime;
+
 //=============================================================================
 // TRANSPORT
 //=============================================================================
@@ -170,7 +172,7 @@ void transport_step_mpi(Mat *tm,Vec *conc,Vec *pconc,Vec *bc);
 void alloc_transport(struct Problem *problem);
 void transport_init(struct Problem *problem);
 void make_transport(struct Transport *transport);
-void convection(struct Transport *transport);
+void convection(struct Transport *transport, OutputTime *_output_time);
 void transport_output(struct Transport *transport,double time,int frame);
 void transport_output_init(struct Transport *transport);
 void transport_output_finish(struct Transport *transport);

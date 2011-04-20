@@ -929,13 +929,13 @@ void compute_sorption(double conc_avg, vector<double> &sorp_coef, int sorp_type,
 //=============================================================================
 //      CONVECTION
 //=============================================================================
-void convection(struct Transport *trans) {
+void convection(struct Transport *trans, OutputTime *_output_time) {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
     MaterialDatabase::Iter material;
 
     int steps, step, save_step, frame = 0;
     register int t;
-    int n_subst, sbi, elm_pos, rank,size;
+    int n_subst, sbi, elm_pos, rank, size;
     struct Problem *problem = trans->problem;
     struct TMatrix *tmatrix = problem->transport->tmatrix;
     double ***pconc;
@@ -1029,11 +1029,12 @@ void convection(struct Transport *trans) {
             xprintf( Msg, "Output\n");
             //if (size != 1)
             output_vector_gather(trans);
-            if (rank == 0) transport_output(trans, t * trans->time_step, ++frame);
-            if (ConstantDB::getInstance()->getInt("Problem_type") != STEADY_SATURATED)
-                output_time(t * trans->time_step); // time variable flow field
-            //	output_transport_time_BTC(trans, t * trans->time_step); // BTC test - spatne vypisuje casy
-            //output_transport_time_CS(problem, t * problem->time_step);
+            if (rank == 0 && _output_time != NULL) {
+                _output_time->get_data_from_transport(trans, ++frame);  // TODO: remove in the future
+                _output_time->write_data(_output_time, t * trans->time_step, frame);
+                _output_time->free_data_from_transport(trans);  // TODO: remove in the future
+                //transport_output(trans, t * trans->time_step, ++frame);
+            }
             step = 0;
         }
     }
@@ -1082,7 +1083,7 @@ void output_vector_gather(struct Transport *transport) {
 //      TRANSPORT OUTPUT
 //=============================================================================
 void transport_output(struct Transport *transport, double time, int frame) {
-    switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
+/*    switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
     case POS_BIN:
         output_transport_time_bin(transport, time, frame, transport->transport_out_fname);
         break;
@@ -1095,15 +1096,14 @@ void transport_output(struct Transport *transport, double time, int frame) {
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");
         break;
-    }
+    }*/
 }
 //=============================================================================
 //      TRANSPORT OUTPUT INIT
 //=============================================================================
 void transport_output_init(struct Transport *transport)
 {
-    // TODO: use OutputTime object
-    switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
+/*    switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
     case POS_BIN:
         output_msh_init_bin(transport->transport_out_fname);
         break;
@@ -1116,19 +1116,19 @@ void transport_output_init(struct Transport *transport)
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");
         break;
-    }
+    }*/
 }
 
 //=============================================================================
 //      TRANSPORT OUTPUT FINISH
 //=============================================================================
 void transport_output_finish(struct Transport *transport) {
-    switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
+/*    switch (ConstantDB::getInstance()->getInt("Pos_format_id")) {
     case POS_BIN:
-        /* There is no need to do anything for this file format */
+         There is no need to do anything for this file format
         break;
     case POS_ASCII:
-        /* There is no need to do anything for this file format */
+         There is no need to do anything for this file format
         break;
     case VTK_SERIAL_ASCII:
         //write_trans_finish_vtk_serial_ascii(transport->transport_out_fname);
@@ -1136,7 +1136,7 @@ void transport_output_finish(struct Transport *transport) {
     case VTK_PARALLEL_ASCII:
         xprintf(UsrErr, "VTK_PARALLEL_ASCII: not implemented yet\n");
         break;
-    }
+    }*/
 }
 
 //=============================================================================

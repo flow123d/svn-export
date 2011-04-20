@@ -35,6 +35,7 @@
 #include <fstream>
 
 #include "system.hh"
+#include "transport.h"
 
 /// External types
 struct Problem;
@@ -114,17 +115,18 @@ typedef std::vector<OutVector> OutVectorsVector;
  */
 class OutputData {
 private:
-    string          name;
-    string          units;
-    void            *data;
-    unsigned char   type;
-    int             comp_num;
-    OutputData() {};          // Un-named constructor can't be called
 public:
-    string getName(void) { return name; };
-    string getUnits(void) { return units; };
+    string          *name;      ///< String with name of data
+    string          *units;     ///< String with units
+    void            *data;      ///< Pointer at own data
+    unsigned char   type;       ///< Type values in vector
+    int             comp_num;   ///< Number of components in vector
+    int             num;        ///< Number of values in vector
+    OutputData() {};            ///< Un-named constructor can't be called
+    string* getName(void) { return name; };
+    string* getUnits(void) { return units; };
     int getCompNum(void) { return comp_num; };
-    void writeData(ofstream &file, string item_sep, string vec_sep);
+    int getValueNum(void) { return num; };
     OutputData(std::string name, std::string unit, std::vector<int> &data);
     OutputData(std::string name, std::string unit, std::vector< vector<int> > &data);
     OutputData(std::string name, std::string unit, std::vector<float> &data);
@@ -141,19 +143,21 @@ typedef std::vector<OutputData> OutputDataVec;
  */
 class Output {
 private:
+public:
+    Output() {};            // Un-named constructor can't be called
     ofstream    *base_file;         ///< Base output stream
     string      *base_filename;     ///< Name of base output file
     ofstream    *data_file;         ///< Data output stream (could be same as base_file)
     string      *data_filename;     ///< Name of data output file
-    char        format_type;        ///< Type of output
-    Mesh        *mesh;
+    int         format_type;        ///< Type of output
     std::vector<OutputData> *node_data;    ///< List of data on nodes
     std::vector<OutputData> *elem_data;    ///< List of data on elements
+    Mesh        *mesh;
 
-public:
-    Output() {};            // Un-named constructor can't be called
     Output(Mesh *mesh, string filename);
     ~Output();
+
+    int get_data_from_mesh(void);
 
     /**
      * \brief This method registers node data, that will be written to the file,
@@ -191,16 +195,16 @@ public:
  * Class of output of during time
  */
 class OutputTime : public Output {
-    ofstream    *step_file;         ///< Stream for output for current step
-    string      *step_filename;     ///< Name of file for current step
-    int         current_step;       ///< Current step
+    int         current_step;           ///< Current step
+    struct OutScalar *element_scalar;   // Temporary solution
+    struct OutVector *element_vector;   // Temporary solution
 //    OutputTime() {};
 public:
     OutputTime(Mesh *mesh, string filename);
     ~OutputTime();
 
-    ///< This method writes geometry, topology of mesh and all data to the file
-    int write_data(double time, int step);
+    void get_data_from_transport(struct Transport *transport, int step);
+    void free_data_from_transport(struct Transport *transport);
 
     ///< This method registers node data, that will be written to the file,
     ///< when write_data() will be called
@@ -213,13 +217,13 @@ public:
     // Internal API for file formats
 
     ///< This method writes geometry, topology of mesh and all data to the file
-    //int write_data(void);
+    int (*write_data)(OutputTime *output, double time, int step);
     int (*write_head)(OutputTime *output);
     int (*write_tail)(OutputTime *output);
 };
 
 /* TODO: remove this function prototype (temporary solution) */
-void output( struct Problem *problem );
+void output( void );
 
 /* TODO: remove following function prototype from this .h file */
 
@@ -242,8 +246,14 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport, double time,
 void write_flow_vtk_serial(FILE *out);
 
 /* TODO: move to new output_vtk.hh */
+int write_vtk_time_data(OutputTime *output, double time, int step);
 int write_vtk_data(Output *output);
 int write_vtk_head(OutputTime *output);
 int write_vtk_tail(OutputTime *output);
+
+/* TODO: move to new output_msh.hh */
+int write_msh_head(OutputTime *output);
+int write_msh_data(OutputTime *output, double time, int step);
+int write_msh_tail(OutputTime *output);
 
 #endif

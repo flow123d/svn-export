@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup la
  * @brief	Unified interface to various linear solvers
  * @author	Jan Brezina
  *
@@ -35,9 +36,9 @@
 #include <petscksp.h>
 #include <petscviewer.h>
 
-#include <system.hh>
+#include "system/system.hh"
 #include <xio.h>
-#include <par_distribution.hh>
+#include "system/par_distribution.hh"
 #include <solve.h>
 #include <la_linsys.hh>
 
@@ -83,7 +84,7 @@ void solver_init( struct Solver *solver) {
     solver->manual_run     = OptGetBool( "Solver", "Manual_solver_run", "no" );
     solver->use_ctrl_file  = OptGetBool( "Solver", "Use_control_file", "no" );
     if (solver->use_ctrl_file)
-    	solver->ctrl_file      = OptGetStr( "Solver", "Control_file", NULL );
+    	solver->ctrl_file      = IONameHandler::get_instance()->get_input_file_name(OptGetStr( "Solver", "Control_file", NULL )).c_str();
     solver->use_last_sol    =OptGetBool( "Solver", "Use_last_solution", "no" );
     /// Last solution reuse is possible only for external solvers
     if (solver->use_last_sol && (solver->type == PETSC_SOLVER)) {
@@ -369,7 +370,7 @@ void solver_petsc(Solver *solver)
 	KSPGetConvergedReason(System,&Reason);
 	KSPGetIterationNumber(System,&nits);
 	DBGMSG ("convergence reason %d, number of iterations is %d", Reason, nits);
-        Profiler::instance()->setTimerSubframes("SOLVING MH SYSTEM", nits);
+        Profiler::instance()->set_timer_subframes("SOLVING MH SYSTEM", nits);
 	KSPDestroy(System);
 
 }

@@ -24,7 +24,7 @@
 # Include global settings
 include ../makefile.in
 
-LOCAL_INCLUDE = -I../include
+LOCAL_INCLUDE = -I../include -I.
 
 # Important directories
 BIN = ../bin
@@ -37,68 +37,90 @@ TARGETS = $(BIN)/flow123d
 # List of object files of Flow123d
 FLOW123D_OBJS = \
 $(OBJS)/mesh/ini_constants_mesh.o\
-$(OBJS)/transport_bcd.o\
-$(OBJS)/system.o\
+$(OBJS)/mesh/mesh.o\
+$(OBJS)/mesh/nodes.o\
+$(OBJS)/mesh/elements.o\
+$(OBJS)/mesh/sides.o\
+$(OBJS)/mesh/edges.o\
+$(OBJS)/mesh/boundaries.o\
+$(OBJS)/mesh/neighbours.o\
+${OBJS}/mesh/topology.o\
+\
+$(OBJS)/flow/local_matrix.o\
+$(OBJS)/flow/darcy_flow_mh.o\
+$(OBJS)/flow/darcy_flow_mh_output.o\
+\
+$(OBJS)/system/system.o\
+$(OBJS)/system/par_distribution.o\
+$(OBJS)/system/sys_function_stack.o\
+$(OBJS)/system/sys_profiler.o\
+$(OBJS)/system/math_fce.o\
+\
 $(OBJS)/read_ini.o\
 $(OBJS)/constantdb.o\
-$(OBJS)/math_fce.o\
 $(OBJS)/msh_gmshreader.o\
-$(OBJS)/nodes.o\
-$(OBJS)/elements.o\
-$(OBJS)/sides.o\
-$(OBJS)/edges.o\
-$(OBJS)/hashes.o\
-$(OBJS)/boundaries.o\
-$(OBJS)/neighbours.o\
-$(OBJS)/mesh.o\
 $(OBJS)/materials.o\
-$(OBJS)/local_matrix.o\
-$(OBJS)/darcy_flow_mh.o\
 $(OBJS)/output.o\
-$(OBJS)/concentrations.o\
-$(OBJS)/darcy_flow_mh_output.o\
 $(OBJS)/solve.o\
 $(OBJS)/problem.o\
 $(OBJS)/main.o\
-$(OBJS)/par_distribution.o\
 $(OBJS)/la_schur.o\
 $(OBJS)/xio.o\
 $(OBJS)/sparse_graph.o\
 $(OBJS)/convert.o\
-$(OBJS)/sys_function_stack.o\
 $(OBJS)/transport.o\
-$(OBJS)/sys_profiler.o\
 $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
-$(OBJS)/decay/linear_reaction.o\
+\
+$(OBJS)/reaction/linear_reaction.o\
+\
 $(OBJS)/semchem/che_semchem.o\
 $(OBJS)/semchem/semchem_interface.o\
 $(OBJS)/semchem/cti_ichnew.o
 
+#$(OBJS)/hashes.o\
+#$(OBJS)/transport_bcd.o\
+#$(OBJS)/concentrations.o\
 # $(OBJS)/ppfcs.o\
 # $(OBJS)/reaction.o\
 # $(OBJS)/reaction.o\
 # $(OBJS)/btc.o\
 
+# src subdirs
+SUB_DIRS = \
+system\
+mesh\
+io\
+semchem\
+flow\
+transport\
+reaction
+
+BUILD_DIRS = $(addprefix $(DEPS)/, $(SUB_DIRS)) $(addprefix $(OBJS)/, $(SUB_DIRS)) 
+
 FLOW123D_DEPS = $(addprefix $(DEPS)/, $(notdir $(FLOW123D_OBJS:.o=.d)))
 
 .PHONY: deps
 
-
 all: $(TARGETS)
 
+
+${BUILD_DIRS}:
+	echo "make dir:" $@
+	mkdir -pf $@ 
+	
 deps: $(FLOW123D_DEPS)
 
 # General rule to create dependencies files for .c source files
-${DEPS}/%.d: %.c
+${DEPS}/%.d:  %.c ${DEPS}
 	${CPP} -o $@ ${LOCAL_INCLUDE} ${INCLUDE} -MM -MG -MP -MT "$(addprefix $(OBJS)/, $(notdir $(@:%.d=%.o)))" $<
 
 # General rule to create dependencies files for .cc source files
-${DEPS}/%.d: %.cc
+${DEPS}/%.d: %.cc ${DEPS}
 	${CPP} -o $@ ${LOCAL_INCLUDE} ${INCLUDE} -MM -MG -MP -MT "$(addprefix $(OBJS)/, $(notdir $(@:%.d=%.o)))" $<
 
 # General rule to create dependencies files for .ccp source files
-${DEPS}/%.d: %.ccp
+${DEPS}/%.d: %.ccp  ${DEPS}
 	${CPP} -o $@ ${LOCAL_INCLUDE} ${INCLUDE} -MM -MG -MP -MT "$(addprefix $(OBJS)/, $(notdir $(@:%.d=%.o)))" $<
 
 # Include generated files with dependencies

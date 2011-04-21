@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup transport
  * @brief Reactions
  * Read input data and perform reaction computation
  *
@@ -33,9 +34,9 @@
 
 #include "transport.h"
 
-#include "system.hh"
+#include "system/system.hh"
 #include "xio.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 #include "reaction.h"
 #include "materials.hh"
 #include "elements.h"

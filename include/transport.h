@@ -32,8 +32,8 @@
 
 #include <petscmat.h>
 
-#include "par_distribution.hh"
-#include "mesh.h"
+#include "system/par_distribution.hh"
+#include "mesh/mesh.h"
 #include "problem.h"
 //#include "reaction.h"
 
@@ -55,7 +55,7 @@ struct BTC;
 
 class ConvectionTransport {
 public:
-	ConvectionTransport(struct Problem *problem);
+	ConvectionTransport(struct Problem *problem, Mesh *init_mesh);
 	~ConvectionTransport();
 	void make_transport(); //
 	void make_transport_partitioning(); //

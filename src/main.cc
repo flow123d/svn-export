@@ -23,17 +23,7 @@
  * $LastChangedDate$
  *
  * @file main.cc
- * @mainpage
- * @author Otto Severýn, Milan Hokr, Jiří Kopal, Jan Březina, Jiří Hnídek, Jiří Jeníček
- * @date April, 2009
- *
- * @brief Flow123d is simulator of underground water flow and transport. Main features are:
- * - simulation of fully saturated water flow in 1D,2D,3D domains and their combination
- * - simulation of transport with linear sorption
- * - simulation of density driven flow
- *
- * This version links against some external software:
- * - PETSC : http://www.mcs.anl.gov/petsc/petsc-2/documentation/index.html
+ * @brief This file should contain only creation of Application object.
  *
  */
 
@@ -44,18 +34,17 @@
 
 #include <petsc.h>
 
-#include "system.hh"
+#include "system/system.hh"
 #include "xio.h"
-#include "mesh.h"
-#include "topology.h"
+#include "mesh/mesh.h"
+#include "mesh/topology.h"
 #include "output.h"
 #include "problem.h"
-#include "darcy_flow_mh.hh"
-#include "darcy_flow_mh_output.hh"
+#include "flow/darcy_flow_mh.hh"
+#include "flow/darcy_flow_mh_output.hh"
 
 #include "main.h"
 #include "read_ini.h"
-#include "global_defs.h"
 #include "btc.h"
 #include "reaction.h"
 
@@ -67,7 +56,7 @@
 #include "solve.h"
 #include "elements.h"
 #include "sides.h"
-#include "math_fce.h"
+#include "system/math_fce.h"
 #include "materials.h"
  */
 
@@ -107,7 +96,7 @@ void parse_cmd_line(const int argc, char * argv[], int &goal, string &ini_fname)
              Source files have to be in the same directory as ini file.\n\
     -c       Convert flow data files into Gmsh parsed post-processing file format\n\
     -i       String used to change the 'variable' ${INPUT} in the file path.\n\
-    -o       String used to change the 'variable' ${OUTPUT} in the file path.\n";
+    -o       Absolute path to output directory.\n";
 
     xprintf(MsgLog, "Parsing program parameters ...\n");
 
@@ -178,14 +167,9 @@ int main(int argc, char **argv) {
     xprintf(Msg, "This is FLOW-1-2-3, version %s rev: %s\n", _VERSION_,REVISION);
     xprintf(Msg, "Built on %s at %s.\n", __DATE__, __TIME__);
 
-    // Read inputs
+
     problem_init(&G_problem);
-    if (OptGetBool("Transport", "Transport_on", "no") == true) {
-        alloc_transport(&G_problem);
-        G_problem.otransport->transport_init();
-        //transport_init(&G_problem);
-    }
-    
+    // Read mesh
     make_mesh(&G_problem);
 
     /* Test of object storage */
@@ -194,6 +178,10 @@ int main(int argc, char **argv) {
     xprintf(Msg, " - Number of nodes in the mesh is: %d\n", numNodes);
 
     Profiler::instance()->set_task_size(mesh->n_elements());
+
+    if (OptGetBool("Transport", "Transport_on", "no") == true) {
+        G_problem.otransport = new ConvectionTransport(&G_problem, mesh);
+    }
 
     // Calculate
     make_element_geometry();

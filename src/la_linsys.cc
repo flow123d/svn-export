@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup la
  * @brief   Wrappers for linear systems based on MPIAIJ and MATIS format.
  * @author  Jan Brezina
  *
@@ -30,7 +31,7 @@
 
 #include <algorithm>
 #include <petscmat.h>
-#include <system.hh>
+#include "system/system.hh"
 #include <la_linsys.hh>
 
 /**
@@ -415,7 +416,7 @@ void LinSys_MATIS::start_allocation()
      ASSERT(err == 0,"Error in MatISGetLocalMat.");
 
      // extract scatter
-     Mat_IS *mis = (Mat_IS*) matrix->data;
+     MatMyIS *mis = (MatMyIS*) matrix->data;
      sub_scatter = mis->ctx;
 
      subdomain_nz= new int[subdomain_size];      // count local nozero for every row of subdomain matrix
@@ -537,3 +538,18 @@ LinSys_MATIS:: ~LinSys_MATIS()
      }
 
 }
+
+#ifdef HAVE_ATLAS_ONLY_LAPACK
+/*
+ * This is a workaround to build Flow with PETSC 3.0 and ATLAS, since one particular and unimportant preconditioner (asa)
+ * needs this Lapack function, which is not implemented in ATLAS.
+ */
+extern "C" {
+
+void dgeqrf_(int m, int n, double **A, double *TAU, double *work, int lwork, int info)
+{
+}
+
+}
+#endif
+

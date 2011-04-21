@@ -23,8 +23,11 @@
  * $LastChangedDate$
  *
  * @file
- * @brief
- * @todo documentation!!!
+ * @ingroup io
+ *
+ * @brief Break through curve.
+ * @todo Rewrite to be applyable to general fields and produce specified output. documentation!!!
+ *
  *
  */
 
@@ -36,8 +39,8 @@
 #include "xio.h"
 #include "output.h"
 #include "btc.h"
-#include "system.hh"
-#include "mesh.h"
+#include "system/system.hh"
+#include "mesh/mesh.h"
 #include "problem.h"
 
 static int *BTC_elm_list( int n_btc, char *line );
@@ -51,7 +54,7 @@ void btc_init(struct BTC *btc){
 
 	char *Btc;
 
-	Btc					= OptGetStr( "Output", "BTC_elms", "-9999" );
+	Btc					= IONameHandler::get_instance()->get_output_file_name(OptGetStr( "Output", "BTC_elms", "-9999" )).c_str();
 	btc->n_BTC_elms		= count_BTC_elms( Btc );
 	btc->BTC_elm		= BTC_elm_list( btc->n_BTC_elms, Btc );
 

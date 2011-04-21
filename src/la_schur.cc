@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup la
  * @brief  Assembly explicit Schur complement for the given linear system.
  * Provides method for resolution of the full original vector of unknowns.
  *
@@ -42,9 +43,9 @@
 #include <petscvec.h>
 #include <petscmat.h>
 
-#include <par_distribution.hh>
+#include "system/par_distribution.hh"
 #include <solve.h>
-#include <system.hh>
+#include "system/system.hh"
 #include <la_linsys.hh>
 #include <la_schur.hh>
 

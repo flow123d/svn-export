@@ -24,12 +24,13 @@
  *
  *
  * @file
+ * @ingroup la
  * @brief  Construction and partitioning of a sparse graph
  *
  */
 
-#include "system.hh"
-#include "par_distribution.hh"
+#include "system/system.hh"
+#include "system/par_distribution.hh"
 #include "sparse_graph.hh"
 
 #include "boost/lambda/lambda.hpp"

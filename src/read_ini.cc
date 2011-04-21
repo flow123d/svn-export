@@ -24,6 +24,7 @@
  *
  *
  * @file
+ * @ingroup io
  * @brief   OPTIONS RUTINES - get program parameters, reading from options/ini file
  * @section DESCRIPTION
  *
@@ -41,7 +42,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-#include "system.hh"
+#include "system/system.hh"
 #include "xio.h"
 #include "read_ini.h"
 

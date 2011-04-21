@@ -24,31 +24,32 @@
 #set -x
 # This script compares two given diretories
 
+#set if nor running as part of run_test.sh script
+#TEST_DIR=/cygdrive/c/cygwin_drive/flow/branches/1.6.5/tests/
+
 # Get actual output dir as the first argument
-OUT=$1
+OUT="$1"
 
-REF_OUT=$2
+REF_OUT="$2"
 
-# file comparison script
+# optional arguments to proper displaying
+INI=$3
+n=$4
+
+# file comparison script, if not running as part of run_test.sh, set absolute path to ndiff
+# ex. NDIFF="/cygdrive/c/cygwin_drive/flow/branches/1.6.5/tests/ndiff.pl"
 NDIFF="${TEST_DIR}/../ndiff.pl"
+
 if [ ! -x "$NDIFF" ]
 then echo "can not find or run ndiff.pl"
+exit 1
 fi
 
-#names of ini files
-INI_FILE=$1
-
-INI=${INI_FILE##*/}
-SOURCE_DIR=${INI_FILE%/*}
-
-#number of processors
-
-SCRIPT_PATH_DIR="$PWD"
-
+INI="${INI##*/}"
+TEST="${TEST_DIR##*/}"
+SCRIPT_PATH_DIR="`pwd`"
 ERROR=0
 
-suff=.ini
-	
 cd "$REF_OUT"
 	
 #VAR which contains names of files
@@ -57,44 +58,37 @@ VAR=`ls`
 #cycle for checking output files
 for x in $VAR
 do
-#if its err file, compare with empty file
 if [ -d "$x" ]; then
-	if [ ! -e "OUT/$x" ]; then
+	if ! "$SCRIPT_PATH_DIR/../run_check.sh" "$OUT/$x/" "$REF_OUT/$x/"; then
 		ERROR=1
-	fi
-	if ! ${TEST_DIR}/../run_check.sh "OUT/$x" "$REF_OUT/$x"; then
-		ERROR = 1
-		echo "ERROR:Missing dir to compare($x)"
-	fi
+		echo "ERROR"
+	fi	
 else
-	if [ "$x" == "err" ]; then
-		echo "" | tee -a ${TEST_DIR}/stdout_diff.log
-		echo "Err log:" | tee -a ${TEST_DIR}/stdout_diff.log
+	if [ $x == err ]; then
+		echo "" | tee --append "${TEST_DIR}/stdout_diff.log"
+		echo "Err log : ini file: ${INI}, procs: ${n}, test: ${TEST}" | tee --append "${TEST_DIR}/stdout_diff.log"
 		touch empty
-		if ! "$NDIFF" -o ${TEST_DIR}/diff.log "$OUT/$x" empty; then
+		if ! "$NDIFF" -o "${TEST_DIR}/diff.log" "$OUT/$x" empty | tee --append "${TEST_DIR}/stdout_diff.log"; then
 			ERROR=1
 		fi
 		rm empty
 	#else compare rest of files
-	elif [ "$x" == "out" ]; then
+	elif [ $x == out ]; then
 		echo ""
 	else 
 		if [ -a "$OUT/$x" ]; then			
-			echo "" | tee -a ${TEST_DIR}/stdout_diff.log
-			echo "File: $x" | tee -a ${TEST_DIR}/stdout_diff.log
-			if ! "$NDIFF" -o ${TEST_DIR}/diff.log "$OUT/$x" "$REF_OUT/$x"; then
+			echo "" | tee --append "${TEST_DIR}/stdout_diff.log"
+			echo "File: $x, ini file: ${INI}, procs: ${n}, test: ${TEST}" | tee --append "${TEST_DIR}/stdout_diff.log"
+			if ! "$NDIFF" -o "${TEST_DIR}/diff.log" "$OUT/$x" "$REF_OUT/$x" | tee --append "${TEST_DIR}/stdout_diff.log"; then
 				ERROR=1
 			fi
 		else
-			echo "Error: Missing output file: $x" | tee -a ${TEST_DIR}/stdout_diff.log
+			echo "Error: Missing output file: $x" | tee --append "${TEST_DIR}/stdout_diff.log"
 			ERROR=1
 		fi
 	fi
 fi
 done
-
-#mv ${TEST_DIR}/diff.log "$OUT"
-#mv ${TEST_DIR}/stdout_diff.log "$OUT"
 
 if [ $ERROR == 1 ]; then
 	exit 1

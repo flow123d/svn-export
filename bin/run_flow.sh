@@ -53,7 +53,7 @@ do
 	shift
   elif [ "$1" == "-s" ]; then
     shift
-    INI_FILE=$1
+    INI_FILE="$1"
   elif [ "$1" == "-q" ]; then
     shift
     QueueTime=$1
@@ -83,7 +83,7 @@ then
 fi
 
 
-export INI=${INI_FILE##*/}
+export INI="${INI_FILE##*/}"
 if [ "${INI_FILE%%[^/]*}" == "" ]
 then 
   # relative path
@@ -128,34 +128,5 @@ else
 	echo "Error: Missing mpiexec, unavailable to proceed with more then one procs"
 	exit 1
 fi
-
-
-if [ -e ./lock ]; then
-	for i in $(seq 1 10)
-	do
-		if [! -e ./out ]; then
-			sleep 10
-		else
-			break
-		fi
-	done
-	if [! -e ./out ]; then
-		echo "ERROR: Directory locked, no output file created, aborting"
-		exit 1
-	fi
-fi
-
-for i in $(seq 1 10)
-do	
-	if [ -e ./lock ]; then
-		sleep 10
-	else 
-		break
-	fi
-	if [ $i == 10 ]; then
-		echo "Error, directory locked too long, exit 1"
-		exit 1
-	fi
-done
 	
 	

@@ -15,7 +15,7 @@ class TimerInfo:
 
 
 #process the output of timers with following tags
-tagsToProcess = ["WHOLE PROGRAM","SOLVING MH SYSTEM"]
+tagsToProcess = ["WHOLE PROGRAM","SOLVING MH SYSTEM","TRANSPORT"]
 includeSubdirs = 1
 
 def main():
@@ -64,7 +64,7 @@ def main():
 
     #generate report
     #create the output file
-    outFile = file(os.path.join(dir, "result"), "w")
+    outFile = file(os.path.join(dir, "report"), "w")
 
     #the first line
     outFile.write("n. proc".ljust(longestTag + 2))
@@ -137,10 +137,10 @@ def processDir(dir, includeSubdirs, fileInfo):
 
             #find the number of processors and task size using the regular expressions
             numprocmatch = patternNumproc.search(fileContent)
-            tagsizematch = patternTaskSize.search(fileContent)
+            tasksizematch = patternTaskSize.search(fileContent)
 
-            if numprocmatch and tagsizematch:
-                size = int(tagsizematch.group("num"))
+            if numprocmatch and tasksizematch:
+                size = int(tasksizematch.group("num"))
                 proc = int(numprocmatch.group("num"))
                 for timerTag in tagsToProcess:
                     #for each tag we want to process, create the regular expression

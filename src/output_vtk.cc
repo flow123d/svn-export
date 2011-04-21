@@ -97,8 +97,6 @@ static void write_flow_vtk_topology(Output *output)
     ElementIter ele;
     int li, tmp;
 
-    /* TODO: digit precision */
-
     /* Write Cells begin*/
     output->get_data_file() << "<Cells>" << endl;
     /* Write DataArray begin */
@@ -157,18 +155,21 @@ static void write_flow_vtk_topology(Output *output)
     output->get_data_file() << "</Cells>" << endl;
 }
 
+/**
+ * \brief This function writes ascii data to VTK (.vtu) output file.
+ * \param[in]   *output     The pointer at Output object
+ * \param[in]   *out_data   The pointer at structure storing pointer at own data.
+ */
 void write_flow_vtk_ascii_data(Output *output, OutputData *out_data)
 {
     ofstream &file = output->get_data_file();
-    string item_sep = " ";
-    string vec_sep = " ";
 
     switch(out_data->type) {
     case OUT_INT:
         for( std::vector<int>::iterator item = ((std::vector<int>*)out_data->data)->begin();
                 item != ((std::vector<int>*)out_data->data)->end();
                 item++) {
-            file << *item << item_sep;
+            file << *item << " ";
         }
         break;
     case OUT_INT_VEC:
@@ -178,16 +179,16 @@ void write_flow_vtk_ascii_data(Output *output, OutputData *out_data)
             for (std::vector<int>::iterator item = vec->begin();
                     item != vec->end();
                     item++) {
-                file << *item << item_sep;
+                file << *item << " ";
             }
-            file << vec_sep;
+            file << " ";
         }
         break;
     case OUT_FLOAT:
         for( std::vector<float>::iterator item = ((std::vector<float>*)out_data->data)->begin();
                 item != ((std::vector<float>*)out_data->data)->end();
                 item++) {
-            file << *item << item_sep;
+            file << *item << " ";
         }
         break;
     case OUT_FLOAT_VEC:
@@ -197,16 +198,16 @@ void write_flow_vtk_ascii_data(Output *output, OutputData *out_data)
             for (std::vector<float>::iterator item = vec->begin();
                     item != vec->end();
                     item++) {
-                file << *item << item_sep;
+                file << *item << " ";
             }
-            file << vec_sep;
+            file << " ";
         }
         break;
     case OUT_DOUBLE:
         for( std::vector<double>::iterator item = ((std::vector<double>*)out_data->data)->begin();
                 item != ((std::vector<double>*)out_data->data)->end();
                 item++) {
-            file << *item << item_sep;
+            file << *item << " ";
         }
         break;
     case OUT_DOUBLE_VEC:
@@ -216,9 +217,9 @@ void write_flow_vtk_ascii_data(Output *output, OutputData *out_data)
             for (std::vector<double>::iterator item = vec->begin();
                     item != vec->end();
                     item++) {
-                file << *item << item_sep;
+                file << *item << " ";
             }
-            file << vec_sep;
+            file << " ";
         }
         break;
     }
@@ -228,7 +229,7 @@ void write_flow_vtk_ascii_data(Output *output, OutputData *out_data)
  * \brief Write scalar data to the VTK file (.vtu)
  * \param[in]	out		The output file
  */
-static void write_flow_vtk_scalar_ascii(Output *output, OutputData *data/*FILE *out, const char *name, const int digit, ScalarFloatVector *vector*/)
+static void write_flow_vtk_scalar_ascii(Output *output, OutputData *data)
 {
     /* Write DataArray begin */
     output->get_data_file() << "<DataArray type=\"Float64\" Name=\"" << *data->getName() << " " << *data->getUnits() <<"\" format=\"ascii\">" << endl;//, name);
@@ -401,6 +402,13 @@ int write_vtk_data(Output *output)
     return 1;
 }
 
+/**
+ * \brief This function write data to VTK (.pvd and .vtu) file format
+ * for specific time
+ * \param[in]   *output     The pointer at output object
+ * \param[in]   time        The time from start
+ * \param[in]   step        The number of steps from start
+ */
 int write_vtk_time_data(OutputTime *output, double time, int step)
 {
     Mesh *mesh = output->get_mesh();
@@ -473,6 +481,10 @@ int write_vtk_time_data(OutputTime *output, double time, int step)
     return 1;
 }
 
+/**
+ * \brief This function writes header of VTK (.pvd) file format
+ * \param[in]   *output     The pointer at output Object
+ */
 int write_vtk_head(OutputTime *output)
 {
     xprintf( Msg, "%s: Writing output file (head) %s ... ", __func__, output->get_base_filename().c_str() );
@@ -484,6 +496,10 @@ int write_vtk_head(OutputTime *output)
     xprintf( Msg, "O.K.\n");
 }
 
+/**
+ * \brief This function writes tail of VTK (.pvd) file format
+ * \param[in]   *output     The pointer at output Object
+ */
 int write_vtk_tail(OutputTime *output)
 {
     xprintf( Msg, "%s: Writing output file (tail) %s ... ", __func__, output->get_base_filename().c_str() );

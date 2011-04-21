@@ -246,14 +246,19 @@ void write_trans_time_vtk_serial_ascii(struct Transport *transport, double time,
 void write_flow_vtk_serial(FILE *out);
 
 /* TODO: move to new output_vtk.hh */
-int write_vtk_time_data(OutputTime *output, double time, int step);
+// Static data
 int write_vtk_data(Output *output);
+// Dynamic data
 int write_vtk_head(OutputTime *output);
+int write_vtk_time_data(OutputTime *output, double time, int step);
 int write_vtk_tail(OutputTime *output);
 
 /* TODO: move to new output_msh.hh */
+// Static data
+int write_msh_data(Output *output);
+// Dynamic data
 int write_msh_head(OutputTime *output);
-int write_msh_data(OutputTime *output, double time, int step);
+int write_msh_time_data(OutputTime *output, double time, int step);
 int write_msh_tail(OutputTime *output);
 
 #endif

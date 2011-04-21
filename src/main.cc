@@ -416,12 +416,12 @@ void main_compute_mh_density(struct Problem *problem)
     OutputTime *_output_time = new OutputTime(mesh ,trans->transport_out_fname);
 
     _output_time->write_head(_output_time);
-    // transport_output_init(problem->transport); TODO: remove
 
     _output_time->get_data_from_transport(trans, 0);
+    // call _output_time->register_node_data(name, unit, 0, data) to register other data on nodes
+    // call _output_time->register_elem_data(name, unit, 0, data) to register other data on elements
     _output_time->write_data(_output_time, 0.0, ++frame);
     _output_time->free_data_from_transport(trans);
-    // transport_output(problem->transport, 0.0, ++frame); TODO: remove
 
     save_step = problem->save_step;
     stop_time = problem->stop_time;
@@ -467,8 +467,8 @@ void main_compute_mh_density(struct Problem *problem)
                 break; //at least one repeat of iteration is necessary to update both conc and pressure
             }
         }
+
         if (trans -> write_iterations == 0) {
-            //transport_output(problem->transport, i * problem->time_step, ++frame);
             _output_time->get_data_from_transport(trans, ++frame);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
@@ -477,13 +477,13 @@ void main_compute_mh_density(struct Problem *problem)
         }
 
         if ((trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
-            //transport_output(problem->transport, (i + 1) * problem->stop_time, ++frame);
             _output_time->get_data_from_transport(trans, ++frame);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
             _output_time->write_data(_output_time, (i + 1) * problem->stop_time, frame);
             _output_time->free_data_from_transport(trans);
         }
+
         xprintf(Msg, "step %d finished at %d density iterations\n", i, j);
         xfprintf(log, "%f \t %d\n", (i + 1) * trans->update_dens_time, j); // Status LOG
     }

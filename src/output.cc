@@ -299,6 +299,9 @@ Output::Output(Mesh *_mesh, string fname)
     case VTK_PARALLEL_ASCII:
         write_data = write_vtk_data;
         break;
+    case POS_ASCII:
+        write_data = write_msh_data;
+        break;
     default:
         write_data = write_null_data;
         break;
@@ -513,7 +516,7 @@ OutputTime::OutputTime(Mesh *_mesh, string fname)
         break;
     case POS_ASCII:
         write_head = write_msh_head;
-        write_data = write_msh_data;
+        write_data = write_msh_time_data;
         write_tail = write_msh_tail;
         break;
     default:

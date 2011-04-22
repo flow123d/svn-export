@@ -284,7 +284,17 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
 
     postprocess(problem);
 
-    output();
+    //output();
+    if (rank == 0) {
+        const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+        Output *output = new Output(mesh, string(out_fname));
+
+        output->get_data_from_mesh();
+        output->write_data(output);
+        output->free_data_from_mesh();
+
+        delete output;
+    }
 
     // pracovni vystup nekompatibilniho propojeni
     // melo by to byt ve water*
@@ -407,21 +417,26 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
 void main_compute_mh_density(struct Problem *problem)
 {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-    int i, j, dens_step, n_step, frame = 0;
+    int i, j, dens_step, n_step, frame = 0, rank;
     double save_step, stop_time; // update_dens_time
     char statuslog[255];
     struct Transport *trans = problem->transport;
     FILE *log;
+    OutputTime *_output_time;
 
-    OutputTime *_output_time = new OutputTime(mesh ,trans->transport_out_fname);
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    _output_time->write_head(_output_time);
+    if(rank == 0) {
+        _output_time = new OutputTime(mesh ,trans->transport_out_fname);
 
-    _output_time->get_data_from_transport(trans, 0);
-    // call _output_time->register_node_data(name, unit, 0, data) to register other data on nodes
-    // call _output_time->register_elem_data(name, unit, 0, data) to register other data on elements
-    _output_time->write_data(_output_time, 0.0, ++frame);
-    _output_time->free_data_from_transport(trans);
+        _output_time->write_head(_output_time);
+
+        _output_time->get_data_from_transport(trans, 0);
+        // call _output_time->register_node_data(name, unit, 0, data) to register other data on nodes
+        // call _output_time->register_elem_data(name, unit, 0, data) to register other data on elements
+        _output_time->write_data(_output_time, 0.0, ++frame);
+        _output_time->free_data_from_transport(trans);
+    }
 
     save_step = problem->save_step;
     stop_time = problem->stop_time;
@@ -468,7 +483,7 @@ void main_compute_mh_density(struct Problem *problem)
             }
         }
 
-        if (trans -> write_iterations == 0) {
+        if (rank == 0 && trans -> write_iterations == 0) {
             _output_time->get_data_from_transport(trans, ++frame);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
@@ -476,7 +491,7 @@ void main_compute_mh_density(struct Problem *problem)
             _output_time->free_data_from_transport(trans);
         }
 
-        if ((trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
+        if ((rank == 0) && (trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
             _output_time->get_data_from_transport(trans, ++frame);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
@@ -488,10 +503,21 @@ void main_compute_mh_density(struct Problem *problem)
         xfprintf(log, "%f \t %d\n", (i + 1) * trans->update_dens_time, j); // Status LOG
     }
 
-    //transport_output_finish(problem->transport);
-    _output_time->write_tail(_output_time);
-    delete _output_time;
+    if(rank == 0) {
+        _output_time->write_tail(_output_time);
+        delete _output_time;
+    }
 
-    output();
+    //output();
+    if (rank == 0) {
+        const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+        Output *output = new Output(mesh, string(out_fname));
+
+        output->get_data_from_mesh();
+        output->write_data(output);
+        output->free_data_from_mesh();
+
+        delete output;
+    }
     xfclose(log);
 }

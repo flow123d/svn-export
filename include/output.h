@@ -143,6 +143,9 @@ typedef std::vector<OutputData> OutputDataVec;
  */
 class Output {
 private:
+    struct OutScalar *node_scalar;      // Temporary solution
+    struct OutScalar *element_scalar;   // Temporary solution
+    struct OutVector *element_vector;   // Temporary solution
 public:
     Output() {};            // Un-named constructor can't be called
     ofstream    *base_file;         ///< Base output stream
@@ -157,7 +160,8 @@ public:
     Output(Mesh *mesh, string filename);
     ~Output();
 
-    int get_data_from_mesh(void);
+    void free_data_from_mesh(void);
+    void get_data_from_mesh(void);
 
     /**
      * \brief This method registers node data, that will be written to the file,
@@ -222,28 +226,10 @@ public:
     int (*write_tail)(OutputTime *output);
 };
 
-/* TODO: remove this function prototype (temporary solution) */
-void output( void );
 
-/* TODO: remove following function prototype from this .h file */
-
+/* TODO: remove */
 void output_flow_field_init(char *fname);
-void output_flow_field_in_time(struct Problem *problem,double time);
-
-void output_init(void);
-void output_time(double time);
-
-void output_msh_init_bin(char *file);
-void output_msh_init_ascii(char *file);
-
-void write_trans_init_vtk_serial_ascii(char *file);
-void write_trans_finish_vtk_serial_ascii(char *file);
-
-void output_transport_time_bin(struct Transport *transport, double time, int step, char *file);
-void output_transport_time_ascii(struct Transport *transport, double time, int step, char *file);
-void write_trans_time_vtk_serial_ascii(struct Transport *transport, double time, int step, char *file);
-
-void write_flow_vtk_serial(FILE *out);
+void output_flow_field_in_time(struct Problem *problem, double time);
 
 /* TODO: move to new output_vtk.hh */
 // Static data

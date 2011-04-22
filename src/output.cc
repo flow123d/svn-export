@@ -46,71 +46,6 @@
 #include <string>
 
 /**
- * \brief This function get data from Mesh to temporary structure. It creates
- * object Output and write all static data to the output file.
- */
-void output( void )
-/* TODO: This is temporary solution. This should be removed in the future */
-{
-    // Do output only in first process
-    int my_proc;
-    MPI_Comm_rank(PETSC_COMM_WORLD,&my_proc);
-    if (my_proc != 0) return;
-
-    NodeIter node;
-    struct OutScalar node_scalar;
-    struct OutScalar element_scalar;
-    struct OutVector element_vector;
-
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
-    /* Fill temporary vector of node scalars */
-    node_scalar.scalars = new ScalarFloatVector;
-    node_scalar.name = "node_scalars";
-    node_scalar.unit = "";
-    /* Generate vector for scalar data of nodes */
-    node_scalar.scalars->reserve(mesh->node_vector.size());   // reserver memory for vector
-    FOR_NODES( node ) {
-        node_scalar.scalars->push_back(node->scalar);
-    }
-
-    /* Fill vectors of element scalars and vectors */
-    element_scalar.scalars = new ScalarFloatVector;
-    element_scalar.name = "element_scalars";
-    element_scalar.unit = "";
-    element_vector.vectors = new VectorFloatVector;
-    element_vector.name = "element_vectors";
-    element_vector.unit = "";
-    /* Generate vectors for scalar and vector data of nodes */
-    element_scalar.scalars->reserve(mesh->n_elements());
-    element_vector.vectors->reserve(mesh->n_elements());
-    FOR_ELEMENTS(ele) {
-        /* Add scalar */
-        element_scalar.scalars->push_back(ele->scalar);
-        /* Add vector */
-        vector<double> vec;
-        vec.reserve(3);
-        vec.push_back(ele->vector[0]);
-        vec.push_back(ele->vector[1]);
-        vec.push_back(ele->vector[2]);
-        element_vector.vectors->push_back(vec);
-    }
-
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
-
-    Output *output = new Output(mesh, string(out_fname));
-
-    output->register_node_data(node_scalar.name, node_scalar.unit, *node_scalar.scalars);
-    output->register_elem_data(element_scalar.name, element_scalar.unit, *element_scalar.scalars);
-    output->register_elem_data(element_vector.name, element_vector.unit, *element_vector.vectors);
-
-    output->write_data(output);
-
-    delete output;
-
-}
-
-/**
  * \brief Constructor for OutputData storing names of output data and their
  * units.
  */
@@ -217,6 +152,68 @@ OutputData::~OutputData()
         delete units;
     }
 #endif
+}
+
+/**
+ * \brief This function free data from Mesh
+ */
+void Output::free_data_from_mesh(void)
+{
+    delete node_scalar->scalars;
+    delete node_scalar;
+    delete element_scalar->scalars;
+    delete element_scalar;
+    delete element_vector->vectors;
+    delete element_vector;
+}
+
+/**
+ * \brief This function gets data from mesh and save them in Output
+ */
+void Output::get_data_from_mesh(void)
+{
+    NodeIter node;
+    ElementIter ele;
+
+    node_scalar = new OutScalar;
+    element_scalar = new OutScalar;
+    element_vector = new OutVector;
+
+    /* Fill temporary vector of node scalars */
+    node_scalar->scalars = new ScalarFloatVector;
+    node_scalar->name = "node_scalars";
+    node_scalar->unit = "";
+    /* Generate vector for scalar data of nodes */
+    node_scalar->scalars->reserve(mesh->node_vector.size());   // reserver memory for vector
+    FOR_NODES( node ) {
+        node_scalar->scalars->push_back(node->scalar);
+    }
+
+    /* Fill vectors of element scalars and vectors */
+    element_scalar->scalars = new ScalarFloatVector;
+    element_scalar->name = "element_scalars";
+    element_scalar->unit = "";
+    element_vector->vectors = new VectorFloatVector;
+    element_vector->name = "element_vectors";
+    element_vector->unit = "";
+    /* Generate vectors for scalar and vector data of nodes */
+    element_scalar->scalars->reserve(mesh->n_elements());
+    element_vector->vectors->reserve(mesh->n_elements());
+    FOR_ELEMENTS(ele) {
+        /* Add scalar */
+        element_scalar->scalars->push_back(ele->scalar);
+        /* Add vector */
+        vector<double> vec;
+        vec.reserve(3);
+        vec.push_back(ele->vector[0]);
+        vec.push_back(ele->vector[1]);
+        vec.push_back(ele->vector[2]);
+        element_vector->vectors->push_back(vec);
+    }
+
+    register_node_data(node_scalar->name, node_scalar->unit, *node_scalar->scalars);
+    register_elem_data(element_scalar->name, element_scalar->unit, *element_scalar->scalars);
+    register_elem_data(element_vector->name, element_vector->unit, *element_vector->vectors);
 }
 
 /**

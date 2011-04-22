@@ -43,8 +43,8 @@
 static void write_flow_vtk_header(Output *output)
 {
     output->get_data_file() << "<?xml version=\"1.0\"?>" << endl;
-    // TODO: test endianess of platform (this is important, when raw data are
-    // saved to the VTK file)
+    // TODO: test endianess of platform (this would be important, when raw
+    // data will be saved to the VTK file)
     output->get_data_file() << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << endl;
     output->get_data_file() << "<UnstructuredGrid>" << endl;
 }
@@ -58,10 +58,7 @@ static void write_flow_vtk_geometry(Output *output)
     Mesh *mesh = output->get_mesh();
 
     NodeIter node;
-    //char dbl_fmt[16];
     int tmp;
-
-    /* TODO: digit precision */
 
     /* Write Points begin*/
     output->get_data_file() << "<Points>" << endl;

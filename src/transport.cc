@@ -929,7 +929,7 @@ void compute_sorption(double conc_avg, vector<double> &sorp_coef, int sorp_type,
 //=============================================================================
 //      CONVECTION
 //=============================================================================
-void convection(struct Transport *trans, OutputTime *_output_time) {
+void convection(struct Transport *trans, OutputTime *output_time) {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
     MaterialDatabase::Iter material;
 
@@ -1027,12 +1027,12 @@ void convection(struct Transport *trans, OutputTime *_output_time) {
             xprintf( Msg, "Output\n");
             //if (size != 1)
             output_vector_gather(trans);
-            if (rank == 0 && _output_time != NULL) {
-                _output_time->get_data_from_transport(trans, ++frame);  // TODO: remove in the future
+            if (rank == 0 && output_time != NULL) {
+                output_time->get_data_from_transport(trans, ++frame);  // TODO: remove in the future
                 // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
                 // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-                _output_time->write_data(_output_time, t * trans->time_step, frame);
-                _output_time->free_data_from_transport(trans);  // TODO: remove in the future
+                output_time->write_data(output_time, t * trans->time_step, frame);
+                output_time->free_data_from_transport(trans);  // TODO: remove in the future
             }
             step = 0;
         }

@@ -152,6 +152,7 @@ void write_msh_topology(Output *output)
     output->get_base_file() << "$Elements" << endl;
     output->get_base_file() << mesh->n_elements() << endl;
     FOR_ELEMENTS(elm) {
+        // element_id element_type 3_other_tags material region partition
         output->get_base_file() << elm.id() << " " << elm->type << " 3 " << elm->mid << " " << elm->rid << " " << elm->pid;
         FOR_ELEMENT_NODES(elm,i)
             output->get_base_file() << " " << elm->node[i]->id;

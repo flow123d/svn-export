@@ -218,32 +218,53 @@ void Output::get_data_from_mesh(void)
 
 /**
  * \brief Register data on nodes. This function will add reference on this data
- * to the Output object. Own data will be writen to the file, when write_data
+ * to the Output object. Own data will be written to the file, when write_data
  * method will be called.
+ * \param[in]   name    The name of data
+ * \param[in]   unit    The name of units
+ * \param[in]   data    The reference on data
+ * \return This function return 1, when the length of data vector is the same as
+ * number of nodes in mesh. When the the number is different, then this function
+ * returns 0.
  */
 template <typename _Data>
 int Output::register_node_data(std::string name, std::string unit, std::vector<_Data> &data)
 {
-    OutputData *out_data = new OutputData(name, unit, data);
-    node_data->push_back(*out_data);
-    return 1;
+    if(mesh->node_vector.size() == data.size()) {
+        OutputData *out_data = new OutputData(name, unit, data);
+        node_data->push_back(*out_data);
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /**
  * \brief Register data on elements. This function will add reference on the
  * data to the Output object. Own data will be writen to the file, when
  * write_data method will be called.
+ * \param[in]   name    The name of data
+ * \param[in]   unit    The name of units
+ * \param[in]   data    The reference on data
+ * \return This function return 1, when the length of data vector is the same as
+ * number of elements in mesh. When the the number is different, then this
+ * function returns 0.
  */
 template <typename _Data>
 int Output::register_elem_data(std::string name, std::string unit, std::vector<_Data> &data)
 {
-    OutputData *out_data = new OutputData(name, unit, data);
-    elem_data->push_back(*out_data);
-    return 1;
+    if(mesh->element.size() == data.size()) {
+        OutputData *out_data = new OutputData(name, unit, data);
+        elem_data->push_back(*out_data);
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /**
  * \brief NULL function for not yet supported formats
+ * \param[in]   *output The pointer at output object.
  */
 int write_null_data(Output *output)
 {
@@ -258,8 +279,6 @@ int write_null_data(Output *output)
  */
 Output::Output(Mesh *_mesh, string fname)
 {
-    xprintf(Msg, "Output(), file: %s\n", fname.c_str());
-
     if( OptGetBool("Output", "Write_output_file", "no") == false ) {
         base_filename = NULL;
         base_file = NULL;
@@ -297,6 +316,7 @@ Output::Output(Mesh *_mesh, string fname)
         write_data = write_vtk_data;
         break;
     case POS_ASCII:
+    case POS_BIN:
         write_data = write_msh_data;
         break;
     default:
@@ -314,12 +334,10 @@ Output::~Output()
 {
     // Free all reference on node and element data
     if(node_data != NULL) {
-        printf("node_data->size: %d\n", node_data->size());
         delete node_data;
     }
 
     if(elem_data != NULL) {
-        printf("elem_data->size: %d\n", elem_data->size());
         delete elem_data;
     }
 
@@ -331,6 +349,8 @@ Output::~Output()
         base_file->close();
         delete base_file;
     }
+
+    xprintf(Msg, "O.K.\n");
 }
 
 /**
@@ -512,6 +532,7 @@ OutputTime::OutputTime(Mesh *_mesh, string fname)
         write_tail = write_vtk_tail;
         break;
     case POS_ASCII:
+    case POS_BIN:
         write_head = write_msh_head;
         write_data = write_msh_time_data;
         write_tail = write_msh_tail;

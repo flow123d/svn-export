@@ -14,6 +14,13 @@ IInterpolation::IInterpolation()
   checks.resize(CH);
 }
 
+IInterpolation::~IInterpolation(void )
+{
+  delete leftcond;
+  delete rightcond;
+}
+
+
 void IInterpolation::SetExtrapolation(const unsigned char& left_degree, 
 				      const unsigned char& right_degree)
 {  

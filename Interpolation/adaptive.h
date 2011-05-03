@@ -23,11 +23,13 @@
 namespace Interpolation
 {
 
+///A structure for priority queue.
 struct ErrorNum {
     double err;
     unsigned long i;
 };
 
+///A Condition function for priority queue.
 class CompareErrorNum {
     public:
     bool operator()(ErrorNum& err1, ErrorNum& err2) // Returns true if t1 is earlier than t2
@@ -36,24 +38,36 @@ class CompareErrorNum {
        return false;
     }
 };
-  
+ 
+///Class Adaptive.
+/** Uses nonadaptive classes in cycles for computing interpolation.
+  * In every cycle computes the interpolation error -- as
+  * a distance of tunctions (function and interpolant) using L_2 norm.
+  * The integral is evaluated by static class AdaptiveSimpson.
+  * After getting to an acceptable tolerance returns interpolant.
+  * Inherits from IInterpolation
+  */
 class Adaptive : public IInterpolation
 {
   private:
-    ///tolerance sets the max. error of interpolation
+    ///Tolerance sets the max. error of interpolation.
     double tolerance;
       
-     ///Checks whether all parameters are set
+    ///Checks whether all parameters are set.
     bool Check(); 
     
   public:
     
-    ///constructor
+    ///A constructor.
     Adaptive(void );
     
-    ///Set tolerance
+    ///A destructor.
+    ~Adaptive(void);
+    
+    ///Sets tolerance.
     void SetTolerance(double tolerance);
     
+    ///Templated method Interpolate\<M\>
     /** Interpolation by Lagrange polynomials of Mth degree on interval a,b.
 	* Template parameter is the degree of polynomials
 	* @param func is the functor that is being interpolated
@@ -65,10 +79,12 @@ class Adaptive : public IInterpolation
       
       InterpolantBase *result;
       
+      
       //setting initial Lagrange interpolation:
       Lagrange *lag = new Lagrange();
       if (x_defined) lag->SetNodes(x);
       else lag->SetStep(step);
+      
       
       //these parameters of interpolation will not change during adaption:
       lag->SetInterval(a,b);
@@ -76,12 +92,13 @@ class Adaptive : public IInterpolation
       lag->AddCond(IInterpolation::RightBC, *rightcond);
       lag->SetExtrapolation(left_degree, right_degree);
       
+      
       double simpsontol = 1e-6;	//tolerance for evaluating of adaptivesimpson
       double max_rel_err = tolerance / (b-a); //relative error
       double tot_err;	// absolute error on <a,b>
       ErrorNum p_err;	// relative polynomial error on its interval
       
-      int n=2;	//iteration cycle of adaption
+      int n=4;	//iteration cycle of adaption
       while (n)
       {
 	result = lag->Interpolate<M>(func);	//interpolation with actual nodes
@@ -94,19 +111,22 @@ class Adaptive : public IInterpolation
 	for(unsigned long i = 0; i < result->GetCount(); i++ )
 	{
 	  LP_Norm norm(&func,result->GetPol(i),2);
-	  // p_err = e/(b-a)
 	  p_err.i = i;
+	  //absolute polynomial error
 	  p_err.err = sqrt(AdaptiveSimpson::AdaptSimpson( norm,
 						     result->GetPol(i)->GetLower(), 
 						     result->GetPol(i)->GetUpper(),
-						     simpsontol) )
-		 / (result->GetPol(i)->GetUpper()-result->GetPol(i)->GetLower());
-	  std::cout << "\t p_err=" << p_err.err << std::endl;
-	  if(p_err.err > max_rel_err) pq.push(p_err);
+						     simpsontol) );
+	  //increase the absolute total error
 	  tot_err += p_err.err;
+	  std::cout << "\t abs. p_err=" << p_err.err;
+	  //p_err convertion absolute -> relative (p_err/(xi+1 - xi))
+	  p_err.err /= (result->GetPol(i)->GetUpper()-result->GetPol(i)->GetLower());
+	  std::cout << "\t rel. p_err=" << p_err.err << std::endl;
+	  if(p_err.err > max_rel_err) pq.push(p_err);
 	}
 	
-	std::cout << "interation = " << n << "  err = " << tot_err << std::endl;
+	std::cout << "interation = " << n << "\trel. err = " << tot_err/(b-a) << "\tabs. err = " << tot_err << std::endl;
 	
 	
 	if (tot_err <= tolerance) break;	//end of adaption
@@ -128,13 +148,15 @@ class Adaptive : public IInterpolation
 	n--;
 	//*/
       }
+      
+      delete lag;
 
-      return result;
+      return result;   
     }
   
 };
 
 
-}
+}	//namespace Interpolation
 
 #endif // ADAPTIVE_H

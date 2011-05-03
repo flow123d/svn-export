@@ -80,6 +80,9 @@ class Lagrange	: public IInterpolation
     ///constructor
     Lagrange ( void );
     
+    ///destructor
+    ~Lagrange ( void );
+    
     /** Interpolation by Lagrange polynomials of Mth degree on interval a,b.
       * Template parameter is the degree of polynomials
       * @param func is the functor that is being interpolated
@@ -110,6 +113,8 @@ class Lagrange	: public IInterpolation
       bandres = band->Solve();
       
       InterpolantBase *result = CreateInterpolant(bandres, M);
+      
+      delete bandres;
       
       //Extrapolation********************************************
       if(!extrapolation_defined)

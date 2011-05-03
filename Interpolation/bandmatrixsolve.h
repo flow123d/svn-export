@@ -26,7 +26,7 @@ typedef long int integer;
 typedef double doublereal;
 #endif 
 
-/// A class BandMatrixSolve
+/// A class BandMatrixSolve.
 /** Provides interface for solving band matrix by DGBTRS_ and DGBTRF_ in CLAPACK.
   * Closer specification for these methods can be found on 
   * http://www.netlib.org/lapack/double/dgbtrf.f
@@ -66,26 +66,26 @@ public:
   BandMatrixSolve(integer n, integer ku, integer kl, integer nrhs);
   
   ///A destructor.
-  ~BandMatrixSolve();
+  ~BandMatrixSolve( void );
   
-  ///returns the m dimension of the matrix A
-  int GetM()
+  ///Returns the m dimension of the matrix A.
+  inline int GetM()
   {return m;}
   
-  ///returns the n dimension of the matrix A
-  int GetN()
+  ///Returns the n dimension of the matrix A.
+  inline int GetN()
   {return n;}
   
-  ///returns the number of superdiagonals of the matrix A
-  int GetKU()
+  ///Returns the number of superdiagonals of the matrix A.
+  inline int GetKU()
   {return ku;}
   
-  ///returns the number of subdiagonals of the matrix A
-  int GetKL()
+  ///Returns the number of subdiagonals of the matrix A.
+  inline int GetKL()
   {return kl;}
   
-  ///returns the number of right hand sizes of the matrix A
-  int GetNRHS()
+  ///Returns the number of right hand sizes of the matrix A.
+  inline int GetNRHS()
   {return nrhs;}
   
   /// A method for filling the matrix A.
@@ -107,6 +107,7 @@ public:
     */
   double* Solve();
 
+  ///Writes the matrix to output.
   void WrMatrix(double* a, int m, int n);
 };
 

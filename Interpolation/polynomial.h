@@ -11,7 +11,7 @@
 namespace Interpolation
 {
   
-//struct der;
+struct der;
  
 /// class Polynomial.
 /** Defines a polynomial of n-th degree on an interval \<a,b\>.
@@ -35,51 +35,56 @@ class Polynomial : public FunctorDiffBase
     std::vector<double> coefs;
     
   public:   
+    ///Default constructor.
     Polynomial();
     
-    /** Constructor.
+    /** A constructor.
       * @param degree is the degree of the polynomial
       */
-    Polynomial(const unsigned char &degree);
+    Polynomial( const unsigned char &degree );
         
-    /** Constructor.
+    /** A constructor.
       * @param a is the lower bound of the polynomial
       * @param b is the upperbound of the polynomial
       * @param coefs is the vector of coeficients of the polynomial
       */
-    Polynomial(const double &a, const double &b, const std::vector<double> &coefs);
+    Polynomial( const double &a, const double &b, const std::vector<double> &coefs );
     
-    ///copy constructor
-    Polynomial(const Polynomial &pol);   
+    ///A copy constructor.
+    Polynomial( const Polynomial &pol );   
+    
+    ///A destructor.
+    ~Polynomial( void );
     
     ///sets the interval for the polynomial
-    void SetInterval(const double &a, const double &b);
+    void SetInterval( const double &a, const double &b );
     
     ///returns lower limit of the polynomial - "a"
-    double GetLower();
+    inline double GetLower()
+    { return a; }
     
     ///returns upper limit of the polynomial - "b"
-    double GetUpper();
+    inline double GetUpper()
+    { return b; }
       
+    ///Returns potiner to the vector of coeficients
+    inline std::vector<double> *GetCoefs()
+    { return &coefs; }
     
     ///sets the coeficients "coef"
-    void SetCoeficients(double *coeficients, const unsigned int &size);
-    
-    ///Returns potiner to the vector of coeficients
-    std::vector<double> *GetCoefs();
+    void SetCoeficients( double *coeficients, const unsigned int &size );
     
     ///returns value of the polynomial P(x), uses Horner schema
     virtual double operator() ( const double &x );
-    //virtual double operator() ( const double &x );
     
     ///returns derivate of the polynomial P'(x), uses Horner schema
-    der Diff(const double &x);
+    virtual der Diff( const double &x );
     
     ///returns intergral of the polynomial P(x) in explicit limits a,b, uses Horner schema
-    double Integral(const double &a, const double &b);
+    double Integral( const double &u, const double &v );
     
     ///returns intergral of the polynomial P(x) in default limits a,b, uses Horner schema
-    double Integral(void);	//int. between a and b 
+    double Integral( void );
 };
 
 }

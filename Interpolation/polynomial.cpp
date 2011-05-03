@@ -19,6 +19,10 @@ Polynomial::Polynomial(const Interpolation::Polynomial &pol)
   : degree(pol.degree), a(pol.a), b(pol.b), coefs(pol.coefs)
 {}
 
+Polynomial::~Polynomial(void )
+{}
+
+
 
 void Polynomial::SetInterval(const double &a, const double &b)
 {
@@ -28,15 +32,6 @@ void Polynomial::SetInterval(const double &a, const double &b)
   this->b = b;
 }
 
-double Polynomial::GetLower()
-{
-  return a;
-}
-
-double Polynomial::GetUpper()
-{
-  return b;
-}
 
 void Polynomial::SetCoeficients(double* coeficients, const unsigned int &size)
 {
@@ -47,11 +42,7 @@ void Polynomial::SetCoeficients(double* coeficients, const unsigned int &size)
   }
 }
 
-std::vector< double >* Polynomial::GetCoefs()
-{
-  return &coefs;
-}
-  
+ 
 double Polynomial::operator() ( const double &x )
 {
   double xx = x - a;	//placing x to the interval <0,step>
@@ -89,12 +80,14 @@ der Polynomial::Diff(const double &x)
   return result;
 }
 
-double Polynomial::Integral(const double &a, const double &b)
+double Polynomial::Integral(const double &u, const double &v)
 {
-  if(a > b) 
-    return Integral(b,a); //replace limits (lower < upper)
+  if(u > v) 
+    return Integral(v,u); //replace limits (lower < upper)
   else
   {
+    double aa = u-a;
+    double bb = v-a;
     //Horner's schema: (a[N]*x/(N+1) + a[N-1]/N)*x + a[N-2]/(N-1)*x +...
     //...+ a[1]/2)*x + a[0]*x
     //(a[n]*x/(n+1) + a[n-1]/n)*x + a[n-2]/(n-1))...
@@ -104,12 +97,12 @@ double Polynomial::Integral(const double &a, const double &b)
     int n = degree-1;
     while(n >= 0)
     {	
-      result_a = result_a*a + coefs[n] / (n+1);
-      result_b = result_b*b + coefs[n] / (n+1);
+      result_a = result_a*aa + coefs[n] / (n+1);
+      result_b = result_b*bb + coefs[n] / (n+1);
       n--;
     }
-    result_a *= a;
-    result_b *= b;
+    result_a *= aa;
+    result_b *= bb;
     return (result_b - result_a);	//result is the difference between values in limits
   }
 }

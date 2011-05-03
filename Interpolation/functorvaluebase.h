@@ -4,8 +4,10 @@
 
 namespace Interpolation
 {
-//abstract class which is used as interface 
-//for functors giving function value
+///Abstract class for functors.
+/** Abstract class which is used as interface 
+  * for functors giving function value.
+  */
 class FunctorValueBase
 {
   public:

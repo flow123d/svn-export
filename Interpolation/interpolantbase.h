@@ -68,20 +68,26 @@ class InterpolantBase : public FunctorDiffBase
     }
  
   public:
-    InterpolantBase(std::vector<Polynomial> &polynomials);
+    ///constructor
+    InterpolantBase( std::vector<Polynomial> &polynomials );
+    
+    ///destructor
+    ~InterpolantBase( void );
     
     ///returns left bound of the interval
-    double GetA();
+    inline double GetA()
+    {  return a; }
     
     ///returns right bound of the interval
-    double GetB();
+    inline double GetB()
+    {  return b; }
     
     ///returns the polynomialcount
     inline unsigned long GetCount()
     { return polynomialcount; }
     
     ///returns the pointer to the vector of polynomials
-    inline Polynomial* GetPol(unsigned long i)
+    inline Polynomial* GetPol( unsigned long i )
     { return &(polynomials[i]); }
     
     /// A function value.
@@ -99,23 +105,23 @@ class InterpolantBase : public FunctorDiffBase
       * @return structure "der" which includes the function
       * value and the derivate of interpolant.
       */    
-    virtual der Diff(const double &x);
+    virtual der Diff( const double &x );
     
     /// An integral.
-    /** Counts the integral of the interpolant between limits "a" and "b".
+    /** Counts the integral of the interpolant between limits "u" and "v".
       * Is evaluated by a integration of polynoms by Horner schema.
-      * @param a a lower limit.
-      * @param a an upper limit.
+      * @param u a lower limit.
+      * @param v an upper limit.
       * @return  value of the integral.
       */
-    double Integral(const double &a, const double &b); 
+    double Integral( const double &u, const double &v ); 
     
     ///Sets type of extrapolation
     /** Sets the polynomials that should be counted when x is out of bounds a,b.
       * @param left a polynomial for x < a.
       * @param right a polynomial for b > b.
       */
-    void SetExtrapolation(const Polynomial &left, const Polynomial &right);
+    void SetExtrapolation( const Polynomial &left, const Polynomial &right );
     
     ///Sets type of extrapolation
     /** Creates the polynomials that should be counted when x is out of bounds a,b.

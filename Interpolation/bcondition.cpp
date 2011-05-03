@@ -15,6 +15,11 @@ BCondition::BCondition(const BCondition& source)
 {
 }
 
+BCondition::~BCondition(void )
+{
+}
+
+
 void BCondition::AddCond(const unsigned int &derivate, const double &value)
 {
   //checking size of vector

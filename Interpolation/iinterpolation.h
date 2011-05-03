@@ -64,6 +64,9 @@ class IInterpolation
     ///constructor
     IInterpolation( void );
     
+    ///destructor
+    ~IInterpolation( void );
+    
     /** Sets the interval of interpolation.
       * @param a is left boundary
       * @param b is right bound

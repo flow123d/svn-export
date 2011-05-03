@@ -7,15 +7,16 @@
 
 namespace Interpolation
 {
-/** contains value and boolean information
-  * whether the value is defined by user
+/** Contains value and boolean information
+  * whether the value is defined by user.
   */
-  struct defvalue{
+struct defvalue
+{
   double value;
   bool defined;
-  };
+};
   
-///class Boundary Condition
+///Class BCondition -- Boundary Condition
 /** Defines a class that keeps boundary conditions for interpolation.
   * Has methods to control the conditions (Add, AutoAdd,GetCond,GetCount).
   */
@@ -31,16 +32,20 @@ class BCondition
   
   public:
     ///constructor
-    BCondition(void);
+    BCondition( void );
     
     ///copy constructor
-    BCondition(const BCondition& source);
+    BCondition( const BCondition& source );
+    
+    ///destructor
+    ~BCondition( void );
   
     /** Adds a boundary condition.
-      * @param derivate sets an order of a derivate which is being added
+      * @param derivate sets an order of a derivate 
+      *			which is being added
       * @param value sets the value of derivate 
       */
-    void AddCond(const unsigned int &derivate, const double &value);
+    void AddCond( const unsigned int &derivate, const double &value );
   
     /// destroys all members in condition vectors
     void ClearCondition();
@@ -52,9 +57,9 @@ class BCondition
       * @param highest_order_of_derivates sets the highest order of derivate 
       */
     void AutoAdd( const unsigned int &number_of_conditions, 
-		  const unsigned int &highest_order_of_derivate);
+		  const unsigned int &highest_order_of_derivate );
     
-    ///returns conditions
+    ///returns pointer to vector of conditions
     std::vector<defvalue> *GetCond();
   
     ///returns number of defined conditions

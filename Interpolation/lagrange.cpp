@@ -9,6 +9,12 @@ Lagrange::Lagrange ( void ) : IInterpolation()
 {
 }
 
+Lagrange::~Lagrange(void )
+{
+  delete band;
+}
+
+
 bool Lagrange::Check()
 {
   /*
@@ -89,26 +95,37 @@ void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase& func )
 void Lagrange::CreateBandMatrix ( const unsigned char &M )
 {
   //number of conditions to fill automatically
-      int cond_to_fill_count = M - 1 - leftcond->GetCount() - rightcond->GetCount();
-      if (DEB)
-      {
-	cout << "cond_to_fill_count=" << cond_to_fill_count << endl;
-	cout << "cond_to_fill_LEFT=" << ceil(cond_to_fill_count/2.0) << endl;
-	cout << "cond_to_fill_RIGHT=" << floor(cond_to_fill_count/2.0) << endl;
-      }
-      //division in halve
-      leftcond->AutoAdd(ceil(cond_to_fill_count/2.0),M-1);
-      rightcond->AutoAdd(floor(cond_to_fill_count/2.0),M-1);
+  int n,ku,kl;
+  if(M > 0)
+  {  
+    int cond_to_fill_count = M - 1 - leftcond->GetCount() - rightcond->GetCount();
+    if (DEB)
+    {
+      cout << "cond_to_fill_count=" << cond_to_fill_count << endl;
+      cout << "cond_to_fill_LEFT=" << ceil(cond_to_fill_count/2.0) << endl;
+      cout << "cond_to_fill_RIGHT=" << floor(cond_to_fill_count/2.0) << endl;
+    }
+    //division in halve
+    leftcond->AutoAdd(ceil(cond_to_fill_count/2.0),M-1);
+    rightcond->AutoAdd(floor(cond_to_fill_count/2.0),M-1);
       
-      if (DEB)
-	cout << "boundary conditions are checked" << endl;
-      //solving band matrix**************************************
-      //creation of the solver
-      //BandMatrixSolve(integer n, integer ku, integer kl, integer nrhs);
-      int n = (M+1)*(x.size()-1);
-      int ku = M - leftcond->GetCount();
-      int kl = 1 + leftcond->GetCount();
-      band = new BandMatrixSolve(n,ku,kl,1);
+    if (DEB)
+      cout << "boundary conditions are checked" << endl;
+    //solving band matrix**************************************
+    //creation of the solver
+    //BandMatrixSolve(integer n, integer ku, integer kl, integer nrhs);
+    n = (M+1)*(x.size()-1);
+    ku = M - leftcond->GetCount();
+    kl = 1 + leftcond->GetCount();
+  }
+  else	//for M=0, meaning constant interoplation
+  {
+    n = (x.size()-1);
+    ku = 0;
+    kl = 0;
+  }
+    
+  band = new BandMatrixSolve(n,ku,kl,1);
 }
 
 void Lagrange::PutBC ( const unsigned char &M )

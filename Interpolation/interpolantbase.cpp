@@ -10,16 +10,9 @@ InterpolantBase::InterpolantBase(std::vector< Polynomial >& polynomials)
     a(polynomials[0].GetLower()), b(polynomials[polynomials.size()-1].GetUpper())
 {}
 
-  
-double InterpolantBase::GetA()
-{
-  return a;
-}
+InterpolantBase::~InterpolantBase(void )
+{}
 
-double InterpolantBase::GetB()
-{
-  return b;
-}
 
 void InterpolantBase::SetExtrapolation(const Polynomial &left, const Polynomial &right)
 {
@@ -27,37 +20,64 @@ void InterpolantBase::SetExtrapolation(const Polynomial &left, const Polynomial 
   this->right = right;
 }
 
-double InterpolantBase::Integral(const double &a, const double &b)
+double InterpolantBase::Integral(const double &u, const double &v)
 {
-    /*
-    std::vector<Polynomial* >::iterator iterator;
-    Polynomial* pol; 
-    iterator = FindPolynomial(a, pol);
-    double result = pol->Integral(a,pol->GetUpper());
-    for(iterator; (iterator != FindPolynomial(b, pol)); iterator++)
+    if (a > b) return Integral(b,a);	//integral must be from lower to upper limit
+    
+    if ( v <= a )			//limits are outside the interval of interpolation
+      return left.Integral(u,v);
+    if ( u >= b )			//limits are outside the interval of interpolation
+      return right.Integral(u,v);	
+    
+    double result = 0;
+    unsigned long j = 0;		//limit u is in j-th interval
+    unsigned long k = 0;		//limit u is in k-th interval
+    if ( u < a)			
     {
-	result += pol->Integral();
+      result += left.Integral(u,a);	//limit u is outside the interval of interpolation
+      j = 0;
     }
-    result += pol->Integral(pol->GetLower(),b);
+    else
+      j = FindPolynomial(u);
+    
+    if ( v > b)
+    {
+      result += right.Integral(b,v);	//limit u is outside the interval of interpolation
+      k = GetCount()-1;
+    }
+    else
+      k = FindPolynomial(v);
+
+    //first incomplete polynomial
+    result = polynomials[j].Integral(u,polynomials[j].GetUpper());
+
+    //complete polynomials in the middle
+    for(unsigned long i=j+1; i < k; i++)
+    {
+	result += polynomials[i].Integral();
+    }
+    
+    //last incomplete polynomial
+    result += polynomials[k].Integral(polynomials[k].GetLower(),v);
+
     return result;
-    //*/
-    return 0.0;
 }
 
 der InterpolantBase::Diff(const double &x)
 {
-    //Horner schema in Polynomials
-    der d;
-    d.f = 0;	    // Value of function
-    d.dfdx = 0; 	// Value of df/dx
-    return d;    	// Return function value
+    if (x <= a)		//left extrapolation
+      return left.Diff(x);
+    if (x >= b)		//right extrapolation
+      return right.Diff(x);
+    
+    return polynomials[FindPolynomial(x)].Diff(x); //Horner schema in Polynomials
 }
 
 double InterpolantBase::operator() ( const double &x )
 {
-    if (x <= a)
+    if (x <= a)		//left extrapolation
       return left(x);
-    if (x >= b)
+    if (x >= b)		//right extrapolation
       return right(x);
     
     return polynomials[FindPolynomial(x)](x); //Horner schema in Polynomials

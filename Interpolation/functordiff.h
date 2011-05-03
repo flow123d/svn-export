@@ -7,10 +7,13 @@ using namespace fadbad;
 
 namespace Interpolation
 {
-//class that is derived and expanded from FunctorDiffBase
-//and templated by the mathematical function
-//it uses class DFunc, that uses FADBAD library and 
-//is able to evaluate derivates
+///Templated class FunctorDiff  
+/** Class that templated by the mathematical functor, 
+  * that returns its value and derivate. 
+  * Inherits from FunctorDiffBase and implements 
+  * virtual operator () and Diff(). It uses FADBAD 
+  * library to obtain 1st derivate.
+  */
 template<class Func>
 class FunctorDiff : public FunctorDiffBase
 {
@@ -18,11 +21,13 @@ private:
   Func fce;	
 
 public:
+  ///constructor
   FunctorDiff(void){}
+  
+  ///destrcutor
   ~FunctorDiff(void){}
   
-  //returns 1st grade derivate
-  //virtual double Diff(double x);
+  ///returns 1st derivate using FADBAD
   virtual der Diff ( const double &i_x )
   {
     B<double> x(i_x); 	// Initialize arguments
@@ -31,11 +36,12 @@ public:
     f.diff(0,1);     	// Differentiate
   
     der d;
-    d.f = f.x();	 	// Value of function
+    d.f = f.x();	// Value of function
     d.dfdx = x.d(0); 	// Value of df/dx
-    return d;    		// Return function value
+    return d;    	// Return function value
   }
 
+  ///overloaded operator() returns value of the function
   virtual double operator() ( const double &x )
   {
     return fce(x);

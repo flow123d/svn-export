@@ -7,7 +7,11 @@
 namespace Interpolation
 {
   
-//class templated by the mathematical functor, that returns its value
+///Templated class FunctorValue
+/** Class templated by the mathematical functor, 
+  * that returns its value. Inherits from FunctorValueBase
+  * and implements virtual operator ().
+  */
 template<class Func>
 class FunctorValue : public FunctorValueBase
 {

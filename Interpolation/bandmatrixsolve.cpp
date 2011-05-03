@@ -2,7 +2,27 @@
 #include "bandmatrixsolve.h"
 using namespace std;
 
-//*
+BandMatrixSolve::BandMatrixSolve(long int n,long int ku,long int kl, long int nrhs)
+: n(n), ku(ku), kl(kl), nrhs(nrhs)
+{
+  m = n;
+  trans = 'N';
+  ldab = 2*kl+ku+1;
+  ldb = n*nrhs;
+  k = kl+ku+1;
+  ab = new double[ldab*n];
+  b = new double[ldb];
+  //pivot indices *************************************************
+  ipiv= new integer[n];
+  factorization = false;
+}
+
+BandMatrixSolve::~BandMatrixSolve()
+{
+  delete ab;
+  delete ipiv;
+}
+
 double* BandMatrixSolve::Solve()
 {
   if (DEB)
@@ -38,28 +58,6 @@ double* BandMatrixSolve::Solve()
   if (DEB) WrMatrix(b,ldb,nrhs);
   return b;
 }
-//*/
-//*	
-// for square matrix only
-BandMatrixSolve::BandMatrixSolve(long int n,long int ku,long int kl, long int nrhs)
-: n(n), ku(ku), kl(kl), nrhs(nrhs)
-{
-  m = n;
-  trans = 'N';
-  ldab = 2*kl+ku+1;
-  ldb = n*nrhs;
-  k = kl+ku+1;
-  ab = new double[ldab*n];
-  b = new double[ldb];
-  //pivot indices *************************************************
-  ipiv= new integer[n];
-  factorization = false;
-}
-
-BandMatrixSolve::~BandMatrixSolve()
-{
-}
-
 
 //fortran field [1,...,n]
 //c++ field [0,...,n]
@@ -78,7 +76,7 @@ void BandMatrixSolve::SetB(integer i, integer j, doublereal value)
   else cout << "Error: out of bounds /B" << endl;
 }
 
-///can write matrix to console output
+//can write matrix to console output
 void BandMatrixSolve::WrMatrix(double* a,int m, int n)
 {
   for(int i = 0; i < m; i++)

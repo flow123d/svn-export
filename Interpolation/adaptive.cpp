@@ -5,11 +5,16 @@
 namespace Interpolation
 {
 
-Adaptive::Adaptive(void ): IInterpolation()
+Adaptive::Adaptive(void ) : IInterpolation()
 {
   //adds boolean information if tolerance has been set
   checks.push_back(false);
 }
+
+Adaptive::~Adaptive(void )
+{
+}
+
 
 bool Adaptive::Check()
 {

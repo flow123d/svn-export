@@ -6,19 +6,23 @@
 
 namespace Interpolation
 {
-//structure with derivate and value, that is return by Diff()
+/// Structure der
+/** Structure with derivate and value, that is return by Diff()
+  */
 struct der
 {
   double f;
   double dfdx;
 };
 
-//abstract class which is used as interface 
-//for functors giving function value and 1st derivate
+///Abstract class for functors.
+/** Abstract class which is used as interface 
+  * for functors giving function value and 1st derivate.
+  */
 class FunctorDiffBase : public FunctorValueBase
 {
   public:
-    virtual der Diff(const double &x) = 0;	//returns df(x)/dx
+    virtual der Diff(const double &x) = 0;	//returns df(x)/dx and f(x)
     virtual double operator() ( const double &x ) = 0;
 };
 

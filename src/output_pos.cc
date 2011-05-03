@@ -22,7 +22,7 @@
  * $LastChangedBy$
  * $LastChangedDate$
  *
- * @file
+ * @file    output_pos.cc
  * @brief   The functions for outputs to GMSH files.
  *
  */
@@ -185,7 +185,7 @@ void write_msh_ascii_data(Output *output, OutputData *out_data)
 /**
  * \brief This function write all data on nodes to output file. This function
  * is used for static and dynamic data
- * \param[in]   *output     The pointer at output object
+ * \param[in]   *output     The pointer at Output object
  * \param[in]   time        The time from start
  * \param[in]   step        The number of steps from start
  */
@@ -256,6 +256,8 @@ void write_msh_elem_data(Output *output, double time, int step)
 
 /**
  * \brief Write head of .msh file format
+ * \param[in]   *output     The pointer at Output object
+ * \return      This function returns 1
  */
 int write_msh_data(Output *output)
 {
@@ -278,6 +280,8 @@ int write_msh_data(Output *output)
 
 /**
  * \brief Write head of .msh file format
+ * \param[in]   *output     The pointer at OutputTime object
+ * \return      This function returns 1
  */
 int write_msh_head(OutputTime *output)
 {
@@ -296,7 +300,11 @@ int write_msh_head(OutputTime *output)
 
 
 /**
- * \brief Write head of .msh file format
+ * \brief Write data of .msh file format for current step
+ * \param[in]   *output     The pointer at OutputTime object
+ * \param[in]   time        The time from start
+ * \param[in]   step        The number of steps from start
+ * \return      This function returns 1
  */
 int write_msh_time_data(OutputTime *output, double time, int step)
 {
@@ -316,11 +324,14 @@ int write_msh_time_data(OutputTime *output, double time, int step)
 
 /**
  * \brief Write tail of .msh file format
+ *
+ * It is stupid file format. It doesn't write anything special at the end of
+ * the file
+ *
+ * \param[in]   *output     The pointer at OutputTime object
+ * \return      This function returns 1
  */
 int write_msh_tail(OutputTime *output)
 {
-    // It is stupid file format. It doesn't write anything special at the end of
-    // the file
-
     return 1;
 }

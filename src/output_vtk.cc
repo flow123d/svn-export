@@ -22,7 +22,7 @@
  * $LastChangedBy$
  * $LastChangedDate$
  *
- * @file
+ * @file    output_vtk.cc
  * @brief   The functions for outputs to VTK files.
  *
  */
@@ -372,7 +372,7 @@ static void write_flow_vtk_tail(Output *output)
  * to the VTK file (.vtu)
  * \param[in]	*out	The output file
  */
-void write_flow_vtk_serial(Output *output)
+static void write_flow_vtk_serial(Output *output)
 {
     Mesh *mesh = output->get_mesh();
 
@@ -404,6 +404,7 @@ void write_flow_vtk_serial(Output *output)
 
 /**
  * \brief This function output data to serial VTK file format
+ * \param[in]   *output     The pointer at output object
  */
 int write_vtk_data(Output *output)
 {
@@ -506,6 +507,8 @@ int write_vtk_head(OutputTime *output)
     output->get_base_file() << "<Collection>" << endl;
 
     xprintf( Msg, "O.K.\n");
+
+    return 1;
 }
 
 /**
@@ -520,4 +523,6 @@ int write_vtk_tail(OutputTime *output)
     output->get_base_file() << "</VTKFile>" << endl;
 
     xprintf( Msg, "O.K.\n");
+
+    return 1;
 }

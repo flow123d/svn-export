@@ -22,7 +22,7 @@
  * $LastChangedBy$
  * $LastChangedDate$
  *
- * @file
+ * @file    output_tmp.cc
  * @brief   The functions for outputs to EVIL file formats.
  *
  */

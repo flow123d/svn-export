@@ -306,6 +306,9 @@ int write_msh_time_data(OutputTime *output, double time, int step)
 
     write_msh_elem_data(output, time, step);
 
+    // Flush stream to be sure everything is in the file now
+    output->get_base_file().flush();
+
     xprintf( Msg, "O.K.\n");
 
     return 1;

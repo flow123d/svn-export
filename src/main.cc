@@ -292,7 +292,7 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
         output->get_data_from_mesh();
         // call output->register_node_data(name, unit, data) to register other data on nodes
         // call output->register_elem_data(name, unit, data) to register other data on elements
-        output->write_data(output);
+        output->write_data();
         output->free_data_from_mesh();
 
         delete output;
@@ -372,13 +372,12 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
 
         if (rank == 0) {
             output_time = new OutputTime(mesh, transport->transport_out_fname);
-            output_time->write_head(output_time);
 
-            output_time->get_data_from_transport(transport, 0);
+            output_time->get_data_from_transport(transport);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-            output_time->write_data(output_time, 0.0, 0);
-            output_time->free_data_from_transport(transport);
+            output_time->write_data(0.0);
+            output_time->free_data_from_transport();
         }
 
         // TODO: there is an uncoditioned jump in open_temp_files
@@ -398,7 +397,6 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
          */
 
         if(output_time != NULL) {
-            output_time->write_tail(output_time);
             delete output_time;
         }
     }
@@ -426,13 +424,12 @@ void main_compute_mh_density(struct Problem *problem)
     if(rank == 0) {
         output_time = new OutputTime(mesh ,trans->transport_out_fname);
 
-        output_time->write_head(output_time);
 
-        output_time->get_data_from_transport(trans, 0);
+        output_time->get_data_from_transport(trans);
         // call _output_time->register_node_data(name, unit, 0, data) to register other data on nodes
         // call _output_time->register_elem_data(name, unit, 0, data) to register other data on elements
-        output_time->write_data(output_time, 0.0, ++frame);
-        output_time->free_data_from_transport(trans);
+        output_time->write_data(0.0);
+        output_time->free_data_from_transport();
     }
 
     save_step = problem->save_step;
@@ -481,19 +478,19 @@ void main_compute_mh_density(struct Problem *problem)
         }
 
         if (rank == 0 && trans -> write_iterations == 0) {
-            output_time->get_data_from_transport(trans, ++frame);
+            output_time->get_data_from_transport(trans);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-            output_time->write_data(output_time, i * problem->time_step, frame);
-            output_time->free_data_from_transport(trans);
+            output_time->write_data(i * problem->time_step);
+            output_time->free_data_from_transport();
         }
 
         if ((rank == 0) && (trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
-            output_time->get_data_from_transport(trans, ++frame);
+            output_time->get_data_from_transport(trans);
             // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
             // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-            output_time->write_data(output_time, (i + 1) * problem->stop_time, frame);
-            output_time->free_data_from_transport(trans);
+            output_time->write_data((i + 1) * problem->stop_time);
+            output_time->free_data_from_transport();
         }
 
         xprintf(Msg, "step %d finished at %d density iterations\n", i, j);
@@ -501,7 +498,6 @@ void main_compute_mh_density(struct Problem *problem)
     }
 
     if(rank == 0) {
-        output_time->write_tail(output_time);
         delete output_time;
     }
 
@@ -513,7 +509,7 @@ void main_compute_mh_density(struct Problem *problem)
         output->get_data_from_mesh();
         // call output->register_node_data(name, unit, data) to register other data on nodes
         // call output->register_elem_data(name, unit, data) to register other data on elements
-        output->write_data(output);
+        output->write_data();
         output->free_data_from_mesh();
 
         delete output;

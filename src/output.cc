@@ -28,22 +28,63 @@
  *
  */
 
-#include "constantdb.h"
-#include "mesh/ini_constants_mesh.hh"
 
-#include "system.hh"
 #include "xio.h"
 #include "output.h"
-#include "math_fce.h"
 #include "mesh.h"
-#include "convert.h"
 
-#include <mpi.h>
-#include <petsc.h>
+// TODO: remove in the future
+#include "constantdb.h"
 
-#include <assert.h>
-#include <stdarg.h>
 #include <string>
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        int *data_data,
+        unsigned int size)
+{
+    name = new string(data_name); units = new string(data_units);
+    data = (void*)&data_data;
+    type = OUT_ARRAY_INT_SCA;
+    comp_num = 1;
+    num = size;
+}
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        float *data_data,
+        unsigned int size)
+{
+    name = new string(data_name); units = new string(data_units);
+    data = (void*)&data_data;
+    type = OUT_ARRAY_FLOAT_SCA;
+    comp_num = 1;
+    num = size;
+}
+
+/**
+ * \brief Constructor for OutputData storing names of output data and their
+ * units.
+ */
+OutputData::OutputData(string data_name,
+        string data_units,
+        double *data_data,
+        unsigned int size)
+{
+    name = new string(data_name); units = new string(data_units);
+    data = (void*)&data_data;
+    type = OUT_ARRAY_DOUBLE_SCA;
+    comp_num = 1;
+    num = size;
+}
 
 /**
  * \brief Constructor for OutputData storing names of output data and their
@@ -55,7 +96,7 @@ OutputData::OutputData(string data_name,
 {
     name = new string(data_name); units = new string(data_units);
     data = (void*)&data_data;
-    type = OUT_INT;
+    type = OUT_VECTOR_INT_SCA;
     comp_num = 1;
     num = data_data.size();
 }
@@ -70,7 +111,7 @@ OutputData::OutputData(string data_name,
 {
     name = new string(data_name); units = new string(data_units);
     data = (void*)&data_data;
-    type = OUT_INT_VEC;
+    type = OUT_VECTOR_INT_VEC;
     comp_num = 3;
     num = data_data.size();
 }
@@ -85,7 +126,7 @@ OutputData::OutputData(string data_name,
 {
     name = new string(data_name); units = new string(data_units);
     data = (void*)&data_data;
-    type = OUT_FLOAT;
+    type = OUT_VECTOR_FLOAT_SCA;
     comp_num = 1;
     num = data_data.size();
 }
@@ -100,7 +141,7 @@ OutputData::OutputData(string data_name,
 {
     name = new string(data_name); units = new string(data_units);
     data = (void*)&data_data;
-    type = OUT_FLOAT_VEC;
+    type = OUT_VECTOR_FLOAT_VEC;
     comp_num = 3;
     num = data_data.size();
 }
@@ -115,7 +156,7 @@ OutputData::OutputData(string data_name,
 {
     name = new string(data_name); units = new string(data_units);
     data = (void*)&data_data;
-    type = OUT_DOUBLE;
+    type = OUT_VECTOR_DOUBLE_SCA;
     comp_num = 1;
     num = data_data.size();
 }
@@ -130,7 +171,7 @@ OutputData::OutputData(string data_name,
 {
     name = new string(data_name); units = new string(data_units);
     data = (void*)&data_data;
-    type = OUT_DOUBLE_VEC;
+    type = OUT_VECTOR_DOUBLE_VEC;
     comp_num = 3;
     num = data_data.size();
 }
@@ -235,6 +276,7 @@ int Output::register_node_data(std::string name, std::string unit, std::vector<_
         node_data->push_back(*out_data);
         return 1;
     } else {
+        xprintf(Err, "Number of values: %d is not equal to number of nodes: %d\n", data.size(), mesh->node_vector.size());
         return 0;
     }
 }
@@ -251,13 +293,16 @@ int Output::register_node_data(std::string name, std::string unit, std::vector<_
  * function returns 0.
  */
 template <typename _Data>
-int Output::register_elem_data(std::string name, std::string unit, std::vector<_Data> &data)
+int Output::register_elem_data(std::string name,
+        std::string unit,
+        std::vector<_Data> &data)
 {
     if(mesh->element.size() == data.size()) {
         OutputData *out_data = new OutputData(name, unit, data);
         elem_data->push_back(*out_data);
         return 1;
     } else {
+        xprintf(Err, "Number of values: %d is not equal to number of elements: %d\n", data.size(), mesh->element.size());
         return 0;
     }
 }
@@ -271,6 +316,16 @@ int write_null_data(Output *output)
     xprintf(Msg, "This file format is not yet supported\n");
 
     return 0;
+}
+
+/**
+ * \brief This function call pointer at _write_data(Output). It writes
+ * registered data to specified file format.
+ * \return This function return result of pointer at output function.
+ */
+int Output::write_data(void)
+{
+    return _write_data(this);
 }
 
 /**
@@ -308,19 +363,20 @@ Output::Output(Mesh *_mesh, string fname)
     node_data = new OutputDataVec;
     elem_data = new OutputDataVec;
 
+    // TODO: remove in the future
     format_type = ConstantDB::getInstance()->getInt("Pos_format_id");
 
     switch(format_type) {
     case VTK_SERIAL_ASCII:
     case VTK_PARALLEL_ASCII:
-        write_data = write_vtk_data;
+        _write_data = write_vtk_data;
         break;
     case POS_ASCII:
     case POS_BIN:
-        write_data = write_msh_data;
+        _write_data = write_msh_data;
         break;
     default:
-        write_data = write_null_data;
+        _write_data = write_null_data;
         break;
     }
 
@@ -356,13 +412,13 @@ Output::~Output()
 /**
  * \brief This method get data from transport
  */
-void OutputTime::free_data_from_transport(struct Transport *transport)
+void OutputTime::free_data_from_transport(void)
 {
     /* Delete vectors */
     delete element_vector->vectors;
     delete element_vector;
     /* Delete scalars */
-    for(int subst_id=0; subst_id<transport->n_substances; subst_id++) {
+    for(int subst_id=0; subst_id<elem_sca_count; subst_id++) {
         delete element_scalar[subst_id].scalars;
     }
     delete[] element_scalar;
@@ -371,7 +427,7 @@ void OutputTime::free_data_from_transport(struct Transport *transport)
 /**
  * \brief This method get data from transport
  */
-void OutputTime::get_data_from_transport(struct Transport *transport, int step)
+void OutputTime::get_data_from_transport(struct Transport *transport)
 {
     NodeIter node;
     element_scalar = new OutScalar[transport->n_substances];
@@ -379,8 +435,10 @@ void OutputTime::get_data_from_transport(struct Transport *transport, int step)
 
     xprintf(Msg, "Getting data from transport ...\n");
 
+    elem_sca_count = transport->n_substances;
+
     /* Go through all substances and add them to vector of scalars */
-    for(int subst_id=0; subst_id<transport->n_substances; subst_id++) {
+    for(int subst_id=0; subst_id<elem_sca_count; subst_id++) {
         element_scalar[subst_id].scalars = new ScalarFloatVector;
         /* Set up names */
         element_scalar[subst_id].name = transport->substance_name[subst_id];
@@ -391,7 +449,7 @@ void OutputTime::get_data_from_transport(struct Transport *transport, int step)
         for(int el=0; el<mesh->n_elements(); el++) {
             element_scalar[subst_id].scalars->push_back(transport->out_conc[subst_id][MOBILE][el]);
         }
-        register_elem_data(element_scalar[subst_id].name, element_scalar[subst_id].unit, step, *element_scalar[subst_id].scalars);
+        register_elem_data(element_scalar[subst_id].name, element_scalar[subst_id].unit, *element_scalar[subst_id].scalars);
     }
 
     /* Add vectors to vector */
@@ -410,28 +468,82 @@ void OutputTime::get_data_from_transport(struct Transport *transport, int step)
         vec.push_back(ele->vector[2]);
         element_vector->vectors->push_back(vec);
     }
-    register_elem_data(element_vector->name, element_vector->unit, step, *element_vector->vectors);
+    register_elem_data(element_vector->name, element_vector->unit, *element_vector->vectors);
 
     xprintf(Msg, "O.K.\n");
 }
 
 /**
- * \brief Register data on nodes. This function will add reference on this data
- * to the Output object. Own data will be writen to the file, when write_data
- * method will be called.
+ * \brief Register data on nodes. This function will add reference on this
+ * array of data to the Output object. Own data will be written to the
+ * file, when write_data method will be called.
  */
 template <typename _Data>
-int OutputTime::register_node_data(std::string name, std::string unit, int step, std::vector<_Data> &data)
+int Output::register_node_data(std::string name,
+        std::string unit,
+        _Data *data,
+        uint size)
 {
-    if (current_step != step && current_step != -1) {
-        delete node_data;
-        node_data = new OutputDataVec;
-        current_step = step;
-    }
+    if(mesh->node_vector.size() == size) {
+        int found = 0;
 
-    OutputData *out_data = new OutputData(name, unit, data);
-    node_data->push_back(*out_data);
-    return 1;
+        for(std::vector<OutputData>::iterator od_iter = node_data->begin();
+                od_iter != node_data->end();
+                od_iter++)
+        {
+            if(*od_iter->name == name) {
+                od_iter->data = (void*)&data;
+                found = 1;
+                break;
+            }
+        }
+
+        if(found == 0) {
+            OutputData *out_data = new OutputData(name, unit, data);
+            node_data->push_back(*out_data);
+        }
+
+        return 1;
+    } else {
+        xprintf(Err, "Number of values: %d is not equal to number of nodes: %d\n", data.size(), mesh->node_vector.size());
+        return 0;
+    }
+}
+
+/**
+ * \brief Register data on nodes. This function will add reference on this
+ * vector of data to the Output object. Own data will be written to the
+ * file, when write_data method will be called.
+ */
+template <typename _Data>
+int OutputTime::register_node_data(std::string name,
+        std::string unit,
+        std::vector<_Data> &data)
+{
+    if(mesh->node_vector.size() == data.size()) {
+        int found = 0;
+
+        for(std::vector<OutputData>::iterator od_iter = node_data->begin();
+                od_iter != node_data->end();
+                od_iter++)
+        {
+            if(*od_iter->name == name) {
+                od_iter->data = (void*)&data;
+                found = 1;
+                break;
+            }
+        }
+
+        if(found == 0) {
+            OutputData *out_data = new OutputData(name, unit, data);
+            node_data->push_back(*out_data);
+        }
+
+        return 1;
+    } else {
+        xprintf(Err, "Number of values: %d is not equal to number of nodes: %d\n", data.size(), mesh->node_vector.size());
+        return 0;
+    }
 }
 
 /**
@@ -442,17 +554,34 @@ int OutputTime::register_node_data(std::string name, std::string unit, int step,
  * updated.
  */
 template <typename _Data>
-int OutputTime::register_elem_data(std::string name, std::string unit, int step, std::vector<_Data> &data)
+int OutputTime::register_elem_data(std::string name,
+        std::string unit,
+        std::vector<_Data> &data)
 {
-    if (current_step != step && current_step != -1) {
-        delete elem_data;
-        elem_data = new OutputDataVec;
-        current_step = step;
+
+    if(mesh->element.size() == data.size()) {
+        int found = 0;
+        for(std::vector<OutputData>::iterator od_iter = elem_data->begin();
+                od_iter != elem_data->end();
+                od_iter++)
+        {
+            if(*od_iter->name == name) {
+                od_iter->data = (void*)&data;
+                found = 1;
+                break;
+            }
+        }
+
+        if(found == 0) {
+            OutputData *out_data = new OutputData(name, unit, data);
+            elem_data->push_back(*out_data);
+        }
+        return 1;
+    } else {
+        xprintf(Err, "Number of values: %d is not equal to number of elements: %d\n", data.size(), mesh->element.size());
+        return 0;
     }
 
-    OutputData *out_data = new OutputData(name, unit, data);
-    elem_data->push_back(*out_data);
-    return 1;
 }
 
 /**
@@ -489,6 +618,15 @@ int write_null_tail(OutputTime *output)
 }
 
 /**
+ * \brief This function call pointer at appropriate pointer at function,
+ * that write data to file format
+ */
+int OutputTime::write_data(double time)
+{
+    return _write_data(this, time, current_step++);
+}
+
+/**
  * \brief Constructor of OutputTime object. It opens base file for writing.
  */
 OutputTime::OutputTime(Mesh *_mesh, string fname)
@@ -522,28 +660,30 @@ OutputTime::OutputTime(Mesh *_mesh, string fname)
     node_data = new OutputDataVec;
     elem_data = new OutputDataVec;
 
+    // TODO: remove in the future
     format_type = ConstantDB::getInstance()->getInt("Pos_format_id");
 
     switch(format_type) {
     case VTK_SERIAL_ASCII:
     case VTK_PARALLEL_ASCII:
-        write_head = write_vtk_head;
-        write_data = write_vtk_time_data;
-        write_tail = write_vtk_tail;
+        _write_head = write_vtk_head;
+        _write_data = write_vtk_time_data;
+        _write_tail = write_vtk_tail;
         break;
     case POS_ASCII:
     case POS_BIN:
-        write_head = write_msh_head;
-        write_data = write_msh_time_data;
-        write_tail = write_msh_tail;
+        _write_head = write_msh_head;
+        _write_data = write_msh_time_data;
+        _write_tail = write_msh_tail;
         break;
     default:
-        write_head = write_null_head;
-        write_data = write_null_time_data;
-        write_tail = write_null_tail;
+        _write_head = write_null_head;
+        _write_data = write_null_time_data;
+        _write_tail = write_null_tail;
         break;
     }
 
+    _write_head(this);
 }
 
 /**
@@ -552,5 +692,5 @@ OutputTime::OutputTime(Mesh *_mesh, string fname)
  */
 OutputTime::~OutputTime(void)
 {
-    //
+    _write_tail(this);
 }

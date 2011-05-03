@@ -30,80 +30,6 @@
 #include "output.h"
 #include "xio.h"
 #include "mesh.h"
-#include "mesh/ini_constants_mesh.hh"
-#include "constantdb.h"
-#include "transport.h"
-#include "problem.h"
-
-/**
- * TODO: remove
- */
-void output_flow_field_init(char *fname)
-{
-    FILE *out;
-
-    if( OptGetBool("Output", "Write_output_file", "no") == false )
-        return;
-
-    xprintf( Msg, "%s: Writing output files... %s ", __func__, fname);
-
-    out = xfopen( fname, "wt" );
-    xfprintf( out, "$DataFormat\n" );
-    xfprintf( out, "1.0 0 %d\n", sizeof( double ) );
-    xfprintf( out, "$EndDataFormat\n" );
-    xfclose( out );
-
-    xprintf( Msg, "O.K.\n");
-}
-
-/**
- * TODO: remove
- */
-void output_flow_field_in_time(struct Problem *problem, double time)
-{
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
-    int i,cit;
-    ElementIter ele;
-    FILE *out;
-    char dbl_fmt[ 16 ];
-
-    ASSERT(!( problem == NULL ),"NULL as argument of function output_flow_field_in_time()\n");
-    if( OptGetBool("Output", "Write_output_file", "no") == false )
-        return;
-
-    xprintf( Msg, "%s: Writing output file %s ... ", __func__, problem->out_fname_2);
-
-    out = xfopen( problem->out_fname_2, "at" );
-    sprintf( dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));
-    xfprintf( out, "$FlowField\n" );
-    xfprintf( out, "T = ");
-    xfprintf( out, dbl_fmt, time);
-    xfprintf( out, "\n%d\n", mesh->n_elements() );
-    cit = 0;
-
-    FOR_ELEMENTS( ele ) {
-        xfprintf( out, "%d ", cit);
-        xfprintf( out, "%d ", ele.id());
-        xfprintf( out, dbl_fmt, ele->scalar);
-        xfprintf( out, " %d ", ele->n_sides);
-        for (i = 0; i < ele->n_sides; i++)
-            xfprintf( out, dbl_fmt, ele->side[i]->scalar);
-        xfprintf( out, "\t");
-        for (i = 0; i < ele->n_sides; i++)
-            xfprintf( out, dbl_fmt, ele->side[i]->flux);
-        xfprintf( out, "\t");
-        xfprintf( out, "%d ", ele->n_neighs_vv);
-        for (i = 0; i < ele->n_neighs_vv; i++)
-            xfprintf( out, "%d ", ele->neigh_vv[i]->id);
-        xfprintf( out, "\n" );
-        cit ++;
-    }
-    xfprintf( out, "$EndFlowField\n\n" );
-    xfclose( out );
-
-    xprintf( Msg, "O.K.\n");
-}
 
 /**
  * \brief This function write header of GMSH (.msh) file format
@@ -172,14 +98,14 @@ void write_msh_ascii_data(Output *output, OutputData *out_data)
     int id = 1;
 
     switch(out_data->type) {
-    case OUT_INT:
+    case OUT_VECTOR_INT_SCA:
         for( std::vector<int>::iterator item = ((std::vector<int>*)out_data->data)->begin();
                 item != ((std::vector<int>*)out_data->data)->end();
                 item++, id++) {
             file << id << " " << *item << endl;
         }
         break;
-    case OUT_INT_VEC:
+    case OUT_VECTOR_INT_VEC:
         for( std::vector< vector<int> >::iterator vec = ((std::vector< vector<int> >*)out_data->data)->begin();
                 vec != ((std::vector< vector<int> >*)out_data->data)->end();
                 vec++, id++)
@@ -193,14 +119,14 @@ void write_msh_ascii_data(Output *output, OutputData *out_data)
             file << endl;
         }
         break;
-    case OUT_FLOAT:
+    case OUT_VECTOR_FLOAT_SCA:
         for( std::vector<float>::iterator item = ((std::vector<float>*)out_data->data)->begin();
                 item != ((std::vector<float>*)out_data->data)->end();
                 item++, id++) {
             file << id << " " << *item << endl;
         }
         break;
-    case OUT_FLOAT_VEC:
+    case OUT_VECTOR_FLOAT_VEC:
         for( std::vector< vector<float> >::iterator vec = ((std::vector< vector<float> >*)out_data->data)->begin();
                 vec != ((std::vector< vector<float> >*)out_data->data)->end();
                 vec++)
@@ -214,14 +140,14 @@ void write_msh_ascii_data(Output *output, OutputData *out_data)
             file << endl;
         }
         break;
-    case OUT_DOUBLE:
+    case OUT_VECTOR_DOUBLE_SCA:
         for( std::vector<double>::iterator item = ((std::vector<double>*)out_data->data)->begin();
                 item != ((std::vector<double>*)out_data->data)->end();
                 item++, id++) {
             file << id << " " << *item << endl;
         }
         break;
-    case OUT_DOUBLE_VEC:
+    case OUT_VECTOR_DOUBLE_VEC:
         for( std::vector< vector<double> >::iterator vec = ((std::vector< vector<double> >*)out_data->data)->begin();
                 vec != ((std::vector< vector<double> >*)out_data->data)->end();
                 vec++, id++)
@@ -234,6 +160,24 @@ void write_msh_ascii_data(Output *output, OutputData *out_data)
             }
             file << endl;
         }
+        break;
+    case OUT_ARRAY_INT_SCA:
+        for(int i=0; i<out_data->num; i++, id++) {
+            file << id << ((int*)out_data->data)[i] << " ";
+        }
+        break;
+    case OUT_ARRAY_FLOAT_SCA:
+        for(int i=0; i<out_data->num; i++, id++) {
+            file << id << ((float*)out_data->data)[i] << " ";
+        }
+        break;
+    case OUT_ARRAY_DOUBLE_SCA:
+        for(int i=0; i<out_data->num; i++, id++) {
+            file << id << ((double*)out_data->data)[i] << " ";
+        }
+        break;
+    default:
+        xprintf(Err, "This type of data: %d is not supported by MSH file format\n", out_data->type);
         break;
     }
 }

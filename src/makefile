@@ -58,6 +58,7 @@ $(OBJS)/darcy_flow_mh.o\
 $(OBJS)/output.o\
 $(OBJS)/output_vtk.o\
 $(OBJS)/output_pos.o\
+$(OBJS)/output_tmp.o\
 $(OBJS)/concentrations.o\
 $(OBJS)/postprocess.o\
 $(OBJS)/preprocess.o\

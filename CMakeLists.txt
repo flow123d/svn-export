@@ -10,13 +10,17 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Flow123d_SOURCE_DIR}/CMake/Modules
 message(STATUS "CMake module path: ${CMAKE_MODULE_PATH}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/makefile.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/makefile.in
+)
+include(${CMAKE_CURRENT_BINARY_DIR}/makefile.in OPTIONAL)
 
-find_package(Doxygen REQUIRED)
 find_package(PETSc REQUIRED)
 find_package(PARMETIS REQUIRED)
 find_package(Boost REQUIRED)
-find_package(Subversion)
-find_package(GTest REQUIRED)
+find_package(Subversion REQUIRED)
+find_package(GTest)
+find_package(Armadillo REQUIRED)
 
 if(Subversion_FOUND)
   Subversion_WC_INFO(${CMAKE_CURRENT_SOURCE_DIR} Flow123d)
@@ -28,6 +32,8 @@ set(Flow123dIncludeDirectories
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/mesh
     ${CMAKE_SOURCE_DIR}/include/transport
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/system
     ${CMAKE_SOURCE_DIR}/src/decay
     ${CMAKE_SOURCE_DIR}/src/semchem
     ${CMAKE_SOURCE_DIR}/third_party/metis-4.0/Lib
@@ -38,7 +44,7 @@ set(Flow123dIncludeDirectories
 include_directories(${Flow123dIncludeDirectories})
 
 set(Flow123dLinkDirectories
-    ${Flow123d_BINARY_dir}/src
+    ${Flow123d_BINARY_dir}/lib
     ${Boost_LIBRARY_DIRS}
 )
 
@@ -58,5 +64,8 @@ endif(CMAKE_BUILD_TYPE STREQUAL "debug")
 ##############
 
 add_subdirectory(src)
+add_subdirectory(doc)
 
 enable_testing()
+add_subdirectory(test_units)
+

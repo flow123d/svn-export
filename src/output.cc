@@ -22,7 +22,7 @@
  * $LastChangedBy$
  * $LastChangedDate$
  *
- * @file
+ * @file output.cc
  * @ingroup io
  * @brief   The functions for all outputs. This file should be split according to the
  *          quantities to output. In this general file, there should remain only general output functions.
@@ -121,7 +121,8 @@ static void output_compute_mh(struct Problem *problem)
     if( OptGetBool("Output", "Write_output_file", "no") == false )
         return;
 
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+    std::string output_file = IONameHandler::get_instance()->get_output_file_name(OptGetFileName("Output", "Output_file", NULL));
+    const char* out_fname = output_file.c_str();
     xprintf( Msg, "Writing flow output files: %s ... ", out_fname);
 
 /*
@@ -447,7 +448,7 @@ static void write_flow_vtk_scalar_ascii(FILE *out, const char *name, const int d
     /* Write DataArray begin */
     xfprintf(out, "<DataArray type=\"Float64\" Name=\"%s\" format=\"ascii\">\n", name);
     /* Write own data */
-    for(ScalarFloatVector::iterator val=vector->begin(); val != vector->end(); val++) {
+    for(ScalarFloatVector::iterator val=vector->begin(); val != vector->end(); ++val) {
         xfprintf(out, dbl_fmt, *val);
     }
     /* Write DataArray end */
@@ -471,7 +472,7 @@ static void write_flow_vtk_vector_ascii(FILE *out, const char *name, const int d
     /* Write DataArray begin */
     xfprintf(out, "<DataArray type=\"Float64\" Name=\"%s\" NumberOfComponents=\"3\" format=\"ascii\">\n", name);
     /* Write own data */
-    for(VectorFloatVector::iterator val=vector->begin(); val != vector->end(); val++) {
+    for(VectorFloatVector::iterator val=vector->begin(); val != vector->end(); ++val) {
         xfprintf(out, dbl_fmt, val->d[0]);
         xfprintf(out, dbl_fmt, val->d[1]);
         xfprintf(out, dbl_fmt, val->d[2]);
@@ -492,7 +493,7 @@ static void write_flow_vtk_data(FILE *out, OutScalarsVector *scalars, OutVectors
     /* Write to the file all scalar arrays if any */
     if(scalars != NULL) {
         for(OutScalarsVector::iterator sca = scalars->begin();
-                sca != scalars->end(); sca++) {
+                sca != scalars->end(); ++sca) {
             write_flow_vtk_scalar_ascii(out, sca->name, ConstantDB::getInstance()->getInt("Out_digit"), sca->scalars);
         }
     }
@@ -500,7 +501,7 @@ static void write_flow_vtk_data(FILE *out, OutScalarsVector *scalars, OutVectors
     /* Write to the file all vector arrays if any */
     if(vectors != NULL) {
        for(OutVectorsVector::iterator vec = vectors->begin();
-                vec != vectors->end(); vec++) {
+                vec != vectors->end(); ++vec) {
             write_flow_vtk_vector_ascii(out, vec->name, ConstantDB::getInstance()->getInt("Out_digit"), vec->vectors);
         }
 
@@ -520,7 +521,7 @@ static void write_flow_vtk_data_names(FILE *out, OutScalarsVector *scalars, OutV
         xfprintf(out, "Scalars=\"");
         /* Write all names of scalar arrays first */
         for(OutScalarsVector::iterator sca = scalars->begin();
-                sca != scalars->end(); sca++) {
+                sca != scalars->end(); ++sca) {
             xfprintf(out, "%s", sca->name);
             if((sca+1) != scalars->end()) {
                 xfprintf(out, ",");
@@ -534,7 +535,7 @@ static void write_flow_vtk_data_names(FILE *out, OutScalarsVector *scalars, OutV
         xfprintf(out, " Vectors=\"");
         /* Write all names of scalar arrays first */
         for(OutVectorsVector::iterator vec = vectors->begin();
-                vec != vectors->end(); vec++) {
+                vec != vectors->end(); ++vec) {
             xfprintf(out, "%s", vec->name);
             if((vec+1) != vectors->end()) {
                 xfprintf(out, ",");
@@ -951,7 +952,8 @@ void output_init(struct Problem *problem)
     char dbl_fmt[ 16 ];
     char filename[255];
 
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+    std::string output_file = IONameHandler::get_instance()->get_output_file_name(OptGetFileName("Output", "Output_file", NULL));
+    const char* out_fname = output_file.c_str();
     xprintf( Msg, "%s: Writing output file %s ... ", __func__, out_fname);
 
     sprintf( dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));
@@ -993,7 +995,8 @@ void output_time(struct Problem *problem, double time)
     char dbl_fmt[16];
     char filename[PATH_MAX];
 
-    const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
+    std::string output_file = IONameHandler::get_instance()->get_output_file_name(OptGetFileName("Output", "Output_file", NULL));
+    const char* out_fname = output_file.c_str();
     xprintf( Msg, "%s: Writing output file %s ... ", __func__, out_fname);
 
     sprintf( dbl_fmt, "%%.%dg ", ConstantDB::getInstance()->getInt("Out_digit"));

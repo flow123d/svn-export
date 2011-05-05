@@ -23,6 +23,7 @@
 
 # Include global settings
 include ../makefile.in
+include ../makefile.include
 
 LOCAL_INCLUDE = -I../include -I.
 
@@ -38,7 +39,6 @@ TARGETS = $(BIN)/flow123d
 FLOW123D_OBJS = \
 $(OBJS)/mesh/ini_constants_mesh.o\
 $(OBJS)/mesh/mesh.o\
-$(OBJS)/mesh/nodes.o\
 $(OBJS)/mesh/elements.o\
 $(OBJS)/mesh/sides.o\
 $(OBJS)/mesh/edges.o\
@@ -78,6 +78,7 @@ $(OBJS)/semchem/che_semchem.o\
 $(OBJS)/semchem/semchem_interface.o\
 $(OBJS)/semchem/cti_ichnew.o
 
+#$(OBJS)/mesh/nodes.o\
 #$(OBJS)/hashes.o\
 #$(OBJS)/transport_bcd.o\
 #$(OBJS)/concentrations.o\

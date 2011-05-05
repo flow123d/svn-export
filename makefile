@@ -25,6 +25,10 @@
 #
 
 include makefile.in
+include makefile.include
+
+
+
 
 all: bin/mpiexec revnumber bin/current_flow
 #	make -C src clean
@@ -81,7 +85,6 @@ revnumber:
 
 
 clean:
-	make -C third_party clean
 	make -C src clean
 	make -C doc/doxy clean
 	rm -f bin/mpiexec
@@ -92,6 +95,11 @@ test: all
 	
 testall: all
 	make -C tests testall
+
+unit_test:
+	make -C test_units test
+	
+
 
 online-doc:
 	make -C doc/doxy doc

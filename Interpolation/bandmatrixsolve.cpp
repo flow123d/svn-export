@@ -11,16 +11,24 @@ BandMatrixSolve::BandMatrixSolve(long int n,long int ku,long int kl, long int nr
   ldb = n*nrhs;
   k = kl+ku+1;
   ab = new double[ldab*n];
+  EmptyField(ab,ldab*n);
   b = new double[ldb];
+  EmptyField(b,ldb);
   //pivot indices *************************************************
   ipiv= new integer[n];
+  EmptyField(ipiv,n);
   factorization = false;
 }
 
 BandMatrixSolve::~BandMatrixSolve()
 {
-  delete ab;
-  delete ipiv;
+  //std::cout << "band destructor ab" << std::endl;
+  delete[] ab;
+  //std::cout << "band destructor ipiv" << std::endl;
+  delete[] ipiv;
+  //std::cout << "band destructor b" << std::endl;
+  delete[] b;
+  //std::cout << "end of band destructor" << std::endl;
 }
 
 double* BandMatrixSolve::Solve()
@@ -87,4 +95,11 @@ void BandMatrixSolve::WrMatrix(double* a,int m, int n)
     }
     cout << endl;
   }
-};
+}
+
+template<class T>
+void BandMatrixSolve::EmptyField(T* p, double size)
+{
+  for(long i = 0; i < size; i++)
+    p[i] = 0.0;
+}

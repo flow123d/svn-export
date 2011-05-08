@@ -7,7 +7,7 @@ namespace Interpolation
 double AdaptiveSimpson::Simpson(const double& h, const double &fa, 
 				const double &fc, const double &fb)
 {
-  return (fa + fb + 4*fc)*h/6;
+  return (fa + fb + 4.0*fc)*(h/6.0);
 }
 
 double AdaptiveSimpson::SimpsonAd(FunctorValueBase &func, 
@@ -27,13 +27,18 @@ double AdaptiveSimpson::SimpsonAd(FunctorValueBase &func,
   double sa = Simpson(h2,fa,fca,fc);
   double sb = Simpson(h2,fc,fcb,fb);
   
-  double err_est = (sa+sb-sx)/15;
+  double err_est = (sa+sb-sx)/15.0;
   //std::cout << "sa=" << sa << " sb=" << sb << " sx=" << sx << " sa+sb=" << sa+sb <<" err_est=" << err_est << std::endl;
-  if (fabs(err_est) <= tol)
+  if (fabs(err_est) <= tol || recursion >= MAX_RECURSION)
+  {
+    //std::cout << recursion << "\tsa+sb+err = " << sa+sb+err_est << std::endl;
     return sa+sb+err_est;
+  }
   else
+  {
     return SimpsonAd(func,h2,a,ca,c,fa,fca,fc,sa,tol,recursion) 
 	   + SimpsonAd(func,h2,c,cb,b,fc,fcb,fb,sb,tol,recursion);
+  }
 }
 
 double AdaptiveSimpson::AdaptSimpson( FunctorValueBase &func,
@@ -41,7 +46,7 @@ double AdaptiveSimpson::AdaptSimpson( FunctorValueBase &func,
 				      const double& tol )
 {
   std::cout << "AdaptiveSimpson: a(" << a << ") b(" << b << ")";
-  double c = 0.5*(b-a);
+  double c = 0.5*(b+a);
   double fa,fb,fc;
   double sx,res;
 

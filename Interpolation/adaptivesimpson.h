@@ -6,6 +6,8 @@
 
 #include "functorvaluebase.h"
 
+#define MAX_RECURSION 9e+6
+
 namespace Interpolation
 {
 

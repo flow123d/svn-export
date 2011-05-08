@@ -24,7 +24,7 @@ public:
 	template<class T>
 	T operator()(const T& x)
 	{
-	  return x*x*x*x*x;
+	  return x*x*x*x*x; //pow(x,5.0);
 	}
 };
 

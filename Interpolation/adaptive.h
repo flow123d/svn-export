@@ -2,42 +2,22 @@
 #ifndef ADAPTIVE_H
 #define ADAPTIVE_H
 
-#include <vector>
-#include <iostream>
-#include <math.h>
-#include <queue>
-
 #ifndef DEB
 #define DEB true
 #endif
+
+#include <vector>
+#include <iostream>
  
 #include "iinterpolation.h"
 #include "massert.h"
 #include "functorvaluebase.h"
 #include "interpolantbase.h"
 #include "lagrange.h"
-#include "adaptivesimpson.h"
-#include "norm.h"
 
 
 namespace Interpolation
 {
-
-///A structure for priority queue.
-struct ErrorNum {
-    double err;
-    unsigned long i;
-};
-
-///A Condition function for priority queue.
-class CompareErrorNum {
-    public:
-    bool operator()(ErrorNum& err1, ErrorNum& err2) // Returns true if t1 is earlier than t2
-    {
-       if (err1.err < err2.err) return true;
-       return false;
-    }
-};
  
 ///Class Adaptive.
 /** Uses nonadaptive classes in cycles for computing interpolation.
@@ -54,26 +34,24 @@ class Adaptive : public IInterpolation
     double tolerance;
       
     ///Checks whether all parameters are set.
-    bool Check(); 
+    bool Check( void ); 
     
   public:
     
     ///A constructor.
-    Adaptive(void );
+    Adaptive( void );
     
     ///A destructor.
-    ~Adaptive(void);
+    ~Adaptive( void );
     
     ///Sets tolerance.
-    void SetTolerance(double tolerance);
+    void SetTolerance( const double& tolerance );
     
-    ///Templated method Interpolate\<M\>
+    ///Virtual method Interpolate
     /** Interpolation by Lagrange polynomials of Mth degree on interval a,b.
-	* Template parameter is the degree of polynomials
-	* @param func is the functor that is being interpolated
-	*/
-    template<unsigned char M>
-    InterpolantBase* Interpolate ( Interpolation::FunctorValueBase &func )
+      * @param func is the functor that is being interpolated
+      */
+    virtual InterpolantBase* Interpolate ( Interpolation::FunctorValueBase &func )
     {
       MASSERT(Check(),"Not all parameters has been set.");
       
@@ -83,59 +61,60 @@ class Adaptive : public IInterpolation
       //setting initial Lagrange interpolation:
       Lagrange *lag = new Lagrange();
       if (x_defined) lag->SetNodes(x);
-      else lag->SetStep(step);
+      else 
+      {
+	//x_defined false -> step must be defined; is checked in Check() before
+	//equidistant**********************************************
+	MASSERT((b-a) >= step ,"The parameter step is larger than the lenght of the interval <a,b>.");
+	int nodescount = floor((double)(b-a)/step)+1;	//number of nodes
+	if (DEB)
+	  std::cout << "number_of_nodes=" << floor((double)(b-a)/step)+1 << std::endl;
+    
+	x.resize(nodescount);	//nodes
+  
+	//filling the vector x and f
+	for(long i = 0; i < nodescount; i++)		
+	{
+	  x[i] = a+step*i;
+	}  
+    
+	//finish the interval
+	if(x[x.size()-1] < b)
+	{
+	  x.push_back(b);
+	  //nodescount++;
+	}
+	lag->SetNodes(x);
+      }
       
       
       //these parameters of interpolation will not change during adaption:
+      lag->SetDegree(M);
       lag->SetInterval(a,b);
-      lag->AddCond(IInterpolation::LeftBC, *leftcond);
-      lag->AddCond(IInterpolation::RightBC, *rightcond);
-      lag->SetExtrapolation(left_degree, right_degree);
+      if(leftcond_defined) lag->AddCond(IInterpolation::LeftBC, *leftcond);
+      if(rightcond_defined) lag->AddCond(IInterpolation::RightBC, *rightcond);
+      if(extrapolation_defined) lag->SetExtrapolation(left_degree, right_degree);
       
       
-      double simpsontol = 1e-6;	//tolerance for evaluating of adaptivesimpson
-      double max_rel_err = tolerance / (b-a); //relative error
-      double tot_err;	// absolute error on <a,b>
-      ErrorNum p_err;	// relative polynomial error on its interval
+      //double max_rel_err = tolerance / (b-a); //relative error
+      double tot_err = 0;	// absolute error on <a,b>
       
-      int n=4;	//iteration cycle of adaption
+      int n=5;	//iteration cycle of adaption
       while (n)
       {
-	result = lag->Interpolate<M>(func);	//interpolation with actual nodes
+	result = lag->Interpolate(func);	//interpolation with actual nodes
 	
-	tot_err = 0;
-	p_err.i = 0;
-	p_err.err = 0;
-	std::priority_queue<ErrorNum, std::vector<ErrorNum>, CompareErrorNum> pq;
+	tot_err = ComputeError(&func,result);	//computes error of interpolation
 	
-	for(unsigned long i = 0; i < result->GetCount(); i++ )
-	{
-	  LP_Norm norm(&func,result->GetPol(i),2);
-	  p_err.i = i;
-	  //absolute polynomial error
-	  p_err.err = sqrt(AdaptiveSimpson::AdaptSimpson( norm,
-						     result->GetPol(i)->GetLower(), 
-						     result->GetPol(i)->GetUpper(),
-						     simpsontol) );
-	  //increase the absolute total error
-	  tot_err += p_err.err;
-	  std::cout << "\t abs. p_err=" << p_err.err;
-	  //p_err convertion absolute -> relative (p_err/(xi+1 - xi))
-	  p_err.err /= (result->GetPol(i)->GetUpper()-result->GetPol(i)->GetLower());
-	  std::cout << "\t rel. p_err=" << p_err.err << std::endl;
-	  if(p_err.err > max_rel_err) pq.push(p_err);
-	}
-	
+	//writes the relative and absolute total error in each iteration
 	std::cout << "interation = " << n << "\trel. err = " << tot_err/(b-a) << "\tabs. err = " << tot_err << std::endl;
-	
 	
 	if (tot_err <= tolerance) break;	//end of adaption
 	else
 	{ //continue adaption
-	  x = *(lag->GetNodes());
 	  //changing nodes
 	  
-	  for(int k = 0; k < 1; k++)
+	  for(int k = 0; k < 1; k++)	//divides k=1 intervals
 	  {
 	    unsigned long i = pq.top().i;
 	    std::cout << "getting top of priority _queued: i=" << i << std::endl;
@@ -146,7 +125,6 @@ class Adaptive : public IInterpolation
 	  lag->SetNodes(x);
 	}
 	n--;
-	//*/
       }
       
       delete lag;

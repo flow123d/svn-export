@@ -31,7 +31,7 @@ class Lagrange	: public IInterpolation
     BandMatrixSolve *band;
     
     ///Checks whether all parameters are set
-    bool Check(); 
+    virtual bool Check(); 
     
     /** Evaluates function in nodes.
       * @param func is the functor that isbeing interpolated
@@ -41,18 +41,18 @@ class Lagrange	: public IInterpolation
     ///Fills the BC, computes dimensions a then create the BandMatrixSolve object
     /** @param M is a degree of polynomials
       */
-    void CreateBandMatrix ( const unsigned char &M );
+    void CreateBandMatrix ();
     
     ///Puts equations of boundary conditions into the matrix A
     /** @param M is a degree of polynomials
       */
-    void PutBC ( const unsigned char &M );
+    void PutBC ();
     
     ///Puts equations into the matrix A
-    void PutEquations ( const unsigned char &M );
+    void PutEquations ();
     
     ///Creates the interpolant from previous results
-    InterpolantBase* CreateInterpolant ( double *bandres, const unsigned char &M );
+    InterpolantBase* CreateInterpolant ( double *bandres);
     
     ///Math Power x^n
     template<class T>
@@ -84,16 +84,15 @@ class Lagrange	: public IInterpolation
     ~Lagrange ( void );
     
     /** Interpolation by Lagrange polynomials of Mth degree on interval a,b.
-      * Template parameter is the degree of polynomials
       * @param func is the functor that is being interpolated
       */   
-    template<unsigned char M>
-    InterpolantBase* Interpolate ( Interpolation::FunctorValueBase &func )
+    virtual InterpolantBase* Interpolate(FunctorValueBase& func)
     {
       MASSERT(Check(),"Not all parameters has been set.");
       
       SetFunctionvalues(func);  
-      CreateBandMatrix(M);
+      
+      CreateBandMatrix();
       if (DEB)
       {
 	std::cout << "x:" << std::endl;
@@ -102,8 +101,8 @@ class Lagrange	: public IInterpolation
 	band->WrMatrix(f.data(),f.size(),1);
       }
       
-      PutBC(M);  
-      PutEquations(M);
+      PutBC();  
+      PutEquations();
       
       if (DEB)
 	std::cout << "Matrix A filled" << std::endl;
@@ -112,10 +111,12 @@ class Lagrange	: public IInterpolation
       double *bandres;
       bandres = band->Solve();
       
-      InterpolantBase *result = CreateInterpolant(bandres, M);
       
-      delete bandres;
       
+      InterpolantBase *result = CreateInterpolant(bandres);
+      
+      delete band;
+         
       //Extrapolation********************************************
       if(!extrapolation_defined)
       {

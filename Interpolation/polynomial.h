@@ -85,6 +85,8 @@ class Polynomial : public FunctorDiffBase
     
     ///returns intergral of the polynomial P(x) in default limits a,b, uses Horner schema
     double Integral( void );
+    
+    void WriteCoef( void );
 };
 
 }

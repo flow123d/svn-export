@@ -63,42 +63,42 @@ public:
     * @param kl is the number of subdiagonals.
     * @param nhrs is the number of right hand vectors.
     */
-  BandMatrixSolve(integer n, integer ku, integer kl, integer nrhs);
+  BandMatrixSolve( integer n, integer ku, integer kl, integer nrhs );
   
   ///A destructor.
   ~BandMatrixSolve( void );
   
   ///Returns the m dimension of the matrix A.
   inline int GetM()
-  {return m;}
+  { return m; }
   
   ///Returns the n dimension of the matrix A.
   inline int GetN()
-  {return n;}
+  { return n; }
   
   ///Returns the number of superdiagonals of the matrix A.
   inline int GetKU()
-  {return ku;}
+  { return ku; }
   
   ///Returns the number of subdiagonals of the matrix A.
   inline int GetKL()
-  {return kl;}
+  { return kl; }
   
   ///Returns the number of right hand sizes of the matrix A.
   inline int GetNRHS()
-  {return nrhs;}
+  { return nrhs; }
   
   /// A method for filling the matrix A.
   /** @param i is the row
     * @param j is the column
     */
-  void SetA(integer i, integer j, doublereal value);
+  void SetA( integer i, integer j, doublereal value );
   
   /// A method for filling the matrix B.
   /** @param i is the row
     * @param j is the column
     */
-  void SetB(integer i, integer j, doublereal value);
+  void SetB( integer i, integer j, doublereal value );
   
   ///Solves the band matrix.
   /** First uses dgbtrf_ to do LU factorization
@@ -108,7 +108,11 @@ public:
   double* Solve();
 
   ///Writes the matrix to output.
-  void WrMatrix(double* a, int m, int n);
+  void WrMatrix( double* a, int m, int n );
+  
+  ///Put zeros in field
+  template<class T>
+  void EmptyField( T* p, double size );
 };
 
 #endif // BANDMATRIXSOLVE_H

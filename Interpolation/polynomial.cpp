@@ -112,5 +112,16 @@ double Polynomial::Integral(void )
   return Polynomial::Integral(a,b);
 }
 
+void Polynomial::WriteCoef(void )
+{
+  std::cout << "{";
+  for(uint i=0; i < coefs.size()-1; i++)
+  {
+    std::cout << coefs[i] << " | ";
+  }
+  std::cout << coefs[coefs.size()-1] << "}";
+}
+
+
 }	//namespace Interpolation
 

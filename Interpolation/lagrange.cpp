@@ -11,7 +11,6 @@ Lagrange::Lagrange ( void ) : IInterpolation()
 
 Lagrange::~Lagrange(void )
 {
-  delete band;
 }
 
 
@@ -21,6 +20,7 @@ bool Lagrange::Check()
   0..a
   1..b
   2..step/tolerance
+  3..degree M
   */
   
   bool res = true;
@@ -35,6 +35,8 @@ bool Lagrange::Check()
 	break;
       case 2:  cerr << "neither vector x nor step undefined" << endl;
 	break;
+      case 3:  cerr << "the degree of interpolation undefined" << endl;
+	break;
       default: cerr << "Lagrange::Check() found undefined parameter" << endl;
     }
     res = false;
@@ -48,9 +50,9 @@ void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase& func )
   
   if (x_defined)	//vector x is defined from outside
   {
-    MASSERT(x.size()>1,"vector x (nodes) contains to few nodes (at leats 2is needed)");
+    MASSERT(x.size()>1,"vector x (nodes) contains to few nodes (at leats 2 is needed)");
     MASSERT(x[0] == a,"in vector of nodes x[0] should be equal to a");
-    MASSERT(x[x.size()-1] == b,"in vector of nodes x[0] should be equal to a");
+    MASSERT(x[x.size()-1] == b,"in vector of nodes x[n] should be equal to b");
     
     nodescount = x.size();
     f.resize(nodescount);	//function values in the nodes
@@ -92,7 +94,7 @@ void Lagrange::SetFunctionvalues ( Interpolation::FunctorValueBase& func )
 	cout << nodescount << " nodes defined, x and f filled" << endl;
 }
 
-void Lagrange::CreateBandMatrix ( const unsigned char &M )
+void Lagrange::CreateBandMatrix ()
 {
   //number of conditions to fill automatically
   int n,ku,kl;
@@ -128,7 +130,7 @@ void Lagrange::CreateBandMatrix ( const unsigned char &M )
   band = new BandMatrixSolve(n,ku,kl,1);
 }
 
-void Lagrange::PutBC ( const unsigned char &M )
+void Lagrange::PutBC ()
 {
   //boundary conditions on the left
       int number_of_leftcond = leftcond->GetCount();
@@ -163,12 +165,37 @@ void Lagrange::PutBC ( const unsigned char &M )
       }
 }
 
-void Lagrange::PutEquations ( const unsigned char &M )
+void Lagrange::PutEquations ()
 {
   //pos is always the position of submatrix in matrix A
       //0...x.size()-2
       int pos = 0;	
       int number_of_leftcond = leftcond->GetCount();
+      
+      /*
+      //computing submatrix
+      vector<vector<double> > sub(M+1);
+      //first lines
+      sub[0] = vector<double>(M+1,0.0);
+      sub[0][0] = 0.0;	
+      //second line
+      sub[1] = vector<double>(M+1,0.0);
+      for(int j = 0; j < M+1; j++)
+      {
+	sub[1][j] = 1.0;
+      }
+      //other lines
+      for(int i = 2; i < M+1; i++)
+      {
+	sub[i] = vector<double>(M+1,0.0);
+	sub[i][0] = -Fact(i-1);
+	for(int j = 0; j < M+1; j++)
+	{
+	  sub[i][j] = -Fact(i-1);
+	}
+      }
+      */
+      
       //goes through submatrixes
       for(unsigned long i = 0; i < x.size()-2; i++)
       {
@@ -176,13 +203,13 @@ void Lagrange::PutEquations ( const unsigned char &M )
 	band->SetA(pos+number_of_leftcond,pos,1.0);		//eqn for x = 0 
 	band->SetB(pos+number_of_leftcond,0,f[i]);		//rhs for x = 0
 	//goes through lines in submatrix except the first one
-	for(int k = 1; k <= M; k++)
+	for(unsigned int k = 1; k <= M; k++)
 	{
 	  band->SetB(pos+number_of_leftcond+k,0,0.0);		//rhs=0 for P'[i]=P'[i-1]..P(M-1)[i]=P(M-1)[i-1]
 	  if (k > 1)
 	    band->SetA(pos+number_of_leftcond+k,pos+k+M,-Fact(k-1));	//eqn P'[i]=P'[i-1]..P(M-1)[i]=P(M-1)[i-1]
 	  //goes through values of the line
-	  for(int l = k-1; l <= M; l++)
+	  for(unsigned int l = k-1; l <= M; l++)
 	  {
 	    //eqn P'[i]=P'[i-1]..P(M-1)[i]=P(M-1)[i-1]
 	    band->SetA(pos+number_of_leftcond+k,pos+l,Fact(l)/Fact(l-k+1)*Power(x[i+1]-x[i],l-k+1));
@@ -198,13 +225,13 @@ void Lagrange::PutEquations ( const unsigned char &M )
       band->SetB(pos+number_of_leftcond,0,f[f.size()-2]);
       band->SetB(pos+number_of_leftcond+1,0,f[f.size()-1]);
       band->SetA(pos+number_of_leftcond+1,pos,1.0);
-      for(int l = 1; l <= M; l++)
+      for(unsigned int l = 1; l <= M; l++)
       {
 	band->SetA(pos+number_of_leftcond+1,pos+l,Power(x[x.size()-1]-x[x.size()-2],l));
       }
 }
 
-InterpolantBase* Lagrange::CreateInterpolant ( double* bandres, const unsigned char &M )
+InterpolantBase* Lagrange::CreateInterpolant ( double* bandres )
 {
   //creation of polynoms for an interpolant******************
       vector<Polynomial> polynomials (x.size()-1);
@@ -219,10 +246,9 @@ InterpolantBase* Lagrange::CreateInterpolant ( double* bandres, const unsigned c
 	
 	if (DEB)
 	{
-	  cout << "p[" << i << "]={";
-	  for(int j = 0; j < M; j++)
-	    cout <<  *(bandres + i*(M+1) + j) << "|";
-	  cout <<  *(bandres + i*(M+1) + M) << "}" << endl;
+	  cout << "p[" << i << "]=";
+	  polynomials[i].WriteCoef();
+	  cout << endl;
 	}
       }
       if(x_defined)
@@ -230,7 +256,6 @@ InterpolantBase* Lagrange::CreateInterpolant ( double* bandres, const unsigned c
       else
 	return new InterpolantEq(polynomials, step);
 }
-
 
 
 }	//namespace IInterpolation

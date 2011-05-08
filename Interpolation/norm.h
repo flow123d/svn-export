@@ -21,7 +21,7 @@ class LP_Norm	: public FunctorValueBase
   public:
     
     LP_Norm( FunctorValueBase* func1, 
-	     FunctorValueBase *func2,
+	     FunctorValueBase* func2,
 	     unsigned int p);
     
     virtual double operator() ( const double &x );
@@ -38,8 +38,8 @@ class W1P_Norm	: public FunctorValueBase
   
   public:
     
-    W1P_Norm ( FunctorDiffBase *func1,
-	       FunctorDiffBase *func2,
+    W1P_Norm ( FunctorDiffBase* func1,
+	       FunctorDiffBase* func2,
 	       unsigned int p);
 	       
     virtual double operator() ( const double &x );

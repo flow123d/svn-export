@@ -48,41 +48,34 @@ class Value_node;
  */
 class Generic_node {
 protected:
-    Value_type               value_type_;
-
-    //sem staticky instance Object_node, Vector_node, Value_node (od kazdeho jedna)
-    //pro neexistujici nody
-
+    Value_type           value_type_;
+    static Generic_node  empty_node_generic_;  //prazdna instance
+    static Object_node   empty_node_object_;  //prazdna instance
+    static Vector_node   empty_node_vector_;  //prazdna instance
+    static Value_node    empty_node_value_;  //prazdna instance
 public:
     Generic_node() { value_type_ = type_generic; }
+
     Generic_node( Generic_node const & n ); //copy constructor - deep?
 
-    //ziska typ nodu. To by mel asi umet kazdy
-    Value_type get_type() { return value_type_; }
-    // hierarchicky projde cely podstrom do hloubky a vypise ho?
-    // asi taky uzitecne pro vsechny...
-    //ostream& operator<<( ostream& output ) { return output; }
+    Value_type get_type() { return value_type_; } //ziska typ nodu. To by mel asi umet kazdy
 
-    //Generic_node & operator=( Generic_node const & n );
-
-    virtual Generic_node & get_key( const string & key )
+    virtual Generic_node & get_key( const string & key );
     virtual Generic_node & get_item( const int id );
 
-    Object_node & as_object( void ) {
-        return dynamic_cast < Object_node & > &(*this);
-    }
+    /* Implementace as_* tady nefunguje, je potreba znat presnou deklaraci tridy.
+     * Forward deklarace nestaci (nevi, jake ma k dispozici metody apod.)
+     */
+    virtual Object_node & as_object( void );
+    virtual Vector_node & as_vector( void );
+    virtual Value_node & as_value( void );
 
-    Vector_node & as_vector( void ) {
-        return dynamic_cast < Vector_node & > &(*this);
-    }
-
-    Value_node & as_vector( void ) {
-        return dynamic_cast < Value_node & > &(*this);
-    }
+    //Generic_node & operator=( Generic_node const & n );
     // data_typ = strom["klic"].get_data<typ>() bez defaultu, pri nepritomnosti spadne
     // data_typ = strom["klic"].get_data<typ>( typ & default ) probehne vzdy
     //template< typename T > T get_data();
     //template< typename T > T get_data( T & default_data );
+    virtual ~Generic_node();
 };
 
 /*!
@@ -94,26 +87,31 @@ class Object_node: Generic_node {
 public:
     Object_node() { value_type_ = type_object; }
 
+    virtual Generic_node & get_item( const int id ) {
+        //pristup jako do vektoru, ale jsme v objektu => vzdy vrati prazdnou instanci
+        return empty_node_generic_;
+    }
+
     virtual Generic_node & get_key( const string & key ) {
         map< string, Generic_node & >::iterator it;
 
         it = object_.find( key );
-        if (  it == map::end )
+        if ( it == object_.end() )
         {
-            //odkaz na prazdnou instanci, vytvorena jen jedna, globalne
-        }
-        {
+            //nenasli, vratime prazndou
+            return empty_node_generic_;
+        } else {
             return it->second;
         }
     }
-    virtual Generic_node & get_item( const int id ) {
-        //pristup jako do vektoru, ale jsme v objektu => vzdy vrati prazdnou instanci
-    }
+
+    virtual Object_node & as_object( void ) { return (*this); }
 
     //pro pristup stylem    gen_node_ref = muj_strom["klic"]
     // nebo data_typ = strom["klic"].get_data<typ>() bez defaultu, pri nepritomnosti spadne
     //      data_typ = strom["klic"].get_data<typ>( typ & default ) probehne vzdy
     //Generic_node & operator[]( const string & key );
+    virtual ~Object_node();
 };
 
 /*!
@@ -121,27 +119,32 @@ public:
  *        that is heterogeneous vector of any JSON construct
  */
 class Vector_node : Generic_node {
-    vector< Generic_node & >  value_array_;
+    //vektor referenci nelze!
+    vector< Generic_node * >  value_array_;
 public:
     Vector_node () { value_type_ = type_vector; }
 
     virtual Generic_node & get_item( const int id ) {
         if (  id >= value_array_.size() )
         {
-            //mimo rozsah pole
-            //odkaz na prazdnou instanci, vytvorena jen jedna, globalne
-        }
-        {
-            return value_array[id];
+            //mimo rozsah pole, vratime prazndou
+            return empty_node_generic_;
+        } else {
+            return *value_array_[id];
         }
     }
+
     virtual Generic_node & get_key( const string & key ) {
         //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati prazdnou instanci
+        return empty_node_generic_;
     }
+
+    virtual Vector_node & as_vector( void ) { return (*this); }
 
     //Generic_node & operator[]( const int & id );
     // get_vector pres template, aby se snazil dodat vse v konkretnim typu ??
     //bool get_vector( vector<Generic_node> & ret_vector );
+    virtual ~Vector_node();
 };
 
 /*!
@@ -157,10 +160,15 @@ public:
 
     virtual Generic_node & get_item( const int id ) {
         //pristup jako do vektoru, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        return empty_node_generic_;
     }
     virtual Generic_node & get_key( const string & key ) {
         //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        return empty_node_generic_;
     }
+
+    virtual Value_node & as_value( void ) { return (*this); }
+
 
     //pokazde kontrolovat, zda je to skutecne Value_node, a ne jen pretypovany jiny?
 
@@ -175,7 +183,39 @@ public:
     bool get_float( double & ret_value, double & default_value );
     bool get_int( int & ret_value );
     bool get_int( int & ret_value, int & default_value );
+
+    virtual ~Value_node();
 };
 
+inline Object_node & Generic_node::as_object(void)
+{
+   if ( value_type_ == type_object ) {
+       return * dynamic_cast < Object_node * > (this) ;
+   } else {
+       //zkousime pristoupit jako k objektu, ale neni objekt - vrat empty
+       return empty_node_object_;
+   }
+}
+
+inline Vector_node & Generic_node::as_vector(void)
+{
+    if ( value_type_ == type_vector ) {
+        return * dynamic_cast < Vector_node * > (this);
+    } else {
+        //zkousime pristoupit jako k vektoru, ale neni vektor - vrat empty
+        return empty_node_vector_;
+    }
+}
+
+inline Value_node & Generic_node::as_value(void)
+{
+    if ( ( value_type_ == type_string ) || ( value_type_ == type_number ) ||
+            ( value_type_ == type_bool ) || ( value_type_ == type_null ) ) {
+        return * dynamic_cast < Value_node * > (this);
+    } else {
+        //zkousime pristoupit jako k value, ale neni value - vrat empty
+        return empty_node_value_;
+    }
+}
 
 #endif /* INPUT_HPP_ */

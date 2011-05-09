@@ -29,3 +29,9 @@
  */
 
 #include "input.hpp"
+
+///definition of global variable for stacktrace storage
+Object_node   Generic_node::empty_node_object_;  //prazdna instance
+Vector_node   Generic_node::empty_node_vector_;  //prazdna instance
+Value_node    Generic_node::empty_node_value_;  //prazdna instance
+Generic_node  Generic_node::empty_node_generic_;  //prazdna instance

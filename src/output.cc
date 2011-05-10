@@ -429,6 +429,7 @@ void OutputTime::free_data_from_transport(void)
  */
 void OutputTime::get_data_from_transport(struct Transport *transport)
 {
+    Mesh *mesh = get_mesh();
     NodeIter node;
     element_scalar = new OutScalar[transport->n_substances];
     element_vector = new OutVector;
@@ -520,6 +521,8 @@ int OutputTime::register_node_data(std::string name,
         std::string unit,
         std::vector<_Data> &data)
 {
+    std::vector<OutputData> *node_data = get_node_data();
+
     if(mesh->node_vector.size() == data.size()) {
         int found = 0;
 
@@ -558,7 +561,9 @@ int OutputTime::register_elem_data(std::string name,
         std::string unit,
         std::vector<_Data> &data)
 {
+    std::vector<OutputData> *elem_data = get_elem_data();
 
+    Mesh *mesh = get_mesh();
     if(mesh->element.size() == data.size()) {
         int found = 0;
         for(std::vector<OutputData>::iterator od_iter = elem_data->begin();
@@ -631,6 +636,13 @@ int OutputTime::write_data(double time)
  */
 OutputTime::OutputTime(Mesh *_mesh, string fname)
 {
+    std::vector<OutputData> *node_data;
+    std::vector<OutputData> *elem_data;
+    Mesh *mesh = _mesh;
+    ofstream *base_file;
+    string *base_filename;
+    int format_type;
+
     if( OptGetBool("Output", "Write_output_file", "no") == false ) {
         base_filename = NULL;
         base_file = NULL;
@@ -656,12 +668,19 @@ OutputTime::OutputTime(Mesh *_mesh, string fname)
 
     base_filename = new string(fname);
 
-    mesh = _mesh;
     node_data = new OutputDataVec;
     elem_data = new OutputDataVec;
 
     // TODO: remove in the future
     format_type = ConstantDB::getInstance()->getInt("Pos_format_id");
+
+    set_base_file(base_file);
+    set_base_filename(base_filename);
+    set_mesh(mesh);
+    set_node_data(node_data);
+    set_elem_data(elem_data);
+
+    set_format_type(format_type);
 
     switch(format_type) {
     case VTK_SERIAL_ASCII:

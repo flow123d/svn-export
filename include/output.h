@@ -152,16 +152,30 @@ private:
     struct OutScalar *node_scalar;      // Temporary solution
     struct OutScalar *element_scalar;   // Temporary solution
     struct OutVector *element_vector;   // Temporary solution
-public:
-    Output() {};            // Un-named constructor can't be called
-    ofstream    *base_file;         ///< Base output stream
-    string      *base_filename;     ///< Name of base output file
-    ofstream    *data_file;         ///< Data output stream (could be same as base_file)
-    string      *data_filename;     ///< Name of data output file
-    int         format_type;        ///< Type of output
-    std::vector<OutputData> *node_data;    ///< List of data on nodes
-    std::vector<OutputData> *elem_data;    ///< List of data on elements
+
+    ofstream    *base_file;             ///< Base output stream
+    string      *base_filename;         ///< Name of base output file
+    string      *data_filename;         ///< Name of data output file
+    ofstream    *data_file;             ///< Data output stream (could be same as base_file)
+    int         format_type;            ///< Type of output
     Mesh        *mesh;
+    std::vector<OutputData> *node_data; ///< List of data on nodes
+    std::vector<OutputData> *elem_data; ///< List of data on elements
+
+    // Internal API for file formats
+    int (*_write_data)(Output *output);
+protected:
+    // Protected getters for descendant
+
+    // Protected setters for descendant
+    void set_mesh(Mesh *_mesh) { mesh = _mesh; };
+    void set_base_file(ofstream *_base_file) { base_file = _base_file; };
+    void set_base_filename(string *_base_filename) { base_filename = _base_filename; };
+    void set_format_type(int _format_type) { format_type = _format_type; };
+    void set_node_data(std::vector<OutputData> *_node_data) { node_data = _node_data; };
+    void set_elem_data(std::vector<OutputData> *_elem_data) { elem_data = _elem_data; };
+public:
+    Output() {};
 
     Output(Mesh *mesh, string filename);
     ~Output();
@@ -169,25 +183,15 @@ public:
     void free_data_from_mesh(void);
     void get_data_from_mesh(void);
 
-    /**
-     *
-     */
     template <typename _Data>
     int register_node_data(std::string name, std::string unit, _Data *data, uint size);
-    /**
-     * \brief This method registers node data, that will be written to the file,
-     * when write_data() will be called.
-     */
+
     template <typename _Data>
     int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
-
-    /**
-     * This method register element data
-     */
     template <typename _Data>
     int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
 
-    // Getters
+    // Public getters
     std::vector<OutputData> *get_node_data(void) { return node_data; };
     std::vector<OutputData> *get_elem_data(void) { return elem_data; };
     ofstream& get_base_file(void) { return *base_file; };
@@ -197,13 +201,8 @@ public:
     Mesh *get_mesh(void) { return mesh; };
     char get_format_type(void) { return format_type; };
 
-    // Setters
+    // Public setters
     void set_data_file(ofstream *_data_file) { data_file = _data_file; };
-
-    // Internal API for file formats
-
-    /// This method writes geometry, topology of mesh and all data to the file
-    int (*_write_data)(Output *output);
 
     int write_data(void);
 };
@@ -212,33 +211,35 @@ public:
  * Class of output of during time
  */
 class OutputTime : public Output {
+private:
     int              current_step;      ///< Current step
     struct OutScalar *element_scalar;   // Temporary solution
     int              elem_sca_count;    // Temporary solution
     struct OutVector *element_vector;   // Temporary solution
-//    OutputTime() {};
-public:
-    OutputTime(Mesh *mesh, string filename);
-    ~OutputTime();
-
-    void get_data_from_transport(struct Transport *transport);
-    void free_data_from_transport(void);
-
-    ///< This method registers node data, that will be written to the file,
-    ///< when write_data() will be called
-    template <typename _Data>
-    int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
-    ///< This method register element data
-    template <typename _Data>
-    int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
 
     // Internal API for file formats
-
-    ///< This method writes geometry, topology of mesh and all data to the file
     int (*_write_data)(OutputTime *output, double time, int step);
     int (*_write_head)(OutputTime *output);
     int (*_write_tail)(OutputTime *output);
+public:
+    // Constructor and destructor
+    OutputTime(Mesh *mesh, string filename);
+    ~OutputTime();
 
+    // Temporary solution for getting data from transport
+    void get_data_from_transport(struct Transport *transport);
+    void free_data_from_transport(void);
+
+    // This method registers node data, that will be written to the file,
+    // when write_data() will be called
+    template <typename _Data>
+
+    int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
+    // This method register element data
+    template <typename _Data>
+    int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
+
+    // This method write data to the file
     int write_data(double time);
 };
 

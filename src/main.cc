@@ -289,11 +289,9 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
         const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
         Output *output = new Output(mesh, string(out_fname));
 
-        output->get_data_from_mesh();
-        // call output->register_node_data(name, unit, data) to register other data on nodes
-        // call output->register_elem_data(name, unit, data) to register other data on elements
+        // call output->register_node_data(name, unit, data) here to register other data on nodes
+        // call output->register_elem_data(name, unit, data) here to register other data on elements
         output->write_data();
-        output->free_data_from_mesh();
 
         delete output;
     }
@@ -506,11 +504,9 @@ void main_compute_mh_density(struct Problem *problem)
         const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
         Output *output = new Output(mesh, string(out_fname));
 
-        output->get_data_from_mesh();
-        // call output->register_node_data(name, unit, data) to register other data on nodes
-        // call output->register_elem_data(name, unit, data) to register other data on elements
+        // call output->register_node_data(name, unit, data) here to register other data on nodes
+        // call output->register_elem_data(name, unit, data) here to register other data on elements
         output->write_data();
-        output->free_data_from_mesh();
 
         delete output;
     }

@@ -162,6 +162,10 @@ private:
     std::vector<OutputData> *node_data; ///< List of data on nodes
     std::vector<OutputData> *elem_data; ///< List of data on elements
 
+    // Temporary solution
+    void get_data_from_mesh(void);
+    void free_data_from_mesh(void);
+
     // Internal API for file formats
     int (*_write_data)(Output *output);
 protected:
@@ -175,19 +179,20 @@ protected:
     void set_node_data(std::vector<OutputData> *_node_data) { node_data = _node_data; };
     void set_elem_data(std::vector<OutputData> *_elem_data) { elem_data = _elem_data; };
 public:
-    Output() {};
+    Output() { node_scalar = NULL; element_scalar = NULL; element_vector = NULL; };
 
     Output(Mesh *mesh, string filename);
     ~Output();
-
-    void free_data_from_mesh(void);
-    void get_data_from_mesh(void);
 
     template <typename _Data>
     int register_node_data(std::string name, std::string unit, _Data *data, uint size);
 
     template <typename _Data>
+    int register_elem_data(std::string name, std::string unit, _Data *data, uint size);
+
+    template <typename _Data>
     int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
+
     template <typename _Data>
     int register_elem_data(std::string name, std::string unit, std::vector<_Data> &data);
 
@@ -230,10 +235,15 @@ public:
     void get_data_from_transport(struct Transport *transport);
     void free_data_from_transport(void);
 
+    template <typename _Data>
+    int register_node_data(std::string name, std::string unit, _Data *data, uint size);
+
+    template <typename _Data>
+    int register_elem_data(std::string name, std::string unit, _Data *data, uint size);
+
     // This method registers node data, that will be written to the file,
     // when write_data() will be called
     template <typename _Data>
-
     int register_node_data(std::string name, std::string unit, std::vector<_Data> &data);
     // This method register element data
     template <typename _Data>

@@ -200,12 +200,20 @@ OutputData::~OutputData()
  */
 void Output::free_data_from_mesh(void)
 {
-    delete node_scalar->scalars;
-    delete node_scalar;
-    delete element_scalar->scalars;
-    delete element_scalar;
-    delete element_vector->vectors;
-    delete element_vector;
+    if(node_scalar != NULL) {
+        delete node_scalar->scalars;
+        delete node_scalar;
+    }
+
+    if(element_scalar != NULL) {
+        delete element_scalar->scalars;
+        delete element_scalar;
+    }
+
+    if(element_vector != NULL) {
+        delete element_vector->vectors;
+        delete element_vector;
+    }
 }
 
 /**
@@ -258,12 +266,63 @@ void Output::get_data_from_mesh(void)
 }
 
 /**
- * \brief Register data on nodes. This function will add reference on this data
- * to the Output object. Own data will be written to the file, when write_data
- * method will be called.
+ * \brief Register data on nodes. This function will add reference on this
+ * array of data to the Output object. Own data will be written to the
+ * file, when write_data method will be called.
+ */
+template <typename _Data>
+int Output::register_node_data(std::string name,
+        std::string unit,
+        _Data *data,
+        uint size)
+{
+    if(mesh->node_vector.size() == size) {
+        int found = 0;
+
+        OutputData *out_data = new OutputData(name, unit, data, size);
+        node_data->push_back(*out_data);
+
+        return 1;
+    } else {
+        xprintf(Err, "Number of values: %d is not equal to number of nodes: %d\n", data.size(), mesh->node_vector.size());
+        return 0;
+    }
+}
+
+/**
+ * \brief Register data on elements. This function will add reference on this
+ * array of data to the Output object. Own data will be written to the
+ * file, when write_data method will be called.
+ */
+template <typename _Data>
+int Output::register_elem_data(std::string name,
+        std::string unit,
+        _Data *data,
+        uint size)
+{
+    if(mesh->element.size() == size) {
+        int found = 0;
+
+        OutputData *out_data = new OutputData(name, unit, data, size);
+        elem_data->push_back(*out_data);
+
+        return 1;
+    } else {
+        xprintf(Err, "Number of values: %d is not equal to number of elements: %d\n", data.size(), mesh->element.size());
+        return 0;
+    }
+}
+
+/**
+ * \brief Register data on nodes.
+ *
+ * This function will add reference on this data to the Output object. Own data
+ * will be written to the file, when write_data() method will be called.
+ *
  * \param[in]   name    The name of data
  * \param[in]   unit    The name of units
  * \param[in]   data    The reference on data
+ *
  * \return This function return 1, when the length of data vector is the same as
  * number of nodes in mesh. When the the number is different, then this function
  * returns 0.
@@ -381,6 +440,8 @@ Output::Output(Mesh *_mesh, string fname)
     }
 
     base_filename = new string(fname);
+
+    get_data_from_mesh();
 }
 
 /**
@@ -388,6 +449,8 @@ Output::Output(Mesh *_mesh, string fname)
  */
 Output::~Output()
 {
+    free_data_from_mesh();
+
     // Free all reference on node and element data
     if(node_data != NULL) {
         delete node_data;
@@ -478,13 +541,18 @@ void OutputTime::get_data_from_transport(struct Transport *transport)
  * \brief Register data on nodes. This function will add reference on this
  * array of data to the Output object. Own data will be written to the
  * file, when write_data method will be called.
+ *
+ * TODO: Test this method!
  */
 template <typename _Data>
-int Output::register_node_data(std::string name,
+int OutputTime::register_node_data(std::string name,
         std::string unit,
         _Data *data,
         uint size)
 {
+    std::vector<OutputData> *node_data = get_node_data();
+    Mesh *mesh = get_mesh();
+
     if(mesh->node_vector.size() == size) {
         int found = 0;
 
@@ -500,7 +568,7 @@ int Output::register_node_data(std::string name,
         }
 
         if(found == 0) {
-            OutputData *out_data = new OutputData(name, unit, data);
+            OutputData *out_data = new OutputData(name, unit, data, size);
             node_data->push_back(*out_data);
         }
 
@@ -512,9 +580,79 @@ int Output::register_node_data(std::string name,
 }
 
 /**
- * \brief Register data on nodes. This function will add reference on this
- * vector of data to the Output object. Own data will be written to the
- * file, when write_data method will be called.
+ * \brief This function register data on elements.
+ *
+ * This function will add reference on this array of data to the Output object.
+ * It is possible to call this function only once, when data are at the same
+ * address during time. it is possible to call this function for each step, when
+ * data are not at the same address, but name of the data has to be same.
+ * Own data will be written to the file, when write_data() method will be called.
+ *
+ * \param[in] name  The name of data
+ * \param[in] unit  The units of data
+ * \param[in] *data The pointer at data (array of int, float or double)
+ * \param[in] size  The size of array (number of values)
+ *
+ * \return This function returns 1, when data were registered. This function
+ * returns 0, when it wasn't able to register data (number of values isn't
+ * same as number of elements).
+ *
+ * TODO: Test this method!
+ */
+template <typename _Data>
+int OutputTime::register_elem_data(std::string name,
+        std::string unit,
+        _Data *data,
+        uint size)
+{
+    std::vector<OutputData> *elem_data = get_elem_data();
+    Mesh *mesh = get_mesh();
+
+    if(mesh->element.size() == size) {
+        int found = 0;
+
+        for(std::vector<OutputData>::iterator od_iter = elem_data->begin();
+                od_iter != elem_data->end();
+                od_iter++)
+        {
+            if(*od_iter->name == name) {
+                od_iter->data = (void*)&data;
+                found = 1;
+                break;
+            }
+        }
+
+        if(found == 0) {
+            OutputData *out_data = new OutputData(name, unit, data, size);
+            elem_data->push_back(*out_data);
+        }
+
+        return 1;
+    } else {
+        xprintf(Err, "Number of values: %d is not equal to number of elements: %d\n", data.size(), mesh->element.size());
+        return 0;
+    }
+}
+
+/**
+ * \brief This function register data on nodes.
+ *
+ * This function will add reference on this array of data to the Output object.
+ * It is possible to call this function only once, when data are at the same
+ * address during time. it is possible to call this function for each step, when
+ * data are not at the same address, but name of the data has to be same.
+ * Own data will be written to the file, when write_data() method will be called.
+ *
+ * \param[in] name  The name of data
+ * \param[in] unit  The units of data
+ * \param[in] *data The pointer at data (array of int, float or double)
+ * \param[in] size  The size of array (number of values)
+ *
+ * \return This function returns 1, when data were registered. This function
+ * returns 0, when it wasn't able to register data (number of values isn't
+ * same as number of nodes).
+ *
+ * TODO: Test this method!
  */
 template <typename _Data>
 int OutputTime::register_node_data(std::string name,
@@ -522,6 +660,7 @@ int OutputTime::register_node_data(std::string name,
         std::vector<_Data> &data)
 {
     std::vector<OutputData> *node_data = get_node_data();
+    Mesh *mesh = get_mesh();
 
     if(mesh->node_vector.size() == data.size()) {
         int found = 0;
@@ -562,8 +701,8 @@ int OutputTime::register_elem_data(std::string name,
         std::vector<_Data> &data)
 {
     std::vector<OutputData> *elem_data = get_elem_data();
-
     Mesh *mesh = get_mesh();
+
     if(mesh->element.size() == data.size()) {
         int found = 0;
         for(std::vector<OutputData>::iterator od_iter = elem_data->begin();

@@ -5,6 +5,12 @@
 #include <vector>
 #include <iostream>
 
+#include "massert.h"
+
+#ifndef DEB
+#define DEB true
+#endif
+
 namespace Interpolation
 {
 /** Contains value and boolean information
@@ -24,20 +30,21 @@ class BCondition
 {    
   private:
     /** Conditions in the beginning of the interval.
-      * value[0] = f'(a), ..., value[m] = f^{(m)}(a) */
+      * value[0] = f'(a), ..., value[m] = f^{(m)}(a) 
+      */
     std::vector<defvalue> condition;
   
-  ///amount of USER defined conditions
-    int count;  
+  ///Amount of USER defined conditions.
+    unsigned int count;  
   
   public:
-    ///constructor
+    ///A constructor.
     BCondition( void );
     
-    ///copy constructor
+    ///A copy constructor.
     BCondition( const BCondition& source );
     
-    ///destructor
+    ///A destructor.
     ~BCondition( void );
   
     /** Adds a boundary condition.
@@ -47,10 +54,10 @@ class BCondition
       */
     void AddCond( const unsigned int &derivate, const double &value );
   
-    /// destroys all members in condition vectors
+    ///Destroys all members in condition vectors.
     void ClearCondition();
     
-    /** fills the needed (according to the degree)
+    /** Fills the needed (according to the degree)
       * amount of conditions with zeros.
       * Goes from the highest derivates. 
       * @param number_of_conditions sets the amount of conditions to be added
@@ -63,7 +70,7 @@ class BCondition
     std::vector<defvalue> *GetCond();
   
     ///returns number of defined conditions
-    int GetCount();
+    unsigned int GetCount();
 };
 
 }	//namespace Interpolation

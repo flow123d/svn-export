@@ -1,8 +1,16 @@
 #ifndef FUNCTORDIFF_H
 #define FUNCTORDIFF_H
 
+#include "massert.h"
 #include "functordiffbase.h"
+#include "../FADBAD++/fadbad.h"
 #include "../FADBAD++/badiff.h"
+#include "../FADBAD++/tadiff.h"
+
+
+///Defines how many derivates can be returned from Taylor's coeficients.
+#define N 10
+
 using namespace fadbad;
 
 namespace Interpolation
@@ -28,7 +36,7 @@ public:
   ~FunctorDiff(void){}
   
   ///returns 1st derivate using FADBAD
-  virtual der Diff ( const double &i_x )
+  virtual der Diff ( const double& i_x )
   {
     B<double> x(i_x); 	// Initialize arguments
     Func func;       	// Instantiate functor
@@ -45,6 +53,37 @@ public:
   virtual double operator() ( const double &x )
   {
     return fce(x);
+  }
+  
+  /** Returns n-th derivate of function in i_x.
+    * Uses coeficients in Taylor's row.
+    */
+  double Diffn(double i_x, unsigned int n)
+  {
+    MASSERT(n <= N,"Cannot obtain nth derivate. Check header file.");
+    T<double> x,f;
+
+    x = i_x;
+    x[1] = 1;
+    f = fce(x);
+    f.eval(N);
+	
+    for(int i = 0; i<N; i++)	//goes through the field of Taylor's coeficients
+    {				//and divide them by the factorial to get derivates
+      f[i] = f[i] * this->Fact(i);
+    }
+    
+    return f[n];		//returns n-th derivate
+  }
+
+  
+  ///Factorial
+  long Fact ( long x )
+  {     
+    if (x > 1)
+      return x*Fact(x-1);
+    else
+      return 1;
   }
   
 };

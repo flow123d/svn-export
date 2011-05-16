@@ -60,6 +60,7 @@ void IInterpolation::SetStep(const double& step)
 {
   MASSERT(step>0,"step cannot be negative or zero.");
   this->step = step;
+  x_defined = false;
   checks[2] = true;
 }
 
@@ -123,20 +124,20 @@ double IInterpolation::ComputeError( FunctorValueBase* f, InterpolantBase* g )
 
     //absolute polynomial error
     p_err.err = sqrt(AdaptiveSimpson::AdaptSimpson( norm,
-					      g->GetPol(i)->GetLower(), 
-					      g->GetPol(i)->GetUpper(),
+					      g->GetPol(i)->GetA(), 
+					      g->GetPol(i)->GetB(),
 					      SIMPSON_TOLERANCE) );
     //increase the absolute total error
     tot_err += p_err.err;
     
     //writes absolute error on a single polynomial
-    std::cout << "\t abs. p_err=" << p_err.err;
+    if(DEB) std::cout << "\t abs. p_err=" << p_err.err;
     
     //p_err convertion absolute -> relative (p_err/(xi+1 - xi))
-    p_err.err /= (g->GetPol(i)->GetUpper()-g->GetPol(i)->GetLower());
+    p_err.err /= (g->GetPol(i)->GetB()-g->GetPol(i)->GetA());
     
     //writes relative error on a single polynomial
-    std::cout << "\t rel. p_err=" << p_err.err << std::endl;
+    if(DEB) std::cout << "\t rel. p_err=" << p_err.err << std::endl;
     
     pq.push(p_err); //puts in priority queue
   }
@@ -148,6 +149,13 @@ double IInterpolation::ComputeError( FunctorValueBase* f, InterpolantBase* g )
   //*/
   
   return tot_err;	//returns absolute total error
+}
+
+void IInterpolation::ClearPolynomialErrors()
+{
+  pq = std::priority_queue< ErrorNum, 	//deleting the queue
+			 std::vector<ErrorNum>, 
+			 CompareErrorNum> ();
 }
 
 

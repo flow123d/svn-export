@@ -117,15 +117,15 @@ to indicate that x is out of range.
   while (ju-jl > 1) 
   { //If we are not yet done,
     jm = (ju+jl) >> 1;		//compute a midpoint,
-    if (x >= polynomials[jm].GetLower())
+    if (x >= polynomials[jm].GetA())
       jl = jm;		//and replace either the lower limit
     else
       ju = jm;		//or the upper limit, as appropriate.
   } //Repeat until the test condition is satisﬁed.
 
   //Then set the output
-  if (x == polynomials[0].GetLower()) return 0;
-  else if(x == polynomials[polynomialcount-1].GetLower()) return polynomialcount-1;
+  if (x == polynomials[0].GetA()) return 0;
+  else if(x == polynomials[polynomialcount-1].GetA()) return polynomialcount-1;
   else return jl;
 }
 

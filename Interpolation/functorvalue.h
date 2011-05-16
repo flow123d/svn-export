@@ -19,13 +19,13 @@ class FunctorValue : public FunctorValueBase
     Func fce;
     
   public:
-    ///constructor
+    ///A constructor.
     FunctorValue(void) {}
     
-    ///destructor
+    ///A destructor.
     ~FunctorValue(void) {}
     
-    ///overloaded operator() returns value of the function
+    ///Overloaded operator() returns value of the function.
     virtual double operator() ( const double &x )
     {
       return fce(x);

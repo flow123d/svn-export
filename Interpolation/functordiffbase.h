@@ -22,7 +22,13 @@ struct der
 class FunctorDiffBase : public FunctorValueBase
 {
   public:
+    /** Evaluates the derivate.
+      * @param x is the point in which the derivate is being evaluated.
+      * @return der is structure of value of the function and derivate
+      */
     virtual der Diff(const double &x) = 0;	//returns df(x)/dx and f(x)
+    
+    ///Overloaded operator() returning the value of the function.
     virtual double operator() ( const double &x ) = 0;
 };
 

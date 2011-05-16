@@ -98,8 +98,9 @@ void Lagrange::CreateBandMatrix ()
 {
   //number of conditions to fill automatically
   int n,ku,kl;
-  if(M > 0)
+  if(M > 1)	//constant and linear has no BC
   {  
+    MASSERT(leftcond->GetCount()+rightcond->GetCount() < M,"Too many boundary conditions defined.");    
     int cond_to_fill_count = M - 1 - leftcond->GetCount() - rightcond->GetCount();
     if (DEB)
     {
@@ -122,9 +123,12 @@ void Lagrange::CreateBandMatrix ()
   }
   else	//for M=0, meaning constant interoplation
   {
-    n = (x.size()-1);
+    leftcond->ClearCondition();
+    rightcond->ClearCondition();
+    if(DEB) cout << "Boundary conditions are not possible and all of them will not be used." << endl;
+    n = (M+1)*(x.size()-1);
     ku = 0;
-    kl = 0;
+    kl = M;
   }
     
   band = new BandMatrixSolve(n,ku,kl,1);
@@ -171,31 +175,7 @@ void Lagrange::PutEquations ()
       //0...x.size()-2
       int pos = 0;	
       int number_of_leftcond = leftcond->GetCount();
-      
-      /*
-      //computing submatrix
-      vector<vector<double> > sub(M+1);
-      //first lines
-      sub[0] = vector<double>(M+1,0.0);
-      sub[0][0] = 0.0;	
-      //second line
-      sub[1] = vector<double>(M+1,0.0);
-      for(int j = 0; j < M+1; j++)
-      {
-	sub[1][j] = 1.0;
-      }
-      //other lines
-      for(int i = 2; i < M+1; i++)
-      {
-	sub[i] = vector<double>(M+1,0.0);
-	sub[i][0] = -Fact(i-1);
-	for(int j = 0; j < M+1; j++)
-	{
-	  sub[i][j] = -Fact(i-1);
-	}
-      }
-      */
-      
+         
       //goes through submatrixes
       for(unsigned long i = 0; i < x.size()-2; i++)
       {
@@ -218,16 +198,18 @@ void Lagrange::PutEquations ()
 	//overwrites the 0.0 which was written before in the for(k) cycle
 	band->SetB(pos+number_of_leftcond+1,0,f[i+1]);
       }
-     
       //2 equations for last polynomial in the last submatrix
       pos = (x.size()-2)*(M+1);
       band->SetA(pos+number_of_leftcond,pos,1.0);
       band->SetB(pos+number_of_leftcond,0,f[f.size()-2]);
-      band->SetB(pos+number_of_leftcond+1,0,f[f.size()-1]);
-      band->SetA(pos+number_of_leftcond+1,pos,1.0);
-      for(unsigned int l = 1; l <= M; l++)
+      if(M > 0)	//constant has no other line
       {
-	band->SetA(pos+number_of_leftcond+1,pos+l,Power(x[x.size()-1]-x[x.size()-2],l));
+	band->SetB(pos+number_of_leftcond+1,0,f[f.size()-1]);
+	band->SetA(pos+number_of_leftcond+1,pos,1.0);
+	for(unsigned int l = 1; l <= M; l++)
+	{
+	  band->SetA(pos+number_of_leftcond+1,pos+l,Power(x[x.size()-1]-x[x.size()-2],l));
+	}
       }
 }
 

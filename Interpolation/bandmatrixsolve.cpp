@@ -11,12 +11,12 @@ BandMatrixSolve::BandMatrixSolve(long int n,long int ku,long int kl, long int nr
   ldb = n*nrhs;
   k = kl+ku+1;
   ab = new double[ldab*n];
-  EmptyField(ab,ldab*n);
+  EmptyField(ab,ldab*n);	//Ensure that the field are filled with 0.0
   b = new double[ldb];
-  EmptyField(b,ldb);
+  EmptyField(b,ldb);		//Ensure that the field are filled with 0.0
   //pivot indices *************************************************
   ipiv= new integer[n];
-  EmptyField(ipiv,n);
+  EmptyField(ipiv,n);		//Ensure that the field are filled with 0.0
   factorization = false;
 }
 
@@ -33,33 +33,33 @@ BandMatrixSolve::~BandMatrixSolve()
 
 double* BandMatrixSolve::Solve()
 {
-  if (DEB)
+  if (DEB)	//writes the band matrix and right hand side
   {
     WrMatrix(ab,ldab,n);
     cout << endl;
     WrMatrix(b,ldb,nrhs);
   }
-  if(!factorization)
+  if(!factorization)	//factorization
   {
-    cout << "factorization dgbtrf_..." << endl;
+    if (DEB) cout << "factorization dgbtrf_..." << endl;
     dgbtrf_(&m, &n, &kl, &ku, ab, &ldab, ipiv, &info);
     factorization = 1;
   }
  
   if(info < 0)
-  { cout << "Error: The " << info*(-1) << 
+  { cerr << "Error: The " << info*(-1) << 
 	"-th argument had an illegal value" << endl;
     factorization = false;
     return NULL;
   }	
   
   if(info > 0)
-  { cout << "Error: The factor U is singular. (info=" << info << ")" << endl;
+  { cerr << "Error: The factor U is singular. (info=" << info << ")" << endl;
     factorization = false;
     return NULL;
   }
   
-  cout << "solving dgbtrs_..." << endl;
+  if (DEB) cout << "solving dgbtrs_..." << endl;
   dgbtrs_(&trans, &n, &kl, &ku, &nrhs, 
 		ab, &ldab, ipiv, b, &ldb, &info);
   
@@ -74,14 +74,14 @@ void BandMatrixSolve::SetA(integer i, integer j, doublereal value)
   #define AB(I,J) ab[(I) + ((J))*ldab]
   if((i < m) & (j < n))
     AB(k-1+i-j,j) = value;
-  else cout << "Error: out of bounds /A" << endl;
+  else cerr << "Error: out of bounds /A" << endl;
 }
 
 void BandMatrixSolve::SetB(integer i, integer j, doublereal value)
 {
   if((i < ldb) & (j < nrhs))
     b[i + j*ldb] = value;
-  else cout << "Error: out of bounds /B" << endl;
+  else cerr << "Error: out of bounds /B" << endl;
 }
 
 //can write matrix to console output

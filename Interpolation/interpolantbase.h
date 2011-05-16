@@ -4,13 +4,18 @@
 
 #include <iostream>
 
+#include "massert.h"
 #include "functordiffbase.h"
 #include "polynomial.h"
+
+#ifndef DEB
+#define DEB true
+#endif
 
 namespace Interpolation
 {
 
-/// abstract class InterpolantBase.
+/// Abstract class InterpolantBase.
 /** Defines the interpolant on the interval [a,b] that is constructed
   * by an interpolation class. Implements the interface FunctorDiffBase. 
   * Implements also return integral. Is still an abstract class for the

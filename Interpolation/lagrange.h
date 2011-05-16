@@ -5,17 +5,16 @@
 #include <vector>
 #include <iostream>
 
-#ifndef DEB
-#define DEB true
-#endif
-
 #include "massert.h"
-
 #include "iinterpolation.h"
 #include "functorvaluebase.h"
 #include "interpolantbase.h"
 #include "interpolant.h"
 #include "bandmatrixsolve.h"
+
+#ifndef DEB
+#define DEB true
+#endif
 
 namespace Interpolation
 {
@@ -110,8 +109,6 @@ class Lagrange	: public IInterpolation
       //result of the band matrix
       double *bandres;
       bandres = band->Solve();
-      
-      
       
       InterpolantBase *result = CreateInterpolant(bandres);
       

@@ -38,10 +38,14 @@ void BCondition::AutoAdd(const unsigned int &number_of_conditions,
   int n;
   if(number_of_conditions > highest_order_of_derivate) 
   { n = highest_order_of_derivate;
-    cout << "Warning: Number of conditions to add was decreased according to the highest order of derivate." << endl;
+    cout << "Warning: Number of conditions " << number_of_conditions 
+	 << " to add was decreased according to the highest order of derivate " 
+	 << highest_order_of_derivate << endl;
   }
   else
+  {
     n = number_of_conditions;
+  }
   condition.resize(highest_order_of_derivate);
   for(int i = 1; i <= n; i++)
   {
@@ -70,7 +74,7 @@ vector<defvalue>* BCondition::GetCond()
   return &condition;
 }
 
-int BCondition::GetCount()
+unsigned int BCondition::GetCount()
 {
   return count;
 }

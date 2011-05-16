@@ -2,6 +2,10 @@
 #ifndef MASSERT_H
 #define MASSERT_H
 
+#ifndef DEB
+#define DEB false
+#endif
+
 #define MDEBUG
 
 #include <stdlib.h>

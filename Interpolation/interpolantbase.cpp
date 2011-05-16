@@ -7,7 +7,7 @@ namespace Interpolation
   
 InterpolantBase::InterpolantBase(std::vector< Polynomial >& polynomials)
   : polynomials(polynomials),polynomialcount(polynomials.size()),
-    a(polynomials[0].GetLower()), b(polynomials[polynomials.size()-1].GetUpper())
+    a(polynomials[0].GetA()), b(polynomials[polynomials.size()-1].GetB())
 {}
 
 InterpolantBase::~InterpolantBase(void )
@@ -49,7 +49,7 @@ double InterpolantBase::Integral(const double &u, const double &v)
       k = FindPolynomial(v);
 
     //first incomplete polynomial
-    result = polynomials[j].Integral(u,polynomials[j].GetUpper());
+    result = polynomials[j].Integral(u,polynomials[j].GetB());
 
     //complete polynomials in the middle
     for(unsigned long i=j+1; i < k; i++)
@@ -58,7 +58,7 @@ double InterpolantBase::Integral(const double &u, const double &v)
     }
     
     //last incomplete polynomial
-    result += polynomials[k].Integral(polynomials[k].GetLower(),v);
+    result += polynomials[k].Integral(polynomials[k].GetA(),v);
 
     return result;
 }
@@ -87,7 +87,6 @@ void InterpolantBase::SetExtrapolation( const unsigned char &left_degree, const 
 {
     std::vector<double> l(left_degree+1);
     std::vector<double> r(right_degree+1);
-    std::cout << "extrapolate_left=[ ";
     /*
     on the left (polynomial is the same as polynomials[0]):
     P[0] = left
@@ -95,11 +94,7 @@ void InterpolantBase::SetExtrapolation( const unsigned char &left_degree, const 
     for(int i = 0; i <= left_degree; i++)
     {
       l[i] = (*polynomials[0].GetCoefs())[i];
-      std::cout << l[i]<< "|";
     }
-    std::cout << "]"<< std::endl;
-
-    std::cout << "extrapolate_right=[ ";
     
     /*
     on the right:
@@ -114,16 +109,23 @@ void InterpolantBase::SetExtrapolation( const unsigned char &left_degree, const 
       for(int j = i; j <= right_degree; j++)
       {
 	r[i] += (*polynomials[polynomialcount-1].GetCoefs())[j] *
-		  Power(b-polynomials[polynomialcount-1].GetLower(),j-i) *
+		  Power(b-polynomials[polynomialcount-1].GetA(),j-i) *
 		  Fact(j)/Fact(j-i);
       }
       r[i] /= Fact(i);
-      std::cout << r[i]<< "|";
     }
-    std::cout << "]"<< std::endl;
     
     left = Polynomial(a,a,l);
     right = Polynomial(b,b,r);
+    
+    if(DEB) 
+    {
+      std::cout << "extrapolate_left=";
+      left.WriteCoef();
+      std::cout << "\nextrapolate_right=";
+      right.WriteCoef();
+      std::cout << std::endl;
+    }
     
 }
 

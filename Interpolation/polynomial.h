@@ -60,11 +60,11 @@ class Polynomial : public FunctorDiffBase
     void SetInterval( const double &a, const double &b );
     
     ///returns lower limit of the polynomial - "a"
-    inline double GetLower()
+    inline double GetA()
     { return a; }
     
     ///returns upper limit of the polynomial - "b"
-    inline double GetUpper()
+    inline double GetB()
     { return b; }
       
     ///Returns potiner to the vector of coeficients

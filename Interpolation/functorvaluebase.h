@@ -11,6 +11,7 @@ namespace Interpolation
 class FunctorValueBase
 {
   public:
+    ///Overloaded operator() returning the value of the function.
     virtual double operator() ( const double &x ) = 0;
 };
 

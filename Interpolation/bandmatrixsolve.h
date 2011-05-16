@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "massert.h"
+
 #ifndef DEB
 #define DEB true
 #endif
@@ -102,8 +104,9 @@ public:
   
   ///Solves the band matrix.
   /** First uses dgbtrf_ to do LU factorization
-    * and if there isno error uses dgbtrs_ 
+    * and if there is no error uses dgbtrs_ 
     * to solve the band matrix.
+    * @return pointer at field of rhs, that contains the results
     */
   double* Solve();
 

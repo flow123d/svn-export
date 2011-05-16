@@ -28,10 +28,8 @@ double AdaptiveSimpson::SimpsonAd(FunctorValueBase &func,
   double sb = Simpson(h2,fc,fcb,fb);
   
   double err_est = (sa+sb-sx)/15.0;
-  //std::cout << "sa=" << sa << " sb=" << sb << " sx=" << sx << " sa+sb=" << sa+sb <<" err_est=" << err_est << std::endl;
   if (fabs(err_est) <= tol || recursion >= MAX_RECURSION)
   {
-    //std::cout << recursion << "\tsa+sb+err = " << sa+sb+err_est << std::endl;
     return sa+sb+err_est;
   }
   else
@@ -45,7 +43,7 @@ double AdaptiveSimpson::AdaptSimpson( FunctorValueBase &func,
 				      const double& a, const double& b, 
 				      const double& tol )
 {
-  std::cout << "AdaptiveSimpson: a(" << a << ") b(" << b << ")";
+  if(DEB) std::cout << "AdaptiveSimpson: a(" << a << ") b(" << b << ")";
   double c = 0.5*(b+a);
   double fa,fb,fc;
   double sx,res;
@@ -54,10 +52,10 @@ double AdaptiveSimpson::AdaptSimpson( FunctorValueBase &func,
   fb = func(b);
   fc = func(c);
   long recursion = 0;
-  std::cout << "fa=" << fa << "\tfb=" << fb << "\tfc=" << fc;
+  if(DEB) std::cout << "fa=" << fa << "\tfb=" << fb << "\tfc=" << fc;
   sx = Simpson(b-a, fa, fc, fb);
   res = SimpsonAd(func,b-a,a,c,b,fa,fc,fb,sx,tol,recursion);
-  std::cout << "\trecursions: " << recursion << std::endl;
+  if(DEB) std::cout << "\trecursions: " << recursion << std::endl;
   return res;
 }
 

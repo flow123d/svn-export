@@ -38,6 +38,7 @@ TARGETS = $(BIN)/flow123d
 FLOW123D_OBJS = \
 $(OBJS)/mesh/ini_constants_mesh.o\
 $(OBJS)/transport_bcd.o\
+$(OBJS)/reaction.o\
 $(OBJS)/system.o\
 $(OBJS)/read_ini.o\
 $(OBJS)/constantdb.o\
@@ -53,7 +54,6 @@ $(OBJS)/neighbours.o\
 $(OBJS)/mesh.o\
 $(OBJS)/materials.o\
 $(OBJS)/local_matrix.o\
-$(OBJS)/calculation.o\
 $(OBJS)/darcy_flow_mh.o\
 $(OBJS)/output.o\
 $(OBJS)/output_vtk.o\
@@ -61,7 +61,6 @@ $(OBJS)/output_pos.o\
 $(OBJS)/output_tmp.o\
 $(OBJS)/concentrations.o\
 $(OBJS)/postprocess.o\
-$(OBJS)/preprocess.o\
 $(OBJS)/solve.o\
 $(OBJS)/problem.o\
 $(OBJS)/main.o\
@@ -74,7 +73,8 @@ $(OBJS)/convert.o\
 $(OBJS)/sys_function_stack.o\
 $(OBJS)/transport.o\
 $(OBJS)/reaction.o\
-$(OBJS)/la_linsys.o
+$(OBJS)/la_linsys.o\
+$(OBJS)/time_governor.o
 
 # $(OBJS)/ppfcs.o\
 

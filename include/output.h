@@ -162,9 +162,6 @@ private:
     std::vector<OutputData> *node_data; ///< List of data on nodes
     std::vector<OutputData> *elem_data; ///< List of data on elements
 
-    // Temporary solution
-    void get_data_from_mesh(void);
-    void free_data_from_mesh(void);
 
     // Internal API for file formats
     int (*_write_data)(Output *output);
@@ -183,6 +180,10 @@ public:
 
     Output(Mesh *mesh, string filename);
     ~Output();
+
+    // Temporary solution
+    void get_data_from_mesh(void);
+    void free_data_from_mesh(void);
 
     template <typename _Data>
     int register_node_data(std::string name, std::string unit, _Data *data, uint size);

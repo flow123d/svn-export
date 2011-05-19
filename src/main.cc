@@ -50,9 +50,7 @@
 #include "topology.h"
 #include "postprocess.h"
 #include "output.h"
-#include "preprocess.h"
 #include "problem.h"
-#include "calculation.h"
 #include "darcy_flow_mh.hh"
 #include "main.h"
 #include "read_ini.h"
@@ -72,7 +70,7 @@
 
 #include "rev_num.h"
 /// named version of the program
-#define _VERSION_   "1.6.0"
+#define _VERSION_   "1.6.5"
 
 
 static struct Problem G_problem;
@@ -187,7 +185,6 @@ int main(int argc, char **argv) {
 
     // Calculate
     make_element_geometry();
-    preprocess(&G_problem);
     switch (ConstantDB::getInstance()->getInt("Goal")) {
         case CONVERT_TO_POS:
             main_convert_to_pos(&G_problem);
@@ -229,26 +226,49 @@ void main_compute_mh(struct Problem *problem) {
 /**
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR UNSTEADY SATURATED FLOW
  */
-void main_compute_mh_unsteady_saturated(struct Problem *problem) {
+void main_compute_mh_unsteady_saturated(struct Problem *problem)
+{
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
+    char * output_file=OptGetFileName("Output", "Output_file", "\\");
+    OutputTime *output_time;
+    int i, rank;
 
-    int t, i;
-    output_flow_field_init(problem->out_fname_2);
-    //        output_flow_field_in_time(problem,0);
-    calculation_mh(problem);
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
+    if(rank == 0) {
+        output_time = new OutputTime(mesh, output_file);
+    }
 
-    for (t = 0, i = 0; t * problem->time_step < problem->stop_time; t++, i++) {
-        calculation_unsteady(problem);
-        problem->water=new DarcyFlowMH(*mesh);
-        problem->water->solve();
+    //output_msh_init_vtk_serial_ascii(output_file);
+
+    DarcyFlowMH *water=new DarcyFlowMH_UnsteadyLumped(*mesh);
+    problem->water=water;
+
+    const TimeGovernor &water_time=water->get_time();
+
+    double save_step=OptGetDbl("Global", "Save_step", "1.0");
+    double save_time=0.0;
+
+    while (! water_time.is_end()) {
+        water->compute_one_step();
         postprocess(problem);
 
-        if ((i * problem->time_step >= problem->save_step) || (t == 0)) {
-            output_flow_field_in_time(problem, t * problem->time_step);
-            i = 0;
+        if ( water_time.ge( save_time ) )  {
+
+            if(rank == 0) {
+                output_time->get_data_from_mesh();
+                // call output_time->register_node_data(name, unit, 0, data) to register other data on nodes
+                // call output_time->register_elem_data(name, unit, 0, data) to register other data on elements
+                output_time->write_data(water_time.t());
+                output_time->free_data_from_mesh();
+            }
+
+            //output_flow_time_vtk_serial_ascii(mesh, water_time.t(), out_step, output_file);
+
+            save_time+=save_step;
         }
     }
+    //output_msh_finish_vtk_serial_ascii(output_file);
 }
 
 /**
@@ -271,9 +291,8 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    calculation_mh(problem);
-    problem->water=new DarcyFlowMH(*mesh);
-    problem->water->solve();
+    problem->water=new DarcyFlowMH_Steady(*mesh);
+    problem->water->compute_one_step();
 
     if (OptGetBool("Transport", "Transport_on", "no") == true)
             {
@@ -415,29 +434,22 @@ void main_compute_mh_density(struct Problem *problem)
     char statuslog[255];
     struct Transport *trans = problem->transport;
     FILE *log;
-    OutputTime *output_time;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
+    OutputTime *output_time;
     if(rank == 0) {
         output_time = new OutputTime(mesh ,trans->transport_out_fname);
-
-
-        output_time->get_data_from_transport(trans);
-        // call _output_time->register_node_data(name, unit, 0, data) to register other data on nodes
-        // call _output_time->register_elem_data(name, unit, 0, data) to register other data on elements
-        output_time->write_data(0.0);
-        output_time->free_data_from_transport();
     }
 
-    save_step = problem->save_step;
-    stop_time = problem->stop_time;
-    trans->update_dens_time = problem->save_step / (ceil(problem->save_step / trans->dens_step));
-    dens_step = (int) ceil(problem->stop_time / trans->update_dens_time);
-    n_step = (int) (problem->save_step / trans->update_dens_time);
+    //save_step = problem->save_step;
+    //stop_time = problem->stop_time;
+    //trans->update_dens_time = problem->save_step / (ceil(problem->save_step / trans->dens_step));
+    //dens_step = (int) ceil(problem->stop_time / trans->update_dens_time);
+    //n_step = (int) (problem->save_step / trans->update_dens_time);
 
     // DF problem - I don't understend to this construction !!!
-    problem->save_step = problem->stop_time = trans->update_dens_time;
+    //problem->save_step = problem->stop_time = trans->update_dens_time;
 
     //------------------------------------------------------------------------------
     //      Status LOG head
@@ -459,9 +471,9 @@ void main_compute_mh_density(struct Problem *problem)
             xprintf(Msg, "dens iter %d \n", j);
             save_restart_iteration_H(problem);
             //restart_iteration(problem);
-            calculation_mh(problem);
-            problem->water=new DarcyFlowMH(*mesh);
-            problem->water->solve();
+            //calculation_mh(problem);
+            //problem->water=new DarcyFlowMH(*mesh);
+            //problem->water->solve();
             restart_iteration_C(problem);
             postprocess(problem);
             convection(trans, output_time);
@@ -475,22 +487,6 @@ void main_compute_mh_density(struct Problem *problem)
             }
         }
 
-        if (rank == 0 && trans -> write_iterations == 0) {
-            output_time->get_data_from_transport(trans);
-            // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
-            // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-            output_time->write_data(i * problem->time_step);
-            output_time->free_data_from_transport();
-        }
-
-        if ((rank == 0) && (trans -> write_iterations == 0) && (((i + 1) % n_step == 0) || (i == (dens_step - 1)))) {
-            output_time->get_data_from_transport(trans);
-            // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
-            // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-            output_time->write_data((i + 1) * problem->stop_time);
-            output_time->free_data_from_transport();
-        }
-
         xprintf(Msg, "step %d finished at %d density iterations\n", i, j);
         xfprintf(log, "%f \t %d\n", (i + 1) * trans->update_dens_time, j); // Status LOG
     }
@@ -499,16 +495,5 @@ void main_compute_mh_density(struct Problem *problem)
         delete output_time;
     }
 
-    //output();
-    if (rank == 0) {
-        const char* out_fname = OptGetFileName("Output", "Output_file", NULL);
-        Output *output = new Output(mesh, string(out_fname));
-
-        // call output->register_node_data(name, unit, data) here to register other data on nodes
-        // call output->register_elem_data(name, unit, data) here to register other data on elements
-        output->write_data();
-
-        delete output;
-    }
     xfclose(log);
 }

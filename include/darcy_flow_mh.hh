@@ -50,6 +50,7 @@
 
 #include <petscmat.h>
 #include <sys_vector.hh>
+#include <time_governor.hh>
 
 /// external types:
 class LinSys;
@@ -67,14 +68,43 @@ class FieldP0;
  *
  */
 
+/**
+ * TODO: TimeGovernor should distinct const  methods and here get_tim should return reference to const time object.
+ * then caller can ask TimeGovernor about time, compare time (with relative precision given by actual dt), nut still
+ * can not modify TimeGovernor object. TimeGovernor should allow recasting to double.
+ *
+ * split compute_one_step to :
+ * 1) prepare_next_timestep
+ * 2) actualize_solution - this is for iterative nonlinear solvers
+ *
+ * make interface of DarcyFlowMH a general interface of time depenedent model. ....
+ */
+
 class DarcyFlowMH {
 public:
-    DarcyFlowMH(Mesh &mesh);
-    void solve();
-    double * solution_vector();
-    ~DarcyFlowMH();
+    virtual void compute_one_step() =0;
+    virtual void compute_until( double time);
+    inline const TimeGovernor& get_time()
+        {return *time;}
+    virtual double * solution_vector() =0;
+    virtual void postprocess() =0;
 
-private:
+protected:
+    TimeGovernor *time;
+
+};
+
+class DarcyFlowMH_Steady : public DarcyFlowMH
+{
+public:
+    DarcyFlowMH_Steady(Mesh &mesh);
+    virtual void compute_one_step();
+    virtual double * solution_vector();
+    virtual void postprocess() {};
+    ~DarcyFlowMH_Steady();
+
+protected:
+    virtual void modify_system() {};
     void prepare_parallel();
     void make_row_numberings();
     void mh_abstract_assembly();
@@ -82,11 +112,12 @@ private:
     void make_schur1();
     void make_schur2();
 
+
 	Mesh *mesh;   // structured water equation ( so far pointer to  the mesh struture )
 
 	int size;				// global size of MH matrix
 	int  n_schur_compls;  	// number of shur complements to make
-	double  *solution; 			// solution vector
+	double  *solution; 			// sequantial scattered solution vector
 
 	struct Solver *solver;
 
@@ -116,6 +147,8 @@ private:
 	// MATIS related arrays
 	int ndof_loc;                   // size of local block of MATIS matrix 
 	int *global_row_4_sub_row;      // global dof index for subdomain index
+    
+	ISLocalToGlobalMapping map_side_local_to_global; ///< PETSC mapping form local SIDE indices of subdomain to global indices
 
 	// gather of the solution
 	Vec sol_vec;			// vector over solution array
@@ -130,6 +163,40 @@ void mat_count_off_proc_values(Mat m, Vec v);
 
 void create_water_linsys(Mesh*, DarcyFlowMH**);
 void solve_water_linsys(DarcyFlowMH*);
+
+class DarcyFlowMH_Unsteady : public DarcyFlowMH_Steady
+{
+public:
+    DarcyFlowMH_Unsteady(Mesh &mesh);
+    DarcyFlowMH_Unsteady();
+protected:
+    virtual void modify_system();
+private:
+    Vec steady_diagonal;
+    Vec steady_rhs;
+    Vec new_diagonal;
+    Vec previous_solution;
+
+
+};
+
+class DarcyFlowMH_UnsteadyLumped : public DarcyFlowMH_Steady
+{
+public:
+    DarcyFlowMH_UnsteadyLumped(Mesh &mesh);
+    DarcyFlowMH_UnsteadyLumped();
+protected:
+    virtual void modify_system();
+    virtual void postprocess();
+private:
+    Vec steady_diagonal;
+    Vec steady_rhs;
+    Vec new_diagonal;
+    Vec previous_solution;
+    Vec time_term;
+
+
+};
 
 #endif  //DARCY_FLOW_MH_HH
 //-----------------------------------------------------------------------------

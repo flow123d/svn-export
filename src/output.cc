@@ -22,7 +22,7 @@
  * $LastChangedBy$
  * $LastChangedDate$
  *
- * @file
+ * @file    output.cc
  * @brief   The functions for all outputs. This file should be split according to the
  *          quantities to output. In this general file, there should remain only general output functions.
  *
@@ -181,18 +181,6 @@ OutputData::OutputData(string data_name,
  */
 OutputData::~OutputData()
 {
-#if 0
-    assert(0);
-
-    if(name != NULL) {
-        cout << "Deleting: " << *name << endl;
-        delete name;
-    }
-    if(units != NULL) {
-        cout << "Deleting: " << *units << endl;
-        delete units;
-    }
-#endif
 }
 
 /**
@@ -266,9 +254,19 @@ void Output::get_data_from_mesh(void)
 }
 
 /**
- * \brief Register data on nodes. This function will add reference on this
- * array of data to the Output object. Own data will be written to the
- * file, when write_data method will be called.
+ * \brief Register array of data on nodes.
+ *
+ * This function will add reference on the array of data to the Output object.
+ * Own data will be written to the file, when write_data() method will be called.
+ *
+ * \param[in]   name    The name of data
+ * \param[in]   unit    The name of units
+ * \param[in]   data    The pointer on array of data
+ * \param[in]   size    The number of values in array
+ *
+ * \return This function return 1, when the length of data vector is the same as
+ * number of nodes in mesh. When the the number is different, then this
+ * function returns 0.
  */
 template <typename _Data>
 int Output::register_node_data(std::string name,
@@ -290,9 +288,19 @@ int Output::register_node_data(std::string name,
 }
 
 /**
- * \brief Register data on elements. This function will add reference on this
- * array of data to the Output object. Own data will be written to the
- * file, when write_data method will be called.
+ * \brief Register array of data on elements.
+ *
+ * This function will add reference on this array of data to the Output object.
+ * Own data will be written to the file, when write_data() method will be called.
+ *
+ * \param[in]   name    The name of data
+ * \param[in]   unit    The name of units
+ * \param[in]   data    The pointer on array of data
+ * \param[in]   size    The number of values in array
+ *
+ * \return This function return 1, when the length of data vector is the same as
+ * number of elements in mesh. When the the number is different, then this
+ * function returns 0.
  */
 template <typename _Data>
 int Output::register_elem_data(std::string name,
@@ -321,14 +329,16 @@ int Output::register_elem_data(std::string name,
  *
  * \param[in]   name    The name of data
  * \param[in]   unit    The name of units
- * \param[in]   data    The reference on data
+ * \param[in]   data    The reference on vector of data
  *
  * \return This function return 1, when the length of data vector is the same as
  * number of nodes in mesh. When the the number is different, then this function
  * returns 0.
  */
 template <typename _Data>
-int Output::register_node_data(std::string name, std::string unit, std::vector<_Data> &data)
+int Output::register_node_data(std::string name,
+        std::string unit,
+        std::vector<_Data> &data)
 {
     if(mesh->node_vector.size() == data.size()) {
         OutputData *out_data = new OutputData(name, unit, data);
@@ -341,12 +351,15 @@ int Output::register_node_data(std::string name, std::string unit, std::vector<_
 }
 
 /**
- * \brief Register data on elements. This function will add reference on the
- * data to the Output object. Own data will be writen to the file, when
- * write_data method will be called.
+ * \brief Register data on elements.
+ *
+ * This function will add reference on the data to the Output object. Own data
+ * will be written to the file, when write_data() method will be called.
+ *
  * \param[in]   name    The name of data
  * \param[in]   unit    The name of units
- * \param[in]   data    The reference on data
+ * \param[in]   data    The reference on vector of data
+ *
  * \return This function return 1, when the length of data vector is the same as
  * number of elements in mesh. When the the number is different, then this
  * function returns 0.
@@ -368,7 +381,10 @@ int Output::register_elem_data(std::string name,
 
 /**
  * \brief NULL function for not yet supported formats
+ *
  * \param[in]   *output The pointer at output object.
+ *
+ * \return This function returns always 0.
  */
 int write_null_data(Output *output)
 {
@@ -380,6 +396,7 @@ int write_null_data(Output *output)
 /**
  * \brief This function call pointer at _write_data(Output). It writes
  * registered data to specified file format.
+ *
  * \return This function return result of pointer at output function.
  */
 int Output::write_data(void)
@@ -389,7 +406,9 @@ int Output::write_data(void)
 
 /**
  * \brief Constructor of the Output object
- * \param[in]   *fname  The name of the output file
+ *
+ * \param[in] *_mesh    The pointer at Mesh
+ * \param[in] *fname    The name of the output file
  */
 Output::Output(Mesh *_mesh, string fname)
 {
@@ -473,7 +492,7 @@ Output::~Output()
 }
 
 /**
- * \brief This method get data from transport
+ * \brief This method free data that was got from transport
  */
 void OutputTime::free_data_from_transport(void)
 {
@@ -488,7 +507,9 @@ void OutputTime::free_data_from_transport(void)
 }
 
 /**
- * \brief This method get data from transport
+ * \brief This method get data from transport and store it in OutputTime
+ *
+ * \param[in] *transport    The pointer at transport
  */
 void OutputTime::get_data_from_transport(struct Transport *transport)
 {
@@ -538,9 +559,22 @@ void OutputTime::get_data_from_transport(struct Transport *transport)
 }
 
 /**
- * \brief Register data on nodes. This function will add reference on this
- * array of data to the Output object. Own data will be written to the
- * file, when write_data method will be called.
+ * \brief This function register data on nodes.
+ *
+ * This function will add reference on this array of data to the Output object.
+ * It is possible to call this function only once, when data are at the same
+ * address during time. It is possible to call this function for each step, when
+ * data are not at the same address, but name of the data has to be same.
+ * Own data will be written to the file, when write_data() method will be called.
+ *
+ * \param[in] name  The name of data
+ * \param[in] unit  The units of data
+ * \param[in] *data The pointer at data (array of int, float or double)
+ * \param[in] size  The size of array (number of values)
+ *
+ * \return This function returns 1, when data were registered. This function
+ * returns 0, when it wasn't able to register data (number of values isn't
+ * same as number of nodes).
  *
  * TODO: Test this method!
  */
@@ -689,11 +723,20 @@ int OutputTime::register_node_data(std::string name,
 }
 
 /**
- * \brief Register data on elements for the step. This function will add
- * reference on the data to the Output object. Own data will be written to the
- * file, when write_data method will be called. When the step is different
- * than current step, then old data will be deleted and current step will be
- * updated.
+ * \brief Register vector of data on elements.
+ *
+ * This function will add reference on the data to the Output object. Own
+ * data will be written to the file, when write_data() method will be called.
+ * When the data has been already registered, then pointer at data will be
+ * updated. Otherwise, new data will be registered.
+ *
+ * \param[in] name  The name of data
+ * \param[in] unit  The unit of data
+ * \param[in] &data The reference on vector (int, float, double)
+ *
+ * \return This function returns 1, when data were successfully registered.
+ * This function returns 0, when number of elements and items of vector is
+ * not the same.
  */
 template <typename _Data>
 int OutputTime::register_elem_data(std::string name,
@@ -731,6 +774,10 @@ int OutputTime::register_elem_data(std::string name,
 /**
  * \brief This is fake output function for not supported formats. It writes
  * only warning to the stdout and log file.
+ *
+ * \param[in] *output   The pointer at OutputTime function
+ *
+ * \return This function always return 0.
  */
 int write_null_head(OutputTime *output)
 {
@@ -742,6 +789,10 @@ int write_null_head(OutputTime *output)
 /**
  * \brief This is fake output function for not supported formats. It writes
  * only warning to the stdout and log file.
+ *
+ * \param[in] *output   The pointer at OutputTime function
+ *
+ * \return This function always return 0.
  */
 int write_null_time_data(OutputTime *output, double time, int step)
 {
@@ -753,6 +804,10 @@ int write_null_time_data(OutputTime *output, double time, int step)
 /**
  * \brief This is fake output function for not supported formats. It writes
  * only warning to the stdout and log file.
+ *
+ * \param[in] *output   The pointer at OutputTime function
+ *
+ * \return This function always return 0.
  */
 int write_null_tail(OutputTime *output)
 {
@@ -763,7 +818,11 @@ int write_null_tail(OutputTime *output)
 
 /**
  * \brief This function call pointer at appropriate pointer at function,
- * that write data to file format
+ * that write data to specific file format.
+ *
+ * \param[in] time  The output will be done for this time
+ *
+ * \return This function returns result of method _write_data().
  */
 int OutputTime::write_data(double time)
 {
@@ -772,6 +831,9 @@ int OutputTime::write_data(double time)
 
 /**
  * \brief Constructor of OutputTime object. It opens base file for writing.
+ *
+ * \param[in]   *_mesh  The pointer at mesh object.
+ * \param[in]   fname   The name of output file
  */
 OutputTime::OutputTime(Mesh *_mesh, string fname)
 {

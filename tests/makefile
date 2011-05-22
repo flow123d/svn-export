@@ -37,9 +37,11 @@ testall:
 	make -C 03_transport_small_12d test
 	make -C 04_density_driven_12d test
 	make -C 11_reactional_transport_semchem test
+	make -C 12_radioactive_decay test
 
 testchem:
 	make -C 11_reactional_transport_semchem test
+	make -C 12_radioactive_decay test
 
 clean:
 	rm -rf ./test1
@@ -51,8 +53,9 @@ clean:
 	
 %.tst:
 	BASE=$*;\
-	dir=`echo $${BASE}*`;\
-	if test -d "$${dir}" ;\
+	dir="`pwd`/`echo $${BASE}*`";\
+	echo $${dir};\
+	if test -d "$${dir}";\
 	then make -C "$${dir}" test;\
 	else echo "missing test directory $${dir}";\
 	exit 1;\

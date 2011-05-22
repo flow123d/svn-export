@@ -1,0 +1,19 @@
+No. of processors: 1
+Task size: 96
+Start time: 05/22/11 21:35:47
+End time: 05/22/11 21:35:49
+----------------------------------------------------
+                            calls time min/max subframes
+WHOLE PROGRAM               1     1.51 1.00    
+ PREALLOCATION              1     0.00 1.00    
+ ASSEMBLY                   1     0.00 1.00    
+ SOLVING MH SYSTEM          1     0.01 1.00    7
+  Schur 1                   1     0.00 1.00    
+  Schur 2                   1     0.00 1.00    
+ TRANSPORT                  1     1.46 1.00    
+  transport_matrix_assembly 1     0.00 1.00    
+   matrix_assembly_mpi      1     0.00 1.00    
+  transport_steps           1     1.46 1.00    
+   transport_step           500   0.32 1.00    
+   decay_step               48000 0.24 1.00    
+   semchem_step             48000 0.25 1.00    

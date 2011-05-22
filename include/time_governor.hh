@@ -31,10 +31,10 @@
 
 #include <algorithm>
 #include <queue>
-#include "system.hh"
+#include "system/system.hh"
 /**
  * @brief
- * This class should provide basic time management functionality for unsteady solvers.
+ * Basic time management functionality for unsteady solvers.
  *
  * This includes:
  * - actual time

@@ -31,7 +31,7 @@
 
 #include "output.h"
 #include "xio.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 
 /**
  * \brief Write header of VTK file (.vtu)

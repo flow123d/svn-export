@@ -27,6 +27,8 @@
  *
  */
 
+#if 0
+
 #include "output.h"
 #include "xio.h"
 #include "mesh.h"
@@ -103,3 +105,5 @@ void output_flow_field_in_time(struct Problem *problem, double time)
 
     xprintf( Msg, "O.K.\n");
 }
+
+#endif

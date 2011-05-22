@@ -31,7 +31,7 @@
 
 #include "xio.h"
 #include "output.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 
 // TODO: remove in the future
 #include "constantdb.h"
@@ -432,7 +432,7 @@ Output::Output(Mesh *_mesh, string fname)
 
         return;
     } else {
-        xprintf(Msg, "Writing flow output file: %s ... ", fname.c_str());
+        xprintf(Msg, "Writing flow output file: %s ... \n", fname.c_str());
     }
 
     base_filename = new string(fname);
@@ -511,7 +511,7 @@ void OutputTime::free_data_from_transport(void)
  *
  * \param[in] *transport    The pointer at transport
  */
-void OutputTime::get_data_from_transport(struct Transport *transport)
+void OutputTime::get_data_from_transport(ConvectionTransport *transport)
 {
     Mesh *mesh = get_mesh();
     NodeIter node;
@@ -864,7 +864,7 @@ OutputTime::OutputTime(Mesh *_mesh, string fname)
 
         return;
     } else {
-        xprintf(Msg, "Writing flow output file: %s ... ", fname.c_str());
+        xprintf(Msg, "Writing flow output file: %s ... \n", fname.c_str());
     }
 
     base_filename = new string(fname);

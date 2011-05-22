@@ -33,7 +33,7 @@
 #define	_GMSHMESHREADER_H
 
 #include "msh_reader.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 
 class GmshMeshReader : public MeshReader {
 private:
@@ -52,7 +52,7 @@ public:
     /**
      *  Read mesh from file
      */
-    void read(const char*, Mesh*);
+    void read(const std::string &file_name, Mesh* mesh);
 
 };
 

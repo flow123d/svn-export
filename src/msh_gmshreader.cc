@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup mesh
  * @brief
  * @author dalibor
  * 
@@ -30,7 +31,7 @@
  */
 
 #include "msh_gmshreader.h"
-#include "nodes.h"
+#include "mesh/nodes.hh"
 #include "xio.h"
 
 GmshMeshReader::GmshMeshReader() {
@@ -43,13 +44,12 @@ GmshMeshReader::~GmshMeshReader() {
 /**
  *  Read mesh from file
  */
-void GmshMeshReader::read(const char* fileName, Mesh* mesh) {
+void GmshMeshReader::read(const std::string &fileName, Mesh* mesh) {
     xprintf(Msg, " - GmshMeshReader->read(const char* fileName, Mesh* mesh)\n");
 
-    ASSERT(!(fileName == NULL), "Argument fileName is NULL in method GmshMeshRedaer->read(const char*, Mesh*)\n");
     ASSERT(!(mesh == NULL), "Argument mesh is NULL in method GmshMeshRedaer->read(const char*, Mesh*)\n");
 
-    FILE* file = xfopen(fileName, "rt");
+    FILE* file = xfopen(fileName.c_str(), "rt");
 
     read_nodes(file, mesh);
     read_elements(file, mesh);
@@ -79,13 +79,16 @@ void GmshMeshReader::read_nodes(FILE* in, Mesh* mesh) {
         //TODO: co kdyz id <= 0 ???
         INPUT_CHECK(!(id < 0), "Id of node must be > 0\n");
 
+
         double x = atof(xstrtok(NULL));
         double y = atof(xstrtok(NULL));
         double z = atof(xstrtok(NULL));
 
         NodeFullIter node = mesh->node_vector.add_item(id);
         node->id = id;
-        node->set(x,y,z);
+        node->point()(0)=x;
+        node->point()(1)=y;
+        node->point()(2)=z;
     }
 
     //xprintf(MsgVerb, " %d nodes readed. ", nodeList->size());

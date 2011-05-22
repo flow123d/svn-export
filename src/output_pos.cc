@@ -29,7 +29,7 @@
 
 #include "output.h"
 #include "xio.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 
 /**
  * \brief This function write header of GMSH (.msh) file format

@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup io
  * @brief  Cross-sections computation
  *
  */
@@ -32,11 +33,11 @@
 
 #include "transport.h"
 
-#include "system.hh"
+#include "system/system.hh"
 #include "xio.h"
-#include "math_fce.h"
+#include "system/math_fce.h"
 #include "problem.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 #include "ppfcs.h"
 #include "read_ini.h"
 #include "materials.hh"
@@ -352,7 +353,7 @@ void output_FCS(struct Transport *transport)
 	char dbl_fmt[ 16 ],file[LINE_SIZE];
 
  	sprintf( dbl_fmt, "%%.%dg", ConstantDB::getInstance()->getInt("Out_digit"));
-        sprintf(file,"%s.fcs", OptGetFileName("Output", "Output_file", NULL) );
+        sprintf(file,"%s.fcs", IONameHandler::get_instance()->get_output_file_name(OptGetFileName("Output", "Output_file", NULL)) );
         out = xfopen(file,"wt");
 
         FOR_ELEMENTCUT(ec){

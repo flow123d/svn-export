@@ -34,12 +34,12 @@
 #include <string>
 #include <fstream>
 
-#include "system.hh"
+//#include "system.hh"
 #include "transport.h"
 
 /// External types
 struct Problem;
-struct Transport;
+class ConvectionTransport;
 class Mesh;
 
 // FILE formats
@@ -233,7 +233,7 @@ public:
     ~OutputTime();
 
     // Temporary solution for getting data from transport
-    void get_data_from_transport(struct Transport *transport);
+    void get_data_from_transport(ConvectionTransport *transport);
     void free_data_from_transport(void);
 
     template <typename _Data>

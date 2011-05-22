@@ -43,9 +43,10 @@
 struct Solver;
 struct DarcyFlowMH;
 class Mesh;
-struct Reaction;
+//struct Reaction;
 struct Transport;
 class MaterialDatabase;
+class ConvectionTransport;
 
 //=============================================================================
 // STRUCTURE OF THE SOLVED TASK
@@ -59,9 +60,13 @@ struct Problem {
     //	int              dens;            // Density Yes/NO
     //	bool              dens_step;            //
 
-
     // Output
     char *out_fname_2; // Name of output file of type 2
+    // Chemistry
+    //bool semchemie_on; //Enable to compute chemistry, YES/NO, NO defalut
+    // First order reactions, simulation
+    //bool reactions_on; ///< to compute or not to compute, first order reactions simulation
+    //bool decay_on; ///< to compute or not to compute, radioactive decay
 
     struct Pos_view_params *pos_view_params;
 
@@ -84,11 +89,12 @@ struct Problem {
      */
 
     //Transport
-    struct Transport *transport;
+   // struct Transport *transport;
+    ConvectionTransport *otransport;
 
     // Reaction
-    struct Reaction *react;
-    struct Reaction **reaction_hash;
+    //struct Reaction *react;
+    //struct Reaction **reaction_hash;
 
     struct DarcyFlowMH *water; // Global MHsystem of the system
 

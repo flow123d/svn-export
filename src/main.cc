@@ -23,17 +23,7 @@
  * $LastChangedDate$
  *
  * @file main.cc
- * @mainpage
- * @author Otto Severýn, Milan Hokr, Jiří Kopal, Jan Březina, Jiří Hnídek, Jiří Jeníček
- * @date April, 2009
- *
- * @brief Flow123d is simulator of underground water flow and transport. Main features are:
- * - simulation of fully saturated water flow in 1D,2D,3D domains and their combination
- * - simulation of transport with linear sorption
- * - simulation of density driven flow
- *
- * This version links against some external software:
- * - PETSC : http://www.mcs.anl.gov/petsc/petsc-2/documentation/index.html
+ * @brief This file should contain only creation of Application object.
  *
  */
 
@@ -44,27 +34,29 @@
 
 #include <petsc.h>
 
-#include "system.hh"
+#include "system/system.hh"
 #include "xio.h"
-#include "mesh.h"
-#include "topology.h"
-#include "postprocess.h"
+#include "mesh/mesh.h"
+#include "mesh/topology.h"
 #include "output.h"
 #include "problem.h"
-#include "darcy_flow_mh.hh"
+#include "flow/darcy_flow_mh.hh"
+#include "flow/darcy_flow_mh_output.hh"
+
 #include "main.h"
 #include "read_ini.h"
-#include "global_defs.h"
 #include "btc.h"
 #include "reaction.h"
 
 #include "solve.h"
 
+//#include "profiler.hh"
+
 /*
 #include "solve.h"
 #include "elements.h"
 #include "sides.h"
-#include "math_fce.h"
+#include "system/math_fce.h"
 #include "materials.h"
  */
 
@@ -79,7 +71,7 @@ static void main_compute_mh(struct Problem*);
 static void main_compute_mh_unsteady_saturated(struct Problem*);
 static void main_compute_mh_steady_saturated(struct Problem*);
 static void main_convert_to_pos(struct Problem*);
-static void main_compute_mh_density(struct Problem*);
+//static void main_compute_mh_density(struct Problem*);
 //void output_transport_init_BTC(struct Problem *problem);
 //void output_transport_time_BTC(struct Problem *problem, double time);
 
@@ -102,7 +94,9 @@ void parse_cmd_line(const int argc, char * argv[], int &goal, string &ini_fname)
              Source files have to be in the current directory.\n\
     -S       Compute MH problem\n\
              Source files have to be in the same directory as ini file.\n\
-    -c       Convert flow data files into Gmsh parsed post-processing file format\n";
+    -c       Convert flow data files into Gmsh parsed post-processing file format\n\
+    -i       String used to change the 'variable' ${INPUT} in the file path.\n\
+    -o       Absolute path to output directory.\n";
 
     xprintf(MsgLog, "Parsing program parameters ...\n");
 
@@ -165,23 +159,26 @@ int main(int argc, char **argv) {
     OptionsInit(ini_fname.c_str()); // Read options/ini file into database
     system_set_from_options();
 
+    Profiler::initialize(MPI_COMM_WORLD);
+
+    START_TIMER("WHOLE PROGRAM");
+
     // Say Hello
     xprintf(Msg, "This is FLOW-1-2-3, version %s rev: %s\n", _VERSION_,REVISION);
     xprintf(Msg, "Built on %s at %s.\n", __DATE__, __TIME__);
 
-    // Read inputs
-    problem_init(&G_problem);
-    if (OptGetBool("Transport", "Transport_on", "no") == true) {
-        alloc_transport(&G_problem);
-        transport_init(&G_problem);
-    }
 
+    problem_init(&G_problem);
+    // Read mesh
     make_mesh(&G_problem);
 
     /* Test of object storage */
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
     int numNodes = mesh->node_vector.size();
     xprintf(Msg, " - Number of nodes in the mesh is: %d\n", numNodes);
+
+    Profiler::instance()->set_task_size(mesh->n_elements());
+
 
     // Calculate
     make_element_geometry();
@@ -218,7 +215,7 @@ void main_compute_mh(struct Problem *problem) {
             main_compute_mh_unsteady_saturated(problem);
             break;
         case PROBLEM_DENSITY:
-            main_compute_mh_density(problem);
+           // main_compute_mh_density(problem);
             break;
     }
 }
@@ -233,15 +230,15 @@ void main_compute_mh_unsteady_saturated(struct Problem *problem)
     OutputTime *output_time;
     int i, rank;
 
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
     if(rank == 0) {
         output_time = new OutputTime(mesh, output_file);
     }
+    char * str_output_file = (char *)IONameHandler::get_instance()->get_output_file_name(output_file).c_str();
 
-    //output_msh_init_vtk_serial_ascii(output_file);
+    DarcyFlowMH *water = new DarcyFlowLMH_Unsteady(mesh, problem->material_database);
+    DarcyFlowMHOutput *water_output = new DarcyFlowMHOutput(water);
 
-    DarcyFlowMH *water=new DarcyFlowMH_UnsteadyLumped(*mesh);
     problem->water=water;
 
     const TimeGovernor &water_time=water->get_time();
@@ -251,7 +248,7 @@ void main_compute_mh_unsteady_saturated(struct Problem *problem)
 
     while (! water_time.is_end()) {
         water->compute_one_step();
-        postprocess(problem);
+        water_output->postprocess();
 
         if ( water_time.ge( save_time ) )  {
 
@@ -263,12 +260,9 @@ void main_compute_mh_unsteady_saturated(struct Problem *problem)
                 output_time->free_data_from_mesh();
             }
 
-            //output_flow_time_vtk_serial_ascii(mesh, water_time.t(), out_step, output_file);
-
             save_time+=save_step;
         }
     }
-    //output_msh_finish_vtk_serial_ascii(output_file);
 }
 
 /**
@@ -278,7 +272,6 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
 {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
-    struct Transport *transport;
     int rank;
     /*
        Mesh* mesh;
@@ -288,20 +281,24 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
        int i;
        mesh=problem->mesh;
      */
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    problem->water=new DarcyFlowMH_Steady(*mesh);
+    problem->water=new DarcyFlowMH_Steady(mesh, problem->material_database);
+    DarcyFlowMHOutput *water_output = new DarcyFlowMHOutput(problem->water);
+
     problem->water->compute_one_step();
 
-    if (OptGetBool("Transport", "Transport_on", "no") == true)
-            {
-            make_transport(problem->transport);
-            }
+
+    if (OptGetBool("Transport", "Transport_on", "no") == true) {
+        problem->otransport = new ConvectionTransport(problem->material_database, mesh);
+    }
+
 
 	xprintf( Msg, "O.K.\n")/*orig verb 2*/;
 
-    postprocess(problem);
+    water_output->postprocess();
 
     /* Write static data to output file */
     if (rank == 0) {
@@ -355,10 +352,7 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
                 }
             }
        }
-     */
-    transport = problem->transport;
 
-    /*
         out = xfopen("pepa.txt","wt");
 
         FOR_ELEMENTS(elm)
@@ -383,19 +377,24 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
     if (OptGetBool("Transport", "Transport_on", "no") == true) {
         OutputTime *output_time = NULL;
 
-        if (transport->reaction_on == true) { /* tohle presunu na rozumnejsi misto, jen co takove bude */
+/*        if (rank == 0) {
+            output_time = new OutputTime(mesh, transport->transport_out_fname);
+        }*/
+
+    	problem->otransport->convection();
+
+/*        if(output_time != NULL) {
+            delete output_time;
+        }*/
+    }
+    /*
+        if (OptGetBool("Transport",  "Reactions", "no") == true) {
             read_reaction_list(transport);
         }
+*/
+        //if (rank == 0) {
 
-        if (rank == 0) {
-            output_time = new OutputTime(mesh, transport->transport_out_fname);
-
-            output_time->get_data_from_transport(transport);
-            // call _output_time->register_node_data(name, unit, frame, data) to register other data on nodes
-            // call _output_time->register_elem_data(name, unit, frame, data) to register other data on elements
-            output_time->write_data(0.0);
-            output_time->free_data_from_transport();
-        }
+        //}
 
         // TODO: there is an uncoditioned jump in open_temp_files
         // also this function should be moved to btc.*
@@ -403,7 +402,8 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
         // not strictly dependent on Transport.
         //btc_check(transport);
 
-        convection(transport, output_time);
+
+
         /*
                 if(problem->cross_section == true)
                 {
@@ -412,16 +412,12 @@ void main_compute_mh_steady_saturated(struct Problem *problem)
                     output_transport_time_CS(problem, 0 * problem->time_step);
                 }
          */
-
-        if(output_time != NULL) {
-            delete output_time;
-        }
-    }
 }
-
 //-----------------------------------------------------------------------------
 // vim: set cindent:
 //-----------------------------------------------------------------------------
+
+#if 0
 
 /**
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR UNSTEADY SATURATED FLOW
@@ -432,14 +428,18 @@ void main_compute_mh_density(struct Problem *problem)
     int i, j, dens_step, n_step, frame = 0, rank;
     double save_step, stop_time; // update_dens_time
     char statuslog[255];
-    struct Transport *trans = problem->transport;
     FILE *log;
+    OutputTime *output_time = NULL;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    OutputTime *output_time;
+/*
+    transport_output_init(problem->otransport->transport_out_fname);
+    transport_output(problem->otransport->out_conc,problem->otransport->substance_name ,problem->otransport->n_substances, 0.0, ++frame,problem->otransport->transport_out_fname);
+*/
+
     if(rank == 0) {
-        output_time = new OutputTime(mesh ,trans->transport_out_fname);
+        output_time = new OutputTime(mesh, problem->otransport->transport_out_fname);
     }
 
     //save_step = problem->save_step;
@@ -451,12 +451,18 @@ void main_compute_mh_density(struct Problem *problem)
     // DF problem - I don't understend to this construction !!!
     //problem->save_step = problem->stop_time = trans->update_dens_time;
 
+
+    /*
+
+
+
     //------------------------------------------------------------------------------
     //      Status LOG head
     //------------------------------------------------------------------------------
     //sprintf( statuslog,"%s.txt",problem->log_fname);
     sprintf(statuslog, "density_log.txt");
     log = xfopen(statuslog, "wt");
+
     xfprintf(log, "Stop time = %f (%f) \n", trans->update_dens_time * dens_step, stop_time);
     xfprintf(log, "Save step = %f \n", save_step);
     xfprintf(log, "Density  step = %f (%d) \n\n", trans->update_dens_time, trans->dens_step);
@@ -475,7 +481,7 @@ void main_compute_mh_density(struct Problem *problem)
             //problem->water=new DarcyFlowMH(*mesh);
             //problem->water->solve();
             restart_iteration_C(problem);
-            postprocess(problem);
+            //postprocess(problem);
             convection(trans, output_time);
 
             if (trans->dens_implicit == 0) {
@@ -495,5 +501,6 @@ void main_compute_mh_density(struct Problem *problem)
         delete output_time;
     }
 
-    xfclose(log);
-}
+    xfclose(log); */
+//}
+#endif

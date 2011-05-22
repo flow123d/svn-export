@@ -25,6 +25,10 @@
 #
 
 include makefile.in
+include makefile.include
+
+
+
 
 all: bin/mpiexec revnumber bin/current_flow
 #	make -C src clean
@@ -54,7 +58,7 @@ bin/current_flow:
 	if [ -z "${MACHINE}" ]; then \
 		echo "Using default: current_flow"; \
 		echo '#!/bin/bash' > bin/current_flow; \
-		echo "`pwd`/bin/generic_flow.sh" >> bin/current_flow; \
+		echo "\"`pwd`/bin/generic_flow.sh\"" >> bin/current_flow; \
 	else \
 		if [ -e "bin/${MACHINE}_flow.sh" ]; then \
 			echo '#!/bin/bash' > bin/current_flow; \
@@ -81,7 +85,6 @@ revnumber:
 
 
 clean:
-	make -C third_party clean
 	make -C src clean
 	make -C doc/doxy clean
 	rm -f bin/mpiexec

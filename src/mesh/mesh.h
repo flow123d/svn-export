@@ -39,6 +39,7 @@
 #include "mesh/edges.h"
 #include "mesh/neighbours.h"
 #include "mesh/boundaries.h"
+#include "mesh/intersection.hh"
 
 
 #define ELM  0
@@ -98,6 +99,8 @@ public:
         return edge.size();
     }
 
+    void read_intersections(string file_name);
+
     // Files
     // DF - Move to ConstantDB
     // char *geometry_fname; // Name of file of nodes and elems
@@ -115,6 +118,8 @@ public:
     EdgeVector edge;
 
     flow::VectorId<int> bcd_group_id; // gives a index of group for an id
+
+    vector<Intersection>  intersections;
 
     int n_materials; // # of materials
     int n_sides; // # of sides

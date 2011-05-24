@@ -34,6 +34,12 @@
 #include "constantdb.h"
 
 #include "system/system.hh"
+#include "xio.h"
+
+#include<boost/tokenizer.hpp>
+
+#include "boost/lexical_cast.hpp"
+
 #include "problem.h"
 #include "mesh/mesh.h"
 
@@ -110,6 +116,7 @@ void make_mesh(struct Problem *problem) {
     // --------------------- MeshReader testing - End
 
     read_neighbour_list(mesh);
+    mesh->read_intersections( OptGetStr( "Input", "Neighbouring", "\\" ) );
 
     make_side_list(mesh);
     make_edge_list(mesh);
@@ -212,72 +219,59 @@ int *max_entry() {
     // getchar();
     return max_size;
 }
-//=============================================================================
-// ID-POS TRANSLATOR
-//=============================================================================
-// TODO: should be method of water_linsys
-/*
-int id2pos(Mesh* mesh, int id, int* list, int type) {
-    int i, limit;
 
-    switch (type) {
-        case ELM:
-            limit = mesh->n_elements();
-            break;
-        case BC:
-            limit = mesh->n_boundaries();
-            break;
-        case NODE:
-            limit = mesh->node_vector.size();
-            break;
+
+void Mesh::read_intersections(string file_name) {
+
+using namespace boost;
+
+
+file_name = IONameHandler::get_instance()->get_input_file_name(file_name);
+ElementFullIter master(element), slave(element);
+
+char *tmp_line;
+FILE *in = xfopen( file_name, "rt" );
+
+tokenizer<>::iterator tok;
+
+    xprintf( Msg, "Reading intersections...")/*orig verb 2*/;
+    skip_to( in, "$Intersections" );
+    xfgets( tmp_line, LINE_SIZE - 2, in );
+    int n_intersect = atoi( xstrtok( tmp_line) );
+    INPUT_CHECK( n_intersect >= 0 ,"Negative number of neighbours!\n");
+
+    intersections.reserve(n_intersect);
+
+    for(int i=0; i<n_intersect; i++) {
+        xfgets( tmp_line, LINE_SIZE - 2, in );
+        string line = tmp_line;
+        tokenizer<> line_tokenizer(line);
+        tok=line_tokenizer.begin();
+
+
+        ++tok; // skip id token
+        try {
+            int type = lexical_cast<int>(*tok); ++tok;
+            int master_id = lexical_cast<int>(*tok); ++tok;
+            int n_intersect_points; // = ...
+            // ...
+            master=element.find_id(master_id);
+            /*
+             * slave = ...
+             */
+            intersections.push_back(Intersection(n_intersect_points-1, master, slave, tok));
+        } catch( bad_lexical_cast &) {
+            xprintf(UsrErr, "Wrong number at line %d in file %s\n",i, file_name.c_str());
+        }
+
+
     }
 
-    for (i = 0; i < limit; i++)
-        if (list[i] == id)
-            break;
 
-    if (type != BC)
-        return i;
-    else
-        return i + mesh->n_elements();
-}*/
-/*
-  for(i=0;i< ((type == ELM) ? mesh->n_elements() : mesh->n_boundaries );i++)
-        if(list[i] == id)
-                return (type == ELM) ? i : (i + mesh->n_elements());
- */
-//=============================================================================
-// MAKE ID-POS ELEMENT & BOUNDARY LIST
-//=============================================================================
-// TODO: should be private method of water_linsys
-/*
-void make_id2pos_list() {
-    F_ENTRY;
+    xprintf( Msg, "O.K.\n")/*orig verb 2*/;
 
-    Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
-
-    ElementIter elm;
-    NodeIter node;
-    int i, j, s;
-
-    mesh->epos_id = (int*) xmalloc(mesh->n_elements() * sizeof (int));
-    mesh->spos_id = (int*) xmalloc(mesh->n_boundaries() * sizeof (int));
-    mesh->npos_id = (int*) xmalloc(mesh->node_vector.size() * sizeof (int));
-
-    j = i = 0;
-
-    FOR_ELEMENTS(elm) {
-        mesh->epos_id[i++] = elm.id();
-        FOR_ELEMENT_SIDES(elm, s)
-        if (elm->side[s]->cond != NULL)
-            mesh->spos_id[j++] = elm->side[s]->id;
-    }
-    i = 0;
-
-    FOR_NODES( node ) {
-        mesh->npos_id[i++] = node->id;
-    }
 }
-*/
+
+
 //-----------------------------------------------------------------------------
 // vim: set cindent:

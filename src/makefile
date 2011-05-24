@@ -44,6 +44,7 @@ $(OBJS)/mesh/sides.o\
 $(OBJS)/mesh/edges.o\
 $(OBJS)/mesh/boundaries.o\
 $(OBJS)/mesh/neighbours.o\
+${OBJS}/mesh/intersection.o\
 ${OBJS}/mesh/topology.o\
 \
 $(OBJS)/flow/local_matrix.o\

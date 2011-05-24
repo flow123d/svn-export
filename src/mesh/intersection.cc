@@ -15,4 +15,3 @@ Intersection::Intersection(unsigned int dimension, ElementFullIter ele_master, E
   slave(ele_slave)
 {
 
-}

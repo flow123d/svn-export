@@ -7,6 +7,15 @@
 using namespace std;
 using namespace Interpolation;
 
+
+/**
+ * @mainpage
+ * 
+ * Library for interpolation of real functions.
+ * 
+ */
+
+
 #define CLK_TCK		CLOCKS_PER_SEC
 
 InterpolantBase* FindStep( FunctorValueBase& f, IInterpolation* interpolation, double tolerance )

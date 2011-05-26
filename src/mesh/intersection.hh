@@ -155,6 +155,7 @@ private:
     arma::Mat<double> master_map, slave_map;
     /// shift vector of the linear transform
     arma::vec master_shift, slave_shift;
+    void read_intersection_point(arma::vec &, arma::vec &, tokenizer<>::iterator &);
 };
 
 

@@ -249,16 +249,16 @@ tokenizer<>::iterator tok;
         tok=line_tokenizer.begin();
 
 
-        ++tok; // skip id token
         try {
-            int type = lexical_cast<int>(*tok); ++tok;
+        	++tok; // skip id token
+        	int type = lexical_cast<int>(*tok); ++tok;
             int master_id = lexical_cast<int>(*tok); ++tok;
-            int n_intersect_points; // = ...
-            // ...
+            int slave_id = lexical_cast<int>(*tok); ++tok;
+            int sigma = lexical_cast<int>(*tok); ++tok;
+
+            int n_intersect_points = lexical_cast<int>(*tok); ++tok;
             master=element.find_id(master_id);
-            /*
-             * slave = ...
-             */
+            slave=element.find_id(slave_id);
             intersections.push_back(Intersection(n_intersect_points-1, master, slave, tok));
         } catch( bad_lexical_cast &) {
             xprintf(UsrErr, "Wrong number at line %d in file %s\n",i, file_name.c_str());

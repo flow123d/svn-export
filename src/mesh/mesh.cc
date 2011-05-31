@@ -36,7 +36,7 @@
 #include "system/system.hh"
 #include "xio.h"
 
-#include<boost/tokenizer.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "boost/lexical_cast.hpp"
 
@@ -229,10 +229,10 @@ using namespace boost;
 file_name = IONameHandler::get_instance()->get_input_file_name(file_name);
 ElementFullIter master(element), slave(element);
 
-char *tmp_line;
+char tmp_line[LINE_SIZE];
 FILE *in = xfopen( file_name, "rt" );
 
-tokenizer<>::iterator tok;
+tokenizer<boost::char_separator<char> >::iterator tok;
 
     xprintf( Msg, "Reading intersections...")/*orig verb 2*/;
     skip_to( in, "$Intersections" );
@@ -245,7 +245,8 @@ tokenizer<>::iterator tok;
     for(int i=0; i<n_intersect; i++) {
         xfgets( tmp_line, LINE_SIZE - 2, in );
         string line = tmp_line;
-        tokenizer<> line_tokenizer(line);
+        tokenizer<boost::char_separator<char> > line_tokenizer(line, boost::char_separator<char> ("\t \n"));
+
         tok=line_tokenizer.begin();
 
 
@@ -254,14 +255,20 @@ tokenizer<>::iterator tok;
         	int type = lexical_cast<int>(*tok); ++tok;
             int master_id = lexical_cast<int>(*tok); ++tok;
             int slave_id = lexical_cast<int>(*tok); ++tok;
-            int sigma = lexical_cast<int>(*tok); ++tok;
+            cout << "master_id: " << master_id << " slave_id: " << slave_id << endl;
+            cout << "pred ctenim sigma - tok: " << (*tok) << endl;
+            double sigma = lexical_cast<double>(*tok); ++tok;
 
-            int n_intersect_points = lexical_cast<int>(*tok); ++tok;
+            int n_intersect_points = lexical_cast<int>(*tok);
+            cout << "n_intersect_points - tok: " << (*tok) << endl;
+            ++tok;
             master=element.find_id(master_id);
             slave=element.find_id(slave_id);
+
+            cout << "master->dim: " << master->dim << " slave->dim: " << slave->dim << " n_intersect_points: " << n_intersect_points << endl;
             intersections.push_back(Intersection(n_intersect_points-1, master, slave, tok));
         } catch( bad_lexical_cast &) {
-            xprintf(UsrErr, "Wrong number at line %d in file %s\n",i, file_name.c_str());
+            xprintf(UsrErr, "Wrong number at line %d in file %s x%sx\n",i, file_name.c_str(),(*tok).c_str());
         }
 
 

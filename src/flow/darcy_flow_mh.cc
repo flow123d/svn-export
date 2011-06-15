@@ -34,10 +34,12 @@
 #include "petscviewer.h"
 #include "petscao.h"
 #include "petscerror.h"
+#include <armadillo>
 
 #include "system/system.hh"
 #include "system/math_fce.h"
 #include "mesh/mesh.h"
+#include "mesh/intersection.hh"
 #include "system/par_distribution.hh"
 #include "flow/darcy_flow_mh.hh"
 #include "la_linsys.hh"
@@ -330,6 +332,75 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
         ls->mat_set_value(edge_row, edge_row, edg->f_val);
         ls->rhs_set_value(edge_row, edg->f_rhs);
     }
+    mh_abstract_assembly_intersection();
+}
+
+void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
+	LinSys *ls = schur0;
+
+	// CYKLUS PRES INTERSECTIONS
+	for (std::vector<Intersection >::iterator it = mesh->intersections.begin();
+		it != mesh->intersections.end();++it) {
+
+	//for (i = 0; i < mesh->n_intersect_points; i++) {
+		arma::vec point_1;
+	    point_1.fill(1.0);
+	    arma::vec point_2D_Y(3); //lokalni souradnice Y na slave rozsirene o 1
+	    arma::vec point_1D_Y(2); //lokalni souradnice Y na masteru rozsirene o 1
+	    //V.subvec( first_index, last_index )
+	    point_2D_Y.subvec(0, 1) = it->map_to_slave(point_1);
+	    point_2D_Y(2) = 1;
+	    point_1D_Y.subvec(0, 0) = it->map_to_master(point_1);
+	    point_1D_Y(1) = 1;
+
+	    arma::vec point_0;
+	    point_0.fill(0.0);
+	    arma::vec point_2D_X(3); //lokalni souradnice X na slave rozsirene o 1
+	    arma::vec point_1D_X(2); //lokalni souradnice X na masteru rozsirene o 1
+	    point_2D_X.subvec(0, 1) = it->map_to_slave(point_0);
+	    point_2D_X(2) = 1;
+	    point_1D_X.subvec(0, 0) = it->map_to_master(point_0);
+	    point_1D_X(1) = 1;
+
+	    arma::mat base_2D(3,3);
+	    base_2D << 1.0 << 0.0 << -2.0 << arma::endr
+	    		<< -1.0 << 2.0 << 2.0 << arma::endr
+	    		<< 1.0 << -2.0 << 0.0 << arma::endr;
+
+	    arma::mat base_1D(2,2);
+	    base_1D << 1.0 << 0.0 << arma::endr
+	    	    << -1.0 << 1.0 << arma::endr;
+
+	    arma::vec difference_in_Y(5);
+	    arma::vec difference_in_X(5);
+	    int base_index = 0;
+
+		difference_in_Y.subvec(0,2) = - base_2D * point_2D_Y;
+	    difference_in_X.subvec(0,2) = - base_2D * point_2D_X;
+	    difference_in_Y.subvec(3,4) = base_1D * point_1D_Y;
+	    difference_in_X.subvec(3,4) = base_1D * point_1D_X;
+
+	    //prvky matice A[i,j]
+	    arma::mat A(5,5);
+	    for (int i = 0; i < 5; ++i) {
+	    	for (int j = 0; j < 5; ++j) {
+	    		A[i,j] = it->intersection_true_size() * (1/3*difference_in_Y[i]*difference_in_Y[j] + 1/6*difference_in_Y[i]*difference_in_X[j] + 1/6*difference_in_Y[j]*difference_in_X[i] + 1/3*difference_in_X[i]*difference_in_X[j]);
+	    	}
+	    }
+	    double* A_mem = A.memptr();
+	    //cout << "mh_abstract_assembly_intersection A_mem: " << A_mem << endl;
+
+	    //globalni indexy:
+	    int idx[5];
+
+	    idx[0] = side_row_4_id[it->slave->side[0]->id];
+	    idx[1] = side_row_4_id[it->slave->side[1]->id];
+	    idx[2] = side_row_4_id[it->slave->side[2]->id];
+	    idx[3] = side_row_4_id[it->master->side[0]->id];
+	    idx[4] = side_row_4_id[it->master->side[1]->id];
+
+	    ls->mat_set_values(5, idx, 5, idx, A_mem);
+	}
 }
 
 

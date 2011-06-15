@@ -100,6 +100,7 @@ public:
     }
 
     void read_intersections(string file_name);
+    double get_sigma();
 
     // Files
     // DF - Move to ConstantDB
@@ -120,6 +121,7 @@ public:
     flow::VectorId<int> bcd_group_id; // gives a index of group for an id
 
     vector<Intersection>  intersections;
+    double sigma; // DOPLENO
 
     int n_materials; // # of materials
     int n_sides; // # of sides

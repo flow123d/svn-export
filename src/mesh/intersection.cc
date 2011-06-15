@@ -23,8 +23,8 @@ Intersection::Intersection(unsigned int dimension, ElementFullIter ele_master,
 	///otestuje se jestli dimenze masteru je mensi nez dimenze slave - chybova hlaska (vyjimka - throw)
 	///pocet pointu=dim+1
 	if (master->dim > slave->dim) {
-		cout << "Exception: master->dim < slave->dim" << endl;
-		//throw((char*) "master->dim < slave->dim");
+		cout << "Exception: master->dim > slave->dim" << endl;
+		//throw((char*) "master->dim > slave->dim");
 	}
 	//arma::vec vertex(master->dim);
 	read_intersection_point(master_shift, slave_shift, tok);
@@ -72,7 +72,6 @@ void Intersection::read_intersection_point(arma::vec &vec1, arma::vec &vec2,
 		double coords2 = lexical_cast<double> (*tok); ++tok;
 		vec2[k] = coords2;
 	}
-
 }
 
 arma::vec Intersection::map_to_master(const arma::vec &point) const
@@ -85,5 +84,33 @@ arma::vec Intersection::map_to_master(const arma::vec &point) const
 arma::vec Intersection::map_to_slave(const arma::vec &point) const
 {
 	ASSERT(( point.n_elem == dim ),"Map to slave: point.n_elem != dim \n");
-	return (master_map * point + master_shift);
+	return (slave_map * point + slave_shift);
 }
+
+double Intersection::intersection_true_size() {
+
+	int factorial_dim = 0;
+	//arma::vec factorial_dim_tmp(3);
+	//factorial_dim_tmp << 1 << 2 << 6 << endr;
+
+	ASSERT(( dim < 4 ), "Intersection_true_size: dim > 3 \n");
+	switch (dim) {
+		case 1: factorial_dim = 1;
+		case 2: factorial_dim = 2;
+ 		case 3: factorial_dim = 6;
+	}
+
+	/*arma::vec factorial_dim;
+	int factorial_dim = dim;
+	if (factorial_dim >= 0) {
+		for (int n = factorial_dim - 1; n > 1; n--) {
+			factorial_dim *= n;
+		}
+	} else {
+		cout << "Intersection_true_size: dim < 0" << endl;
+	}*/
+
+	return (master->measure * (det(master_map) / factorial_dim));
+}
+
+

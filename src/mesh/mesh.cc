@@ -79,6 +79,7 @@ Mesh::Mesh() {
     n_neighs = NDEF;
     neighbour = NULL;
     l_neighbour = NULL;
+    sigma = NULL; // DOPLNENO
 
     // Hashes
     n_lines = 0;
@@ -257,7 +258,7 @@ tokenizer<boost::char_separator<char> >::iterator tok;
             int slave_id = lexical_cast<int>(*tok); ++tok;
             cout << "master_id: " << master_id << " slave_id: " << slave_id << endl;
             cout << "pred ctenim sigma - tok: " << (*tok) << endl;
-            double sigma = lexical_cast<double>(*tok); ++tok;
+            sigma = lexical_cast<double>(*tok); ++tok;
 
             int n_intersect_points = lexical_cast<int>(*tok);
             cout << "n_intersect_points - tok: " << (*tok) << endl;
@@ -279,6 +280,9 @@ tokenizer<boost::char_separator<char> >::iterator tok;
 
 }
 
+double Mesh::get_sigma() {
+    return sigma;
+}
 
 //-----------------------------------------------------------------------------
 // vim: set cindent:

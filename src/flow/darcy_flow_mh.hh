@@ -142,6 +142,7 @@ protected:
     void prepare_parallel();
     void make_row_numberings();
     void mh_abstract_assembly();
+    void mh_abstract_assembly_intersection();
     void make_schur0();
     void make_schur1();
     void make_schur2();

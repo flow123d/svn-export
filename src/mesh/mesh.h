@@ -100,7 +100,7 @@ public:
     }
 
     void read_intersections(string file_name);
-    double get_sigma();
+    void make_intersec_elements();
 
     // Files
     // DF - Move to ConstantDB
@@ -120,8 +120,17 @@ public:
 
     flow::VectorId<int> bcd_group_id; // gives a index of group for an id
 
+    /**
+     * Vector of individual intersections of two elements.
+     * This is enough for local mortar.
+     */
     vector<Intersection>  intersections;
-    double sigma; // DOPLENO
+
+    /**
+     * For every element El we have vector of indices into @var intersections array for every intersection in which El is master element.
+     * This is necessary for true mortar.
+     */
+    vector<vector<unsigned int> >  master_elements;
 
     int n_materials; // # of materials
     int n_sides; // # of sides

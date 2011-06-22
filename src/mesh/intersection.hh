@@ -146,6 +146,11 @@ public:
     unsigned int slave_dim()
         {return slave->dim;}
 
+    ElementFullIter &master_iter()
+        {return master;}
+    ElementFullIter &slave_iter()
+        {return slave;}
+
     arma::vec map_to_master(const arma::vec &point) const;
     arma::vec map_to_slave(const arma::vec &point) const;
     double intersection_true_size();

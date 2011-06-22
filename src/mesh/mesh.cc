@@ -118,6 +118,7 @@ void make_mesh(struct Problem *problem) {
 
     read_neighbour_list(mesh);
     mesh->read_intersections( OptGetStr( "Input", "Neighbouring", "\\" ) );
+    mesh->make_intersec_elements();
 
     make_side_list(mesh);
     make_edge_list(mesh);
@@ -280,8 +281,22 @@ tokenizer<boost::char_separator<char> >::iterator tok;
 
 }
 
-double Mesh::get_sigma() {
-    return sigma;
+/**
+ * After we have all intresections we pass through, find number of intersections for every master element then
+ * allocate arrays and fill them.
+ */
+void Mesh::make_intersec_elements()
+{
+    // calculate sizes and make allocations
+    vector<int >sizes(n_elements(),0);
+    for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
+        sizes[i->master.index()]++;
+    master_elements.resize(n_elements());
+    for(int i=0;i<n_elements(); ++i ) master_elements[i].reserve(sizes[i]);
+
+    // fill intersec_elements
+    for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
+        master_elements[i->master.index()].push_back( i-intersections.begin() );
 }
 
 //-----------------------------------------------------------------------------

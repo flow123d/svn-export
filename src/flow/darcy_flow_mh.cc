@@ -332,8 +332,42 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
         ls->mat_set_value(edge_row, edge_row, edg->f_val);
         ls->rhs_set_value(edge_row, edg->f_rhs);
     }
+
+    //coupling_P0_mortar_assembly();
     mh_abstract_assembly_intersection();
+
 }
+/*
+void DarcyFlowMH_Steady::coupling_P0_mortar_assembly()
+{
+    for(vector<vector<Intersection> >::iterator it_master_list
+            = mesh->master_elements.begin(); it_master_list != mesh->master_elements.end(); ++ it_master_list )
+    if (it_master_list->size() != 0)  // skip empty masters
+    {
+        // on the intersection element we consider
+        // * intersection dofs for master and slave
+        //   those are dofs of the space into which we interpolate
+        //   base functions from individual master and slave elements
+        //   For the master dofs both are usualy eqivalent.
+        // * original dofs - for master same as intersection dofs, for slave
+        //   all dofs of slave elements
+        coupling_P0_mortar_local(* it_master_list, arma:Mat local_mat);
+
+        // original to intersection interpolation
+        for()
+        for()
+
+        int master_dim = master_list->
+
+        int n_master_dofs = 1
+        int n_isec_slave_dofs =
+
+
+    }
+    // compute base functions for P0 pressure
+    phi_1D[i]
+
+}*/
 
 void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
 	LinSys *ls = schur0;

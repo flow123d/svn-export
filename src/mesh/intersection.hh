@@ -137,8 +137,6 @@ class Intersection {
 public:
     Intersection(unsigned int dimension, ElementFullIter ele_master, ElementFullIter ele_slave, tokenizer<boost::char_separator<char> >::iterator &tok);
 
-    ElementFullIter master, slave; // master lower dimension
-
     /// dimension of the master element
     unsigned int master_dim()
         {return master->dim;}
@@ -157,7 +155,7 @@ public:
 private:
     /// dimenze pruniku
     unsigned int dim;
-    //ElementFullIter master, slave; // master lower dimension
+    ElementFullIter master, slave; // master lower dimension
 
     /// matrix part of linear transform from reference element of intersection to reference element of master or slave
     arma::Mat<double> master_map, slave_map;

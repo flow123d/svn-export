@@ -372,28 +372,30 @@ void DarcyFlowMH_Steady::coupling_P0_mortar_assembly()
 void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
 	LinSys *ls = schur0;
 
+    cout << "mh_abstract_assembly_intersection!" << endl;
+
 	// CYKLUS PRES INTERSECTIONS
 	for (std::vector<Intersection >::iterator it = mesh->intersections.begin();
 		it != mesh->intersections.end();++it) {
+		cout << "CYKLUS PRES INTERSECTIONS" << endl;
 
-	//for (i = 0; i < mesh->n_intersect_points; i++) {
-		arma::vec point_1;
-	    point_1.fill(1.0);
+		arma::vec point_Y(1);
+	    point_Y.fill(1.0);
 	    arma::vec point_2D_Y(3); //lokalni souradnice Y na slave rozsirene o 1
 	    arma::vec point_1D_Y(2); //lokalni souradnice Y na masteru rozsirene o 1
 	    //V.subvec( first_index, last_index )
-	    point_2D_Y.subvec(0, 1) = it->map_to_slave(point_1);
+	    point_2D_Y.subvec(0, 1) = it->map_to_slave(point_Y);
 	    point_2D_Y(2) = 1;
-	    point_1D_Y.subvec(0, 0) = it->map_to_master(point_1);
+	    point_1D_Y.subvec(0, 0) = it->map_to_master(point_Y);
 	    point_1D_Y(1) = 1;
 
-	    arma::vec point_0;
-	    point_0.fill(0.0);
+	    arma::vec point_X(1);
+	    point_X.fill(0.0);
 	    arma::vec point_2D_X(3); //lokalni souradnice X na slave rozsirene o 1
 	    arma::vec point_1D_X(2); //lokalni souradnice X na masteru rozsirene o 1
-	    point_2D_X.subvec(0, 1) = it->map_to_slave(point_0);
+	    point_2D_X.subvec(0, 1) = it->map_to_slave(point_X);
 	    point_2D_X(2) = 1;
-	    point_1D_X.subvec(0, 0) = it->map_to_master(point_0);
+	    point_1D_X.subvec(0, 0) = it->map_to_master(point_X);
 	    point_1D_X(1) = 1;
 
 	    arma::mat base_2D(3,3);
@@ -405,6 +407,11 @@ void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
 	    base_1D << 1.0 << 0.0 << arma::endr
 	    	    << -1.0 << 1.0 << arma::endr;
 
+	    base_1D.print("base_1D: ");
+	    base_2D.print("base_2D: ");
+	    point_2D_X.print("point_2D_X: ");
+	    point_2D_Y.print("point_2D_Y: ");
+
 	    arma::vec difference_in_Y(5);
 	    arma::vec difference_in_X(5);
 	    int base_index = 0;
@@ -414,6 +421,9 @@ void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
 	    difference_in_Y.subvec(3,4) = base_1D * point_1D_Y;
 	    difference_in_X.subvec(3,4) = base_1D * point_1D_X;
 
+	    difference_in_X.print("difference_in_X: ");
+	    difference_in_Y.print("difference_in_Y: ");
+
 	    //prvky matice A[i,j]
 	    arma::mat A(5,5);
 	    for (int i = 0; i < 5; ++i) {
@@ -422,18 +432,20 @@ void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
 	    	}
 	    }
 	    double* A_mem = A.memptr();
-	    //cout << "mh_abstract_assembly_intersection A_mem: " << A_mem << endl;
+
+	    A.print("A: ");
+	    cout << "mh_abstract_assembly_intersection A_mem: " << A_mem << endl;
 
 	    //globalni indexy:
 	    int idx[5];
+/*
+	    //idx[0] = side_row_4_id[it->(*slave_iter)->side[0]->edge->];
+	    idx[1] = side_row_4_id[it->(*slave_iter)->side[1]->id];
+	    idx[2] = side_row_4_id[it->(*slave_iter)->side[2]->id];
+	    idx[3] = side_row_4_id[it->(*master_iter)->side[0]->id];
+	    idx[4] = side_row_4_id[it->(*master_iter)->side[1]->id];
 
-	    idx[0] = side_row_4_id[it->slave->side[0]->id];
-	    idx[1] = side_row_4_id[it->slave->side[1]->id];
-	    idx[2] = side_row_4_id[it->slave->side[2]->id];
-	    idx[3] = side_row_4_id[it->master->side[0]->id];
-	    idx[4] = side_row_4_id[it->master->side[1]->id];
-
-	    ls->mat_set_values(5, idx, 5, idx, A_mem);
+	    ls->mat_set_values(5, idx, 5, idx, A_mem); */
 	}
 }
 

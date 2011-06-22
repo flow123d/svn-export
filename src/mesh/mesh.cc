@@ -79,7 +79,6 @@ Mesh::Mesh() {
     n_neighs = NDEF;
     neighbour = NULL;
     l_neighbour = NULL;
-    sigma = NULL; // DOPLNENO
 
     // Hashes
     n_lines = 0;
@@ -259,7 +258,7 @@ tokenizer<boost::char_separator<char> >::iterator tok;
             int slave_id = lexical_cast<int>(*tok); ++tok;
             cout << "master_id: " << master_id << " slave_id: " << slave_id << endl;
             cout << "pred ctenim sigma - tok: " << (*tok) << endl;
-            sigma = lexical_cast<double>(*tok); ++tok;
+            double sigma = lexical_cast<double>(*tok); ++tok;
 
             int n_intersect_points = lexical_cast<int>(*tok);
             cout << "n_intersect_points - tok: " << (*tok) << endl;
@@ -287,7 +286,8 @@ tokenizer<boost::char_separator<char> >::iterator tok;
  */
 void Mesh::make_intersec_elements()
 {
-    // calculate sizes and make allocations
+ /*
+	// calculate sizes and make allocations
     vector<int >sizes(n_elements(),0);
     for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
         sizes[i->master.index()]++;
@@ -297,6 +297,7 @@ void Mesh::make_intersec_elements()
     // fill intersec_elements
     for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
         master_elements[i->master.index()].push_back( i-intersections.begin() );
+*/
 }
 
 //-----------------------------------------------------------------------------

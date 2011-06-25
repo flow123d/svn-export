@@ -64,10 +64,10 @@ Mesh::Mesh() {
     xprintf(Msg, " - Mesh()     - version with node_vector\n");
 
     n_materials = NDEF;
-//    concentration = NULL;
-//    l_concentration = NULL;
-//    transport_bcd = NULL;
-//    l_transport_bcd = NULL;
+    //    concentration = NULL;
+    //    l_concentration = NULL;
+    //    transport_bcd = NULL;
+    //    l_transport_bcd = NULL;
     //	n_sources        = NDEF;
     //	source           = NULL;
     //	l_source         = NULL;
@@ -85,9 +85,9 @@ Mesh::Mesh() {
     n_triangles = 0;
     n_tetrahedras = 0;
 
-//    concentration_hash = NULL;
-//    transport_bcd_hash = NULL;
-//    neighbour_hash = NULL;
+    //    concentration_hash = NULL;
+    //    transport_bcd_hash = NULL;
+    //    neighbour_hash = NULL;
 }
 
 //=============================================================================
@@ -104,9 +104,11 @@ void make_mesh(struct Problem *problem) {
 
     Mesh* mesh = new Mesh();
 
+    mesh->side = NULL;
+    mesh->neighbour = NULL;
+
     /* Test of object storage */
     ConstantDB::getInstance()->setObject(MESH::MAIN_INSTANCE, mesh);
-
 
     // read all mesh files - this is work for MeshReader
     // DF - elements are read by MeshReader
@@ -116,13 +118,12 @@ void make_mesh(struct Problem *problem) {
     // --------------------- MeshReader testing - End
 
     read_neighbour_list(mesh);
-    mesh->read_intersections( OptGetStr( "Input", "Neighbouring", "\\" ) );
+    mesh->read_intersections(OptGetStr("Input", "Neighbouring", "\\"));
     mesh->make_intersec_elements();
 
     make_side_list(mesh);
-    make_edge_list(mesh);
+    mesh->make_edge_list_from_neigh();
 
-//    make_hashes(problem);
     count_element_types(mesh);
 
     // topology
@@ -137,13 +138,12 @@ void make_mesh(struct Problem *problem) {
     side_shape_specific(mesh);
     side_to_node(mesh);
     neigh_bb_topology(mesh);
-    neigh_bb_to_edge_both(mesh);
+    //neigh_bb_to_edge_both(mesh);
     edge_to_side_both(mesh);
     neigh_vb_to_edge_both(mesh);
     side_types(mesh);
     count_side_types(mesh);
     xprintf(MsgVerb, "Topology O.K.\n")/*orig verb 4*/;
-
 
     read_boundary(mesh);
 
@@ -157,7 +157,7 @@ void count_element_types(Mesh* mesh) {
     //ElementIter elm;
 
     FOR_ELEMENTS(elm)
-    switch (elm->type) {
+        switch (elm->type) {
         case 1:
             mesh->n_lines++;
             break;
@@ -167,7 +167,7 @@ void count_element_types(Mesh* mesh) {
         case 4:
             mesh->n_tetrahedras++;
             break;
-    }
+        }
 }
 //=============================================================================
 // RETURN MAX NUMBER OF ENTRIES IN THE ROW
@@ -177,9 +177,9 @@ int *max_entry() {
     Mesh* mesh = (Mesh*) ConstantDB::getInstance()->getObject(MESH::MAIN_INSTANCE);
 
     int *max_size, size, i;
-//    ElementIter elm;
+    //    ElementIter elm;
 
-    max_size = (int*) xmalloc(2 * sizeof (int));
+    max_size = (int*) xmalloc(2 * sizeof(int));
 
     max_size[0] = 0; // entries count
     max_size[1] = 0; // row
@@ -188,10 +188,12 @@ int *max_entry() {
         size = 0; // uloha se zapornymi zdroji =1
 
         FOR_ELEMENT_SIDES(elm, si) { //same dim
-            if (elm->side[si]->cond != NULL) size++;
+            if (elm->side[si]->cond != NULL)
+                size++;
             else
-                size += elm->side[ si ]->edge->n_sides - 1;
-            if (elm->side[si]->neigh_bv != NULL) size++; // comp model
+                size += elm->side[si]->edge->n_sides - 1;
+            if (elm->side[si]->neigh_bv != NULL)
+                size++; // comp model
         } // end same dim
 
 
@@ -205,76 +207,72 @@ int *max_entry() {
 
 
         /*
-        if (elm->dim > 1)
-          FOR_NEIGHBOURS(ngh)
-            FOR_NEIGH_ELEMENTS(ngh,n)
-              if (ngh->element[n]->id == elm->id && n == 1)
-                size++;
+         if (elm->dim > 1)
+         FOR_NEIGHBOURS(ngh)
+         FOR_NEIGH_ELEMENTS(ngh,n)
+         if (ngh->element[n]->id == elm->id && n == 1)
+         size++;
          */
 
         size += elm->n_neighs_vv; // non-comp model
 
         max_size[0] += size;
-        if (max_size[1] < size) max_size[1] = size;
+        if (max_size[1] < size)
+            max_size[1] = size;
     }
     // getchar();
     return max_size;
 }
 
-
 void Mesh::read_intersections(string file_name) {
 
-using namespace boost;
+    using namespace boost;
 
+    file_name = IONameHandler::get_instance()->get_input_file_name(file_name);
+    ElementFullIter master(element), slave(element);
 
-file_name = IONameHandler::get_instance()->get_input_file_name(file_name);
-ElementFullIter master(element), slave(element);
+    char tmp_line[LINE_SIZE];
+    FILE *in = xfopen(file_name, "rt");
 
-char tmp_line[LINE_SIZE];
-FILE *in = xfopen( file_name, "rt" );
-
-tokenizer<boost::char_separator<char> >::iterator tok;
+    tokenizer<boost::char_separator<char> >::iterator tok;
 
     xprintf( Msg, "Reading intersections...")/*orig verb 2*/;
-    skip_to( in, "$Intersections" );
-    xfgets( tmp_line, LINE_SIZE - 2, in );
-    int n_intersect = atoi( xstrtok( tmp_line) );
+    skip_to(in, "$Intersections");
+    xfgets(tmp_line, LINE_SIZE - 2, in);
+    int n_intersect = atoi(xstrtok(tmp_line));
     INPUT_CHECK( n_intersect >= 0 ,"Negative number of neighbours!\n");
 
     intersections.reserve(n_intersect);
 
-    for(int i=0; i<n_intersect; i++) {
-        xfgets( tmp_line, LINE_SIZE - 2, in );
+    for (int i = 0; i < n_intersect; i++) {
+        xfgets(tmp_line, LINE_SIZE - 2, in);
         string line = tmp_line;
-        tokenizer<boost::char_separator<char> > line_tokenizer(line, boost::char_separator<char> ("\t \n"));
+        tokenizer<boost::char_separator<char> > line_tokenizer(line, boost::char_separator<char>("\t \n"));
 
-        tok=line_tokenizer.begin();
-
+        tok = line_tokenizer.begin();
 
         try {
-        	++tok; // skip id token
-        	int type = lexical_cast<int>(*tok); ++tok;
-            int master_id = lexical_cast<int>(*tok); ++tok;
-            int slave_id = lexical_cast<int>(*tok); ++tok;
-            cout << "master_id: " << master_id << " slave_id: " << slave_id << endl;
-            cout << "pred ctenim sigma - tok: " << (*tok) << endl;
-            double sigma = lexical_cast<double>(*tok); ++tok;
-
-            int n_intersect_points = lexical_cast<int>(*tok);
-            cout << "n_intersect_points - tok: " << (*tok) << endl;
+            ++tok; // skip id token
+            int type = lexical_cast<int> (*tok);
             ++tok;
-            master=element.find_id(master_id);
-            slave=element.find_id(slave_id);
+            int master_id = lexical_cast<int> (*tok);
+            ++tok;
+            int slave_id = lexical_cast<int> (*tok);
+            ++tok;
+            double sigma = lexical_cast<double> (*tok);
+            ++tok;
 
-            cout << "master->dim: " << master->dim << " slave->dim: " << slave->dim << " n_intersect_points: " << n_intersect_points << endl;
-            intersections.push_back(Intersection(n_intersect_points-1, master, slave, tok));
-        } catch( bad_lexical_cast &) {
+            int n_intersect_points = lexical_cast<int> (*tok);
+            ++tok;
+            master = element.find_id(master_id);
+            slave = element.find_id(slave_id);
+
+            intersections.push_back(Intersection(n_intersect_points - 1, master, slave, tok));
+        } catch (bad_lexical_cast &) {
             xprintf(UsrErr, "Wrong number at line %d in file %s x%sx\n",i, file_name.c_str(),(*tok).c_str());
         }
 
-
     }
-
 
     xprintf( Msg, "O.K.\n")/*orig verb 2*/;
 
@@ -284,21 +282,48 @@ tokenizer<boost::char_separator<char> >::iterator tok;
  * After we have all intresections we pass through, find number of intersections for every master element then
  * allocate arrays and fill them.
  */
-void Mesh::make_intersec_elements()
-{
- /*
-	// calculate sizes and make allocations
-    vector<int >sizes(n_elements(),0);
-    for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
-        sizes[i->master.index()]++;
-    master_elements.resize(n_elements());
-    for(int i=0;i<n_elements(); ++i ) master_elements[i].reserve(sizes[i]);
+void Mesh::make_intersec_elements() {
 
-    // fill intersec_elements
-    for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
-        master_elements[i->master.index()].push_back( i-intersections.begin() );
-*/
+     // calculate sizes and make allocations
+     vector<int >sizes(n_elements(),0);
+     for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
+     sizes[i->master_iter().index()]++;
+     master_elements.resize(n_elements());
+     for(int i=0;i<n_elements(); ++i ) master_elements[i].reserve(sizes[i]);
+
+     // fill intersec_elements
+     for( vector<Intersection>::iterator i=intersections.begin(); i != intersections.end(); ++i )
+     master_elements[i->master_iter().index()].push_back( i-intersections.begin() );
+
 }
 
+void Mesh::make_edge_list_from_neigh() {
+    int edi;
+    Mesh *mesh = this;
+    struct Neighbour *ngh;
+
+    xprintf( Msg, "Creating edges from neigbours... ")/*orig verb 2*/;
+
+    int n_edges = mesh->n_sides;
+    FOR_NEIGHBOURS( ngh )
+        if (ngh->type == BB_E || ngh->type == BB_EL)
+            n_edges-=( ngh->n_elements - 1 );
+
+    mesh->edge.resize(n_edges);
+
+    xprintf( MsgVerb, " O.K. %d edges created.", mesh->n_edges())/*orig verb 4*/;
+
+    EdgeFullIter edg = mesh->edge.begin();
+    n_edges=0;
+    FOR_NEIGHBOURS( ngh )
+        if (ngh->type == BB_E || ngh->type == BB_EL) {
+            ngh->edge = edg;
+            edg->neigh_bb = ngh;
+            ++edg;
+            n_edges++;
+        }
+    xprintf( MsgVerb, "O.K. %d\n")/*orig verb 6*/;
+
+}
 //-----------------------------------------------------------------------------
 // vim: set cindent:

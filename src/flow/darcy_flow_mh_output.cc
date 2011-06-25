@@ -52,7 +52,7 @@ void DarcyFlowMHOutput::postprocess() {
     make_element_vector();
     make_sides_scalar();
 
-    make_node_scalar();
+    //make_node_scalar();
 
     /** new version of make_node_scalar */
     /* double* scalars = new double[mesh->node_vector.size()];

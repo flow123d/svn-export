@@ -45,7 +45,7 @@ static void neigh_bv_to_side(Mesh *);
 static void element_to_neigh_vb(Mesh*);
 static void side_to_node(Mesh*);
 static void neigh_bb_topology(Mesh*);
-static void neigh_bb_to_edge_both(Mesh*);
+//static void neigh_bb_to_edge_both(Mesh*);
 static void edge_to_side_both(Mesh*);
 static void neigh_vb_to_edge_both(Mesh*);
 static void side_types(Mesh*);
@@ -405,8 +405,10 @@ void side_types(Mesh* mesh)
 	xprintf( MsgVerb, "   Side types... ")/*orig verb 5*/;
     ASSERT(!( mesh == NULL ),"Mesh is NULL\n");
 
-	FOR_SIDES( sde )
-		sde->type = ( sde->edge->n_sides == 1 ? EXTERNAL : INTERNAL );
+	FOR_SIDES( sde ) {
+        sde->type = ( sde->edge->n_sides == 1 ? EXTERNAL : INTERNAL );
+
+	}
 	xprintf( MsgVerb, "O.K.\n")/*orig verb 6*/;
 }
 //=============================================================================
@@ -659,27 +661,7 @@ int elements_common_sides_3D( ElementFullIter e0, ElementFullIter e1, int s[] )
 			s[ 1 ] = i;
 	return true;
 }
-//=============================================================================
-//
-//=============================================================================
-void neigh_bb_to_edge_both(Mesh* mesh)
-{
-	struct Neighbour *ngh;
 
-	xprintf( MsgVerb, "   Neighbour BB to edge and back... ")/*orig verb 5*/;
-    ASSERT(!( mesh == NULL ),"Mesh is NULL\n");
-
-    EdgeFullIter edg = mesh->edge.begin();
-	FOR_NEIGHBOURS( ngh ) {
-		if( ngh->type != BB_E && ngh->type != BB_EL )
-			continue;
-		ngh->edge = edg;
-		edg->neigh_bb = ngh;
-		++edg;
-		ASSERT( edg != mesh->edge.end() ,"Inconsistency between number of neighbours and number of edges\n");
-	}
-	xprintf( MsgVerb, "O.K.\n")/*orig verb 6*/;
-}
 //=============================================================================
 //
 //=============================================================================

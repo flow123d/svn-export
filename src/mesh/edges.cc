@@ -56,18 +56,19 @@ Edge::Edge()
 //=============================================================================
 // CREATE AND PREFILL LIST OF EDGES
 //=============================================================================
+/*
 void make_edge_list(Mesh* mesh)
 {
 	int edi;
 	struct Edge *edg;
 
 	ASSERT(!( mesh == NULL ),"NULL as argument of function make_edge_list()\n");
-	xprintf( Msg, "Creating edges... ")/*orig verb 2*/;
+	xprintf( Msg, "Creating edges... ");//orig verb 2
 	mesh->edge.resize(count_edges( mesh ));
 
-	xprintf( MsgVerb, " O.K. %d edges created.", mesh->n_edges() )/*orig verb 4*/;
-	xprintf( Msg, "O.K.\n")/*orig verb 2*/;
-}
+	xprintf( MsgVerb, " O.K. %d edges created.", mesh->n_edges() );//orig verb 4
+	xprintf( Msg, "O.K.\n");//orig verb 2
+}*/
 /*
 //=============================================================================
 //

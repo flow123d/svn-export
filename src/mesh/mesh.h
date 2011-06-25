@@ -101,6 +101,7 @@ public:
 
     void read_intersections(string file_name);
     void make_intersec_elements();
+    void make_edge_list_from_neigh();
 
     // Files
     // DF - Move to ConstantDB

@@ -135,7 +135,7 @@ void add_to_neighbour_list(Mesh* mesh, struct Neighbour* ngh)
 {
 	ASSERT(!( (mesh == NULL) || (ngh == NULL) ),"NULL as an argument of function add_to_neighbour_list()\n");
 	// First element in the list
-	if( mesh->neighbour == NULL && mesh->l_neighbour == NULL ) {
+	if( mesh->neighbour == NULL || mesh->l_neighbour == NULL ) {
 		mesh->neighbour = ngh;
 		mesh->l_neighbour = ngh;
 		ngh->prev = NULL;
@@ -143,7 +143,7 @@ void add_to_neighbour_list(Mesh* mesh, struct Neighbour* ngh)
 		return;
 	}
 	// If something is wrong with the list
-	ASSERT(!( (mesh->neighbour == NULL) || (mesh->l_neighbour == NULL) ),"Inconsistency in the neighbour list\n");
+	ASSERT( mesh->neighbour != NULL && mesh->l_neighbour != NULL ,"Inconsistency in the neighbour list\n");
 	// Add after last neighbour
 	ngh->next = NULL;
 	ngh->prev = mesh->l_neighbour;

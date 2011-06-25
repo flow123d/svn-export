@@ -151,7 +151,7 @@ void add_to_side_list(Mesh* mesh, struct Side* sde) {
 
     ASSERT(!((mesh == NULL) || (sde == NULL)), "NULL as an argument of function add_to_side_list()\n");
     // First side in the list
-    if (mesh->side == NULL && mesh->l_side == NULL) {
+    if (mesh->side == NULL || mesh->l_side == NULL) {
         mesh->side = sde;
         mesh->l_side = sde;
         sde->prev = NULL;

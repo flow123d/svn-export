@@ -39,20 +39,12 @@ Intersection::Intersection(unsigned int dimension, ElementFullIter ele_master,
 		master_map.col(i-1) = master_tmp;
 		slave_map.col(i-1) = slave_tmp;
 	}
-	//TISK
-	master_shift.print("master_shift: ");
-	slave_shift.print("slave_shift: ");
-	//master_map.print("master_map: ");
-	//slave_map.print("slave_map: ");
-	master_map.raw_print(cout, "master_map = ");
-	slave_map.raw_print(cout, "slave_map = ");
 }
 
 void Intersection::read_intersection_point(arma::vec &vec1, arma::vec &vec2,
 		tokenizer<boost::char_separator<char> >::iterator &tok) {
 
 	// pocet lokalnich souradnic 1. elementu
-    cout << "n_insec_points_el1: " << (*tok) << endl;
 	int n_insec_points_el1 = lexical_cast<int> (*tok);
 	++tok;
 	INPUT_CHECK(n_insec_points_el1 == vec1.n_elem, "Exception: n_insec_points_el1 != vec1.n_elem");
@@ -63,7 +55,6 @@ void Intersection::read_intersection_point(arma::vec &vec1, arma::vec &vec2,
 	}
 
 	// pocet lokalnich souradnic 2. elementu
-    cout << "n_insec_points_el2: " << (*tok) << endl;
 	int n_insec_points_el2 = lexical_cast<int> (*tok);
 	++tok;
 	INPUT_CHECK(n_insec_points_el2 == vec2.n_elem, "Exception: n_insec_points_el2 != vec2.n_elem");
@@ -77,14 +68,23 @@ void Intersection::read_intersection_point(arma::vec &vec1, arma::vec &vec2,
 arma::vec Intersection::map_to_master(const arma::vec &point) const
 {
 	//dim = dimenze intersec elementu
-	ASSERT(( point.n_elem == dim ),"Map to master: point.n_elem != dim \n");
-	return (master_map * point + master_shift);
+    ASSERT(( point.n_elem == dim ),"Map to slave: point.n_elem(%d) != dim(%d) \n", point.n_elem, dim);
+    int result_dim = master->dim;
+    arma::vec result(result_dim+1);
+	result(0)=1.0;
+	result.subvec(1, result_dim) = (master_map * point + master_shift);
+	return result;
 }
 
 arma::vec Intersection::map_to_slave(const arma::vec &point) const
 {
-	ASSERT(( point.n_elem == dim ),"Map to slave: point.n_elem != dim \n");
-	return (slave_map * point + slave_shift);
+	ASSERT(( point.n_elem == dim ),"Map to slave: point.n_elem(%d) != dim(%d) \n", point.n_elem, dim);
+	int result_dim = slave->dim;
+	arma::vec result(result_dim+1);
+	result(0)=1.0;
+	//DBGMSG("s dim: %d dim:%d\n", master->dim, )
+	result.subvec(1, result_dim) = (slave_map * point + slave_shift);
+	return result;
 }
 
 double Intersection::intersection_true_size() {
@@ -110,6 +110,7 @@ double Intersection::intersection_true_size() {
 		cout << "Intersection_true_size: dim < 0" << endl;
 	}*/
 
+//	DBGMSG("size: %f det: %f\n",master->measure,det(master_map));
 	return (master->measure * (det(master_map) / factorial_dim));
 }
 

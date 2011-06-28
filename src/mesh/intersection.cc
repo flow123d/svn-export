@@ -89,29 +89,8 @@ arma::vec Intersection::map_to_slave(const arma::vec &point) const
 
 double Intersection::intersection_true_size() {
 
-	int factorial_dim = 0;
-	//arma::vec factorial_dim_tmp(3);
-	//factorial_dim_tmp << 1 << 2 << 6 << endr;
-
-	ASSERT(( dim < 4 ), "Intersection_true_size: dim > 3 \n");
-	switch (dim) {
-		case 1: factorial_dim = 1;
-		case 2: factorial_dim = 2;
- 		case 3: factorial_dim = 6;
-	}
-
-	/*arma::vec factorial_dim;
-	int factorial_dim = dim;
-	if (factorial_dim >= 0) {
-		for (int n = factorial_dim - 1; n > 1; n--) {
-			factorial_dim *= n;
-		}
-	} else {
-		cout << "Intersection_true_size: dim < 0" << endl;
-	}*/
-
-//	DBGMSG("size: %f det: %f\n",master->measure,det(master_map));
-	return (master->measure * (det(master_map) / factorial_dim));
+    static const double factorial[4] = {1.0, 1.0, 2.0, 6.0};
+	return (master->measure * det(master_map) / factorial[dim]);
 }
 
 

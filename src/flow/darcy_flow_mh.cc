@@ -317,8 +317,9 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
         ls->rhs_set_value(edge_row, edg->f_rhs);
     }
 
-    //coupling_P0_mortar_assembly();
-    mh_abstract_assembly_intersection();
+    coupling_P0_mortar_assembly();
+    //mh_abstract_assembly_intersection();
+
 
 }
 
@@ -350,14 +351,19 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
             double delta_i, delta_j;
             arma::mat left_map, right_map,product;
             int left_idx[3], right_idx[3], l_size, r_size, i,j;
+            vector<int> l_dirich(3,0);
+            vector<int> r_dirich(3,0);
 
-
+            // rows
             for (int i = -1; i < it_master_list->size(); ++i) {
                 if (i == -1) { // master element
                     delta_i = delta_0;
                     left_map = master_map;
                     left_idx[0] = row_4_edge[mesh->edge.index(master_iter->side[0]->edge)];
                     left_idx[1] = row_4_edge[mesh->edge.index(master_iter->side[1]->edge)];
+                    // Dirichlet bounndary conditions
+                     if (master_iter->side[0]->cond != NULL && master_iter->side[0]->cond->type == DIRICHLET) l_dirich[0]=1; else l_dirich[0]=0;
+                     if (master_iter->side[1]->cond != NULL && master_iter->side[1]->cond->type == DIRICHLET) l_dirich[1]=1; else l_dirich[1]=0;
                     l_size = 2;
                 } else {
                     Intersection &isect=mesh->intersections[(*it_master_list)[i]];
@@ -368,12 +374,16 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
                     left_idx[2] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[2]->edge)];
                     l_size = 3;
                 }
+                //columns
                 for (j = -1; j < it_master_list->size(); ++j) {
                     if (i == -1) { // master element
                         delta_j = delta_0;
                         right_map = arma::trans(master_map);
                         right_idx[0] = row_4_edge[mesh->edge.index(master_iter->side[0]->edge)];
                         right_idx[1] = row_4_edge[mesh->edge.index(master_iter->side[1]->edge)];
+                        // Dirichlet bounndary conditions
+                         if (master_iter->side[0]->cond != NULL && master_iter->side[0]->cond->type == DIRICHLET) r_dirich[0]=1; else r_dirich[0]=0;
+                         if (master_iter->side[1]->cond != NULL && master_iter->side[1]->cond->type == DIRICHLET) r_dirich[1]=1; else r_dirich[1]=0;
                         r_size = 2;
                     } else {
                         Intersection &isect=mesh->intersections[(*it_master_list)[j]];
@@ -385,6 +395,17 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
                         r_size = 3;
                     }
                     product = 100.0 * left_map * delta_i * delta_j * right_map / delta_0;
+
+                    // Dirichlet modification
+                    for(int i=0;i<l_size;i++) if (l_dirich[i]) {
+                        for(int j=0;j<r_size;j++) product(i,j)=0.0;
+                    }
+                    for(int j=0;j<r_size;j++) if (r_dirich[j])
+                        for(int i=0;i<l_size;i++) {
+                            schur0->rhs_set_value(left_idx[i], -master_iter->side[j]->cond->scalar * product(i,j));
+                            product(i,j)=0.0;
+                        }
+
                     schur0->mat_set_values(l_size, left_idx, r_size, right_idx, product.memptr());
                 }
             }
@@ -480,12 +501,13 @@ void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
         arma::mat A(5, 5);
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
-                A(i, j) = -200.0 * intersec->intersection_true_size() *
+                A(i, j) = -100.0 * intersec->intersection_true_size() *
                         ( difference_in_Y[i] * difference_in_Y[j]
-                          + difference_in_Y[i] * difference_in_X[j]
+                          + difference_in_Y[i] * difference_in_X[j]/2
+                          + difference_in_X[i] * difference_in_Y[j]/2
                           + difference_in_X[i] * difference_in_X[j]
                         ) * (1.0 / 3.0);
-                        //* 6.0; // don't know why need this coef. but this is necessary for convergency
+
             }
         }
 
@@ -499,24 +521,30 @@ void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
         idx[2] = row_4_edge[mesh->edge.index(intersec->slave_iter()->side[2]->edge)];
         idx[3] = row_4_edge[mesh->edge.index(intersec->master_iter()->side[0]->edge)];
         idx[4] = row_4_edge[mesh->edge.index(intersec->master_iter()->side[1]->edge)];
+
+        // Dirichlet bounndary conditions
         side1=intersec->master_iter()->side[0];
         if (side1->cond != NULL && side1->cond->type == DIRICHLET) dirich[3]=1;
         side2=intersec->master_iter()->side[1];
         if (side2->cond !=NULL && side2->cond->type == DIRICHLET) dirich[4]=1;
         if (dirich[3]) {
+            //DBGMSG("Boundary %d %f\n",idx[3],side1->cond->scalar);
             for(int i=0;i<5;i++)  if (! dirich[i]) {
-                ls->rhs_set_value(idx[i], side1->cond->scalar * A(i,3));
+                ls->rhs_set_value(idx[i], -side1->cond->scalar * A(i,3));
                 A(i,3)=0; A(3,i)=0;
             }
             A(3,3)=0.0;
         }
         if (dirich[4]) {
+            //DBGMSG("Boundary %d %f\n",idx[4],side2->cond->scalar);
             for(int i=0;i<5;i++)  if (! dirich[i]) {
-                ls->rhs_set_value(idx[i], side2->cond->scalar * A(i,4));
+                ls->rhs_set_value(idx[i], -side2->cond->scalar * A(i,4));
                 A(i,4)=0; A(4,i)=0;
             }
             A(4,4)=0.0;
         }
+        //for(int i=0;i<5;i++) DBGMSG("idx %d: %d\n",i, idx[i]);
+        //A.print("A:");
         ls->mat_set_values(5, idx, 5, idx, A.memptr());
 
     }
@@ -614,7 +642,11 @@ void DarcyFlowMH_Steady::make_schur0() {
     //PetscViewer myViewer;
     //PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matis.m",&myViewer);
     //PetscViewerSetFormat(myViewer,PETSC_VIEWER_ASCII_MATLAB);
-    //MatView( schur0->get_matrix( ), myViewer );
+
+    //MatView( schur0->get_matrix(),PETSC_VIEWER_STDOUT_WORLD  );
+    //VecView(schur0->get_rhs(),   PETSC_VIEWER_STDOUT_WORLD);
+    //VecView(schur0->get_solution(),   PETSC_VIEWER_STDOUT_WORLD);
+
     //PetscViewerDestroy(myViewer);
 
 

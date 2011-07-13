@@ -1,7 +1,7 @@
-#ifndef VECTOR_NODE_H_
-#define VECTOR_NODE_H_
+#ifndef VECTOR_NODE_HPP_
+#define VECTOR_NODE_HPP_
 
-#include "Generic_node.h"
+#include "Generic_node.hpp"
 
 namespace flow {
 
@@ -17,6 +17,7 @@ public:
 
     virtual Generic_node & get_item( const size_t id );
     virtual Generic_node & get_item( const size_t id, Generic_node & default_tree );
+    virtual Generic_node & get_item_check( const size_t id, int & err_code );
     virtual Generic_node & get_key( const string & key ) {
         //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati prazdnou instanci
         return *empty_node_generic_;
@@ -24,6 +25,11 @@ public:
     virtual Generic_node & get_key( const string & key, Generic_node & default_tree ) {
         //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati default
         return default_tree;
+    }
+    virtual Generic_node & get_key_check( const string & key, int & err_code ) {
+        //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati prazdnou instanci, s chybou
+        err_code = 1;
+        return *empty_node_generic_;
     }
 
     virtual Vector_node & as_vector( void ) { return (*this); }
@@ -37,4 +43,4 @@ public:
 
 }
 
-#endif /* VECTOR_NODE_H_ */
+#endif /* VECTOR_NODE_HPP_ */

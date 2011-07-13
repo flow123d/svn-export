@@ -1,9 +1,9 @@
-#ifndef DATA_TREE_H_
-#define DATA_TREE_H_
+#ifndef DATA_TREE_HPP_
+#define DATA_TREE_HPP_
 
-#include "Generic_node.h"
-#include "Object_node.h"
-#include "Vector_node.h"
-#include "Value_node.h"
+#include "Generic_node.hpp"
+#include "Object_node.hpp"
+#include "Vector_node.hpp"
+#include "Value_node.hpp"
 
-#endif /* DATA_TREE_H_ */
+#endif /* DATA_TREE_HPP_ */

@@ -1,7 +1,7 @@
-#ifndef VALUE_NODE_H_
-#define VALUE_NODE_H_
+#ifndef VALUE_NODE_HPP_
+#define VALUE_NODE_HPP_
 
-#include "Generic_node.h"
+#include "Generic_node.hpp"
 
 namespace flow {
 
@@ -18,7 +18,11 @@ public:
         value_type_   = type_null;
         value_number_ = 0.0;
         value_bool_   = false;
+        value_string_ = "";
     }
+
+    //TODO: Value node constructory s hodnotou
+
 
     virtual Generic_node & get_item( const int id ) {
         //pristup jako do vektoru, ale jsme ve skalaru => vzdy vrati prazdnou instanci
@@ -26,6 +30,12 @@ public:
     }
     virtual Generic_node & get_key( const string & key ) {
         //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        return *empty_node_generic_;
+    }
+    virtual Generic_node & get_key_check( const string & key, int & err_code ) {
+        //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        //s chybou
+        err_code = 0;
         return *empty_node_generic_;
     }
     virtual Generic_node & get_item( const size_t id, Generic_node & default_tree ) {
@@ -36,28 +46,40 @@ public:
         //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
         return *empty_node_generic_;
     }
+    virtual Generic_node & get_item_check( const size_t id, int & err_code ) {
+        //pristup jako do vektoru, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        //s chybou
+        err_code = 0;
+        return *empty_node_generic_;
+    }
 
     virtual Value_node & as_value( void ) { return (*this); }
     friend ostream & operator<<( ostream & stream, const Value_node & node );
 
     //TODO: pokazde kontrolovat, zda je to skutecne Value_node, a ne jen pretypovany jiny?
+    virtual bool get_bool( void );
+    virtual bool get_bool( const bool & default_value );
+    virtual bool get_bool_check( int & err_code );
 
-    //pro ziskani uz finalnich skalarnich hodnot, s defaultni hodnotou a bez
-    //bez def: pri nemoznosti konverze vrati false
-    //  s def: uspeje vzdy, protoze pri nemoznosti konverze pouzije default
-    //  s err: uspeje vzdy, pri neuspechu vyplni err, jako hodnotu vrati 0, null, nebo ekvivalent
-    bool get_bool( bool & ret_value );
-    bool get_bool( bool & ret_value, bool & default_value );
-    bool get_string( string & ret_value );
-    bool get_string( string & ret_value, string & default_value );
-    bool get_double( double & ret_value );
-    bool get_float( double & ret_value, double & default_value );
-    bool get_int( int & ret_value );
-    bool get_int( int & ret_value, const int & default_value );
+    virtual int get_int( void );
+    virtual int get_int( const int & default_value );
+    virtual int get_int_check( int & err_code );
+
+    virtual float get_float( void );
+    virtual float get_float( const float & default_value );
+    virtual float get_float_check( int & err_code );
+
+    virtual double get_double( void );
+    virtual double get_double( const double & default_value );
+    virtual double get_double_check( int & err_code );
+
+    virtual string get_string( void );
+    virtual string get_string( const string & default_value );
+    virtual string get_string_check( int & err_code );
 
     virtual ~Value_node();
 };
 
 }
 
-#endif /* VALUE_NODE_H_ */
+#endif /* VALUE_NODE_HPP_ */

@@ -1,4 +1,4 @@
-#include "Vector_node.h"
+#include "Vector_node.hpp"
 
 namespace flow {
 
@@ -21,10 +21,21 @@ Generic_node & Vector_node::get_item(const size_t id, Generic_node & default_tre
     }
 }
 
+Generic_node & Vector_node::get_item_check(const size_t id, int & err_code) {
+    if (id >= value_array_.size()) {
+        //mimo rozsah pole, vratime empty, s chybou
+        err_code = 1;
+        return *empty_node_generic_;
+    } else {
+        err_code = 0;
+        return *value_array_[id];
+    }
+}
+
 ostream & operator <<(ostream & stream, const Vector_node & node) {
     stream << "Node begin: Vector: ";
     stream << "type " << node.get_type() << ", ";
-    stream << node.get_type_str() << ". ";
+    stream << "\"" << node.get_type_str() << "\". ";
     stream << "Node end.";
     return stream;
 }

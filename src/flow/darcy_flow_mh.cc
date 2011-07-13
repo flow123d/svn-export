@@ -323,9 +323,14 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
 
 }
 
+/**
+ * Works well but there is large error next to the boundary.
+ */
  void DarcyFlowMH_Steady::coupling_P0_mortar_assembly() {
     for (vector<vector<unsigned int> >::iterator it_master_list = mesh->master_elements.begin(); it_master_list
-            != mesh->master_elements.end(); ++it_master_list)
+            != mesh->master_elements.end(); ++it_master_list) {
+
+
         if (it_master_list->size() != 0) // skip empty masters
         {
             // on the intersection element we consider
@@ -342,23 +347,26 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
             arma::mat master_map(1,2);
             master_map.fill(1.0 / 2);
             arma::mat slave_map(1,3);
-            slave_map.fill(1.0 / 3);
+            slave_map.fill(-1.0 / 3);
 
             int i_dof = 0;
             vector<int> global_idx;
-            double delta_0 = mesh->intersections[it_master_list->front()].intersection_true_size();
+
             ElementFullIter master_iter(mesh->intersections[it_master_list->front()].master_iter());
+            double delta_0 = master_iter->measure;
             double delta_i, delta_j;
             arma::mat left_map, right_map,product;
             int left_idx[3], right_idx[3], l_size, r_size, i,j;
             vector<int> l_dirich(3,0);
             vector<int> r_dirich(3,0);
 
+
             // rows
-            for (int i = -1; i < it_master_list->size(); ++i) {
-                if (i == -1) { // master element
+            for(int i = 0; i <= it_master_list->size(); ++i) {
+
+                if (i == it_master_list->size()) { // master element
                     delta_i = delta_0;
-                    left_map = master_map;
+                    left_map = arma::trans(master_map);
                     left_idx[0] = row_4_edge[mesh->edge.index(master_iter->side[0]->edge)];
                     left_idx[1] = row_4_edge[mesh->edge.index(master_iter->side[1]->edge)];
                     // Dirichlet bounndary conditions
@@ -366,19 +374,21 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
                      if (master_iter->side[1]->cond != NULL && master_iter->side[1]->cond->type == DIRICHLET) l_dirich[1]=1; else l_dirich[1]=0;
                     l_size = 2;
                 } else {
+                    l_dirich[0]=0;
+                    l_dirich[1]=0;
                     Intersection &isect=mesh->intersections[(*it_master_list)[i]];
                     delta_i = isect.intersection_true_size();
-                    left_map = slave_map;
+                    left_map = arma::trans(slave_map);
                     left_idx[0] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[0]->edge)];
                     left_idx[1] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[1]->edge)];
                     left_idx[2] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[2]->edge)];
                     l_size = 3;
                 }
                 //columns
-                for (j = -1; j < it_master_list->size(); ++j) {
-                    if (i == -1) { // master element
+                for (j = 0; j <=it_master_list->size(); ++j) {
+                    if (j == it_master_list->size()) { // master element
                         delta_j = delta_0;
-                        right_map = arma::trans(master_map);
+                        right_map = master_map;
                         right_idx[0] = row_4_edge[mesh->edge.index(master_iter->side[0]->edge)];
                         right_idx[1] = row_4_edge[mesh->edge.index(master_iter->side[1]->edge)];
                         // Dirichlet bounndary conditions
@@ -386,30 +396,36 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
                          if (master_iter->side[1]->cond != NULL && master_iter->side[1]->cond->type == DIRICHLET) r_dirich[1]=1; else r_dirich[1]=0;
                         r_size = 2;
                     } else {
+                        r_dirich[0]=0;
+                        r_dirich[1]=0;
+
                         Intersection &isect=mesh->intersections[(*it_master_list)[j]];
                         delta_j = isect.intersection_true_size();
-                        right_map = arma::trans(slave_map);
+                        right_map = slave_map;
                         right_idx[0] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[0]->edge)];
                         right_idx[1] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[1]->edge)];
                         right_idx[2] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[2]->edge)];
                         r_size = 3;
                     }
-                    product = 100.0 * left_map * delta_i * delta_j * right_map / delta_0;
+                    product = -100.0 * left_map * delta_i * delta_j * right_map / delta_0;
 
                     // Dirichlet modification
-                    for(int i=0;i<l_size;i++) if (l_dirich[i]) {
-                        for(int j=0;j<r_size;j++) product(i,j)=0.0;
+                    for(int ii=0;ii<l_size;ii++) if (l_dirich[ii]) {
+                        for(int jj=0;jj<r_size;jj++) product(ii,jj)=0.0;
                     }
-                    for(int j=0;j<r_size;j++) if (r_dirich[j])
-                        for(int i=0;i<l_size;i++) {
-                            schur0->rhs_set_value(left_idx[i], -master_iter->side[j]->cond->scalar * product(i,j));
-                            product(i,j)=0.0;
+                    for(int jj=0;jj<r_size;jj++) if (r_dirich[jj])
+                        for(int ii=0;ii<l_size;ii++) {
+                            schur0->rhs_set_value(left_idx[ii], -master_iter->side[jj]->cond->scalar * product(ii,jj));
+                            product(ii,jj)=0.0;
                         }
 
+                    DBGMSG("(i,j): %d %d %f %f %f\n",i,j, delta_i, delta_j, delta_0);
+                    product.print("A:");
                     schur0->mat_set_values(l_size, left_idx, r_size, right_idx, product.memptr());
                 }
             }
         }
+    }
  }
 /**
  * P1 coonection of different dimensions

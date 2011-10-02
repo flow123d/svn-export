@@ -400,7 +400,6 @@ LinSys_MATIS::LinSys_MATIS(unsigned int vec_lsize,  int sz, int *global_row_4_su
     type = MAT_IS;
 };
 
-
 void LinSys_MATIS::start_allocation()
 {
      PetscErrorCode err;

@@ -184,7 +184,8 @@ protected:
 
 	// MATIS related arrays
         std::vector<int> global_row_4_sub_row;           //< global dof index for subdomain index
-	ISLocalToGlobalMapping map_side_local_to_global; //< PETSC mapping form local SIDE indices of subdomain to global indices
+	ISLocalToGlobalMapping map_side_local_to_global;    //< PETSC mapping form local SIDE indices of subdomain to global indices
+	ISLocalToGlobalMapping map_element_local_to_global; //< PETSC mapping form local ELEMENT indices of subdomain to global indices
 
 	// gather of the solution
 	Vec sol_vec;			                 //< vector over solution array

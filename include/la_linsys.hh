@@ -93,16 +93,6 @@ public:
     /// Get matrix.
     inline const Mat &get_matrix()
     { return matrix; }
-
-    /// Get subdomain matrix.
-    inline const Mat &get_matrix_sub()
-    { 
-       if      (type == MAT_IS)
-       {
-	  return local_matrix;
-       }
-    }
-
     /// Get RHS.
     inline const Vec &get_rhs()
     { return rhs; }
@@ -203,8 +193,8 @@ protected:
     double  *v_solution;        ///< Vector of solution.
 
     // for MATIS
-    int *subdomain_indices;     ///< Remember indices which created mapping
-    Mat local_matrix;           ///< local matrix of subdomain (used in LinSys_MATIS)
+    int *subdomain_indices;                     ///< Remember indices which created mapping
+    Mat local_matrix;                           ///< local matrix of subdomain (used in LinSys_MATIS)
 
     friend void SchurComplement::form_schur();
     friend class SchurComplement;
@@ -238,11 +228,26 @@ public:
     virtual void preallocate_values(int nrow,int *rows,int ncol,int *cols);
     virtual void view_local_matrix();
 
+    /// Get subdomain matrix.
+    inline const Mat &get_matrix_sub()
+    { 
+       if      (type == MAT_IS)
+       {
+	  return local_matrix;
+       }
+    }
+
     inline VecScatter get_scatter()
     { return sub_scatter; }
     /// Get local subdomain size.
     inline int get_subdomain_size()
     { return subdomain_size; }
+    inline void get_subdomain_indices( int *sub_indices )
+    {   
+        for ( int i = 0; i < subdomain_size; ++i ) {
+            sub_indices[i] = subdomain_indices[i];
+        }
+    }
   
     virtual ~LinSys_MATIS();
 

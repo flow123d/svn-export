@@ -53,6 +53,7 @@
 #include <iostream>
 #include <iterator>
 
+
 //=============================================================================
 // CREATE AND FILL GLOBAL MH MATRIX OF THE WATER MODEL
 // - do it in parallel:
@@ -141,7 +142,6 @@ void DarcyFlowMH_Steady::update_solution() {
     DBGMSG("compute one step.\n");
     if (time_->is_end()) return;
 
-
     time_->next_time();
     modify_system(); // hack for unsteady model
 
@@ -151,19 +151,29 @@ void DarcyFlowMH_Steady::update_solution() {
         break;
     case 1: /* first schur complement of A block */
         make_schur1();
-        //solve_system(solver, schur1->get_system());
-        //schur1->resolve();
-        schur1->solve(solver);
+        solve_system(solver, schur1->get_system());
+        schur1->resolve();
         break;
     case 2: /* second schur complement of the max. dimension elements in B block */
         make_schur1();
         make_schur2();
-
         //mat_count_off_proc_values(schur2->get_system()->get_matrix(),schur2->get_system()->get_solution());
         solve_system(solver, schur2->get_system());
-
         schur2->resolve();
+
+        PetscViewer solViewer;
+        PetscViewerASCIIOpen( PETSC_COMM_WORLD, "sol2.m", &solViewer );
+        PetscViewerSetFormat(solViewer,PETSC_VIEWER_ASCII_MATLAB);
+        VecView( schur1->get_system()->get_solution(), solViewer );
+        PetscViewerDestroy(solViewer);
+
         schur1->resolve();
+
+        PetscViewerASCIIOpen( PETSC_COMM_WORLD, "sol3.m", &solViewer );
+        PetscViewerSetFormat(solViewer,PETSC_VIEWER_ASCII_MATLAB);
+        VecView( schur0->get_solution(), solViewer );
+        PetscViewerDestroy(solViewer);
+
         break;
     }
     postprocess();
@@ -208,18 +218,7 @@ void DarcyFlowMH_Steady::update_solution() {
             INSERT_VALUES, SCATTER_FORWARD);
     VecScatterEnd(par_to_all, schur0->get_solution(), sol_vec,
             INSERT_VALUES, SCATTER_FORWARD);
-
     
-    //int rank;
-    //MPI_Comm_rank( PETSC_COMM_WORLD, &rank );
-    //if ( rank == 0 ) {
-    //    PetscViewer solViewer;
-    //    PetscViewerASCIIOpen( PETSC_COMM_SELF, "sol.m", &solViewer );
-    //    PetscViewerSetFormat(solViewer,PETSC_VIEWER_ASCII_MATLAB);
-    //    VecView( sol_vec, solViewer );
-    //    PetscViewerDestroy(solViewer);
-    //}
-
     //solved=true;
 
 }
@@ -414,6 +413,7 @@ void DarcyFlowMH_Steady::make_schur0() {
     int i_loc, el_row;
     Element *ele;
     Vec aux;
+    //void print_matrix_with_export( Mat mat, std::string fileName );
 
     START_TIMER("PREALLOCATION");
 
@@ -442,14 +442,7 @@ void DarcyFlowMH_Steady::make_schur0() {
     assembly_steady_mh_matrix(); // fill matrix
     schur0->finalize();
 
-    //schur0->view_local_matrix();
-    //PetscViewer myViewer;
-    //PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matis.m",&myViewer);
-    //PetscViewerSetFormat(myViewer,PETSC_VIEWER_ASCII_MATLAB);
-    //MatView( schur0->get_matrix( ), myViewer );
-    //PetscViewerDestroy(myViewer);
-
-
+    //print_matrix_with_export( schur0->get_matrix(), "matrix_after_assembly.m" );
 
     // add time term
 
@@ -485,6 +478,7 @@ void DarcyFlowMH_Steady::make_schur1() {
     int i_loc, nsides, i, side_rows[4], ierr, el_row;
     double det;
     PetscErrorCode err;
+    //void print_matrix_with_export( Mat mat, std::string fileName );
 
     F_ENTRY;
     START_TIMER("Schur 1");
@@ -493,80 +487,134 @@ void DarcyFlowMH_Steady::make_schur1() {
     // check type of LinSys
     if      (schur0->type == LinSys::MAT_IS)
     {
-       // create mapping for PETSc
-       err = ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD, side_ds->lsize(), side_id_4_loc, &map_side_local_to_global);
-       ASSERT(err == 0,"Error in ISLocalToGlobalMappingCreate.");
+        //std::cout << " Sides begin with " << side_ds->begin() << std::endl;
+        // create local set of side indices
+        std::vector<PetscInt> local_side_indices;
+        for ( PetscInt ind = side_ds->begin(); ind < side_ds->begin() + side_ds->lsize(); ++ind ) {
+            local_side_indices.push_back( ind );
+        }
 
-       err = MatCreateIS(PETSC_COMM_WORLD,  side_ds->lsize(), side_ds->lsize(), side_ds->size(), side_ds->size(), map_side_local_to_global, &IA1);
-       ASSERT(err == 0,"Error in MatCreateIS.");
+        // create mapping for PETSc
+        err = ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD, local_side_indices.size(), &(local_side_indices[0]), &map_side_local_to_global);
+        ASSERT(err == 0,"Error in ISLocalToGlobalMappingCreate.");
 
-       MatSetOption(IA1, MAT_SYMMETRIC, PETSC_TRUE);
+        err = MatCreateIS(PETSC_COMM_WORLD,  side_ds->lsize(), side_ds->lsize(), side_ds->size(), side_ds->size(), map_side_local_to_global, &IA1);
+        ASSERT(err == 0,"Error in MatCreateIS.");
 
-       for (i_loc = 0; i_loc < el_ds->lsize(); i_loc++) {
-           ele = mesh_->element(el_4_loc[i_loc]);
-           el_row = row_4_el[el_4_loc[i_loc]];
-           nsides = ele->n_sides;
-           if (ele->loc_inv == NULL) {
-               ele->loc_inv = (double *) malloc(nsides * nsides * sizeof(double));
-               det = MatrixInverse(ele->loc, ele->loc_inv, nsides);
-               if (fabs(det) < NUM_ZERO) {
-                   xprintf(Warn,"Singular local matrix of the element %d\n",ele.id());
-                   PrintSmallMatrix(ele->loc, nsides);
-                   xprintf(Err,"det: %30.18e \n",det);
-               }
-           }
-	   /* print the matrix */
-	   //int j;
-	   //xprintf(Msg,"Local element inverse: \n ");
-           //for (i = 0; i < nsides; i++) {
-           //   for (j = 0; j < nsides; j++) 
-	   //      xprintf(Msg, " %14.6f ", ele->loc_inv[i*nsides + j]);
-	   //   xprintf(Msg, " \n ");
-	   //}
-
-           for (i = 0; i < nsides; i++)
-               side_rows[i] = ele->side[i]->id; // side ID
-                           // - rows_ds->begin(); // local side number
-                           // + side_ds->begin(); // side row in IA1 matrix
-           MatSetValues(IA1, nsides, side_rows, nsides, side_rows, ele->loc_inv,
-                        INSERT_VALUES);
-       }
+        local_side_indices.clear();
     }
     else if (schur0->type == LinSys::MAT_MPIAIJ)
     {
-       // create Inverse of the A block
-       ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, side_ds->lsize(),
-               side_ds->lsize(), PETSC_DETERMINE, PETSC_DETERMINE, 4,
-               PETSC_NULL, 0, PETSC_NULL, &(IA1));
-
-       MatSetOption(IA1, MAT_SYMMETRIC, PETSC_TRUE);
-
-       for (i_loc = 0; i_loc < el_ds->lsize(); i_loc++) {
-           ele = mesh_->element(el_4_loc[i_loc]);
-           el_row = row_4_el[el_4_loc[i_loc]];
-           nsides = ele->n_sides;
-           if (ele->loc_inv == NULL) {
-               ele->loc_inv = (double *) malloc(nsides * nsides * sizeof(double));
-               det = MatrixInverse(ele->loc, ele->loc_inv, nsides);
-               if (fabs(det) < NUM_ZERO) {
-                   xprintf(Warn,"Singular local matrix of the element %d\n",ele.id());
-                   PrintSmallMatrix(ele->loc, nsides);
-                   xprintf(Err,"det: %30.18e \n",det);
-               }
-           }
-           for (i = 0; i < nsides; i++)
-               side_rows[i] = side_row_4_id[ele->side[i]->id] // side row in MH matrix
-                       - rows_ds->begin() // local side number
-                       + side_ds->begin(); // side row in IA1 matrix
-           MatSetValues(IA1, nsides, side_rows, nsides, side_rows, ele->loc_inv,
-                   INSERT_VALUES);
-       }
+        // create Inverse of the A block
+        ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, side_ds->lsize(),
+                side_ds->lsize(), PETSC_DETERMINE, PETSC_DETERMINE, 4,
+                PETSC_NULL, 0, PETSC_NULL, &(IA1));
     }
 
-    MatAssemblyBegin(IA1, MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(IA1, MAT_FINAL_ASSEMBLY);
+    //MatSetOption(IA1, MAT_SYMMETRIC, PETSC_TRUE);
 
-    schur1 = new SchurComplement(schur0, IA1);
+    //for (i_loc = 0; i_loc < el_ds->lsize(); i_loc++) {
+    //    ele = mesh_->element(el_4_loc[i_loc]);
+    //    el_row = row_4_el[el_4_loc[i_loc]];
+    //    nsides = ele->n_sides;
+    //    if (ele->loc_inv == NULL) {
+    //        ele->loc_inv = (double *) malloc(nsides * nsides * sizeof(double));
+    //        det = MatrixInverse(ele->loc, ele->loc_inv, nsides);
+    //        if (fabs(det) < NUM_ZERO) {
+    //            xprintf(Warn,"Singular local matrix of the element %d\n",ele.id());
+    //            PrintSmallMatrix(ele->loc, nsides);
+    //            xprintf(Err,"det: %30.18e \n",det);
+    //        }
+    //    }
+    //    /* print the matrix */
+    //    //int j;
+    //    //xprintf(Msg,"Local element inverse: \n ");
+    //    //for (i = 0; i < nsides; i++) {
+    //    //   for (j = 0; j < nsides; j++) 
+    //    //      xprintf(Msg, " %14.6f ", ele->loc_inv[i*nsides + j]);
+    //    //   xprintf(Msg, " \n ");
+    //    //}
+
+    //    for (i = 0; i < nsides; i++)
+    //        side_rows[i] = ele->side[i]->id; // side ID
+    //                    // - rows_ds->begin(); // local side number
+    //                    // + side_ds->begin(); // side row in IA1 matrix
+    //    //for (i = 0; i < nsides; i++) 
+    //    //    std::cout << side_rows[i] << " ";
+    //    //std::cout << std::endl;
+
+    //    MatSetValues(IA1, nsides, side_rows, nsides, side_rows, ele->loc_inv,
+    //                 INSERT_VALUES);
+    //    //for (i = 0; i < nsides; i++)
+    //    //    side_rows[i] = side_row_4_id[ele->side[i]->id] // side row in MH matrix
+    //    //            - rows_ds->begin() // local side number
+    //    //            + side_ds->begin(); // side row in IA1 matrix
+    //    //MatSetValues(IA1, nsides, side_rows, nsides, side_rows, ele->loc_inv,
+    //    //        INSERT_VALUES);
+    //}
+    //else if (schur0->type == LinSys::MAT_MPIAIJ)
+    //{
+    //   // create Inverse of the A block
+    //   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, side_ds->lsize(),
+    //           side_ds->lsize(), PETSC_DETERMINE, PETSC_DETERMINE, 4,
+    //           PETSC_NULL, 0, PETSC_NULL, &(IA1));
+
+    MatSetOption(IA1, MAT_SYMMETRIC, PETSC_TRUE);
+
+    std::set<int> side_indices_set;
+
+    for (i_loc = 0; i_loc < el_ds->lsize(); i_loc++) {
+        ele = mesh_->element(el_4_loc[i_loc]);
+        el_row = row_4_el[el_4_loc[i_loc]];
+        nsides = ele->n_sides;
+        if (ele->loc_inv == NULL) {
+            ele->loc_inv = (double *) malloc(nsides * nsides * sizeof(double));
+            det = MatrixInverse(ele->loc, ele->loc_inv, nsides);
+            if (fabs(det) < NUM_ZERO) {
+                xprintf(Warn,"Singular local matrix of the element %d\n",ele.id());
+                PrintSmallMatrix(ele->loc, nsides);
+                xprintf(Err,"det: %30.18e \n",det);
+            }
+        }
+        for (i = 0; i < nsides; i++) 
+            side_rows[i] = side_row_4_id[ele->side[i]->id] // side row in MH matrix
+                    - rows_ds->begin() // local side number
+                    + side_ds->begin(); // side row in IA1 matrix
+        
+        MatSetValues(IA1, nsides, side_rows, nsides, side_rows, ele->loc_inv,
+                INSERT_VALUES);
+
+        // copy side indices into a set
+        for (i = 0; i < nsides; i++) 
+            side_indices_set.insert( side_row_4_id[ele->side[i]->id] );
+    }
+
+    MatAssemblyBegin( IA1, MAT_FINAL_ASSEMBLY );
+    MatAssemblyEnd(   IA1, MAT_FINAL_ASSEMBLY );
+
+    //print_matrix_with_export( IA1, "matrix_inverse_1.m" );
+
+    //debug print
+    //std::cout << "A block indices." << std::endl;
+    //std::copy( side_indices_set.begin(), side_indices_set.end(), std::ostream_iterator<int>( std::cout, " " ) );
+
+    std::vector<PetscInt> side_indices_local( side_indices_set.begin(), side_indices_set.end() );
+
+    IS isA1block;
+    ISCreateGeneralWithArray( PETSC_COMM_WORLD, side_indices_local.size(), &(side_indices_local[0]), &isA1block );
+
+    PetscReal normIA1;
+    if      (schur0->type == LinSys::MAT_IS) {
+        Mat IA1_sub;
+        ierr = MatISGetLocalMat( IA1, &IA1_sub );
+        ierr = MatNorm( IA1_sub, NORM_1, &normIA1);
+    } 
+    else {
+        ierr = MatNorm( IA1, NORM_1, &normIA1);
+    }
+    DBGMSG( "Norm of A inverse local matrix: %f \n", normIA1 );
+
+    schur1 = new SchurComplement(schur0, IA1, isA1block);
 
     schur1->form_schur();
 
@@ -580,31 +628,127 @@ void DarcyFlowMH_Steady::make_schur2() {
     Vec Diag, DiagB;
     PetscScalar *vDiag;
     int ierr, loc_el_size;
+    Mat sub_matrix;
     F_ENTRY;
     START_TIMER("Schur 2");
     // create Inverse of the B block ( of the first complement )
 
+    // determine index set corresponding to eliminated inverse
+    std::vector<PetscInt> el_indices_local;
+    for (int i_loc = 0; i_loc < el_ds->lsize(); i_loc++) {
+        int el_row = row_4_el[el_4_loc[i_loc]];
 
-    // get subdiagonal of local size == loc num of elements
-    loc_el_size = el_ds->lsize();
-    VecCreateMPI(PETSC_COMM_WORLD, schur1->get_system()->vec_lsize(),
-            PETSC_DETERMINE, &Diag);
-    MatGetDiagonal(schur1->get_system()->get_matrix(), Diag); // get whole diagonal
-    VecGetArray(Diag,&vDiag);
-    // define sub vector of B-block diagonal
-    VecCreateMPIWithArray(PETSC_COMM_WORLD, loc_el_size, PETSC_DETERMINE,
-            vDiag, &DiagB);
-    // compute inverse
-    VecReciprocal(DiagB);
-    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, loc_el_size, loc_el_size,
-            PETSC_DETERMINE, PETSC_DETERMINE, 1, PETSC_NULL, 0, PETSC_NULL,
-            &(IA2)); // construct matrix
-    MatDiagonalSet(IA2, DiagB, INSERT_VALUES);
-    VecDestroy(DiagB); // clean up
-    VecRestoreArray(Diag,&vDiag);
-    VecDestroy(Diag);
+        //get shifted number
+        int shift = side_ds -> end( ); 
+        int new_index = el_row - shift;
 
-    schur2 = new SchurComplement(schur1->get_system(), IA2);
+        // copy element indices into a set
+        el_indices_local.push_back( new_index );
+    }
+
+    //debug print
+    //std::cout << " local element indices recomputed. " << std::endl;
+    //std::copy( el_indices_local.begin(), el_indices_local.end(), std::ostream_iterator<int>( std::cout, " " ) );
+
+    IS isA2block;
+    ISCreateGeneralWithArray( PETSC_COMM_WORLD, el_indices_local.size(), &(el_indices_local[0]), &isA2block );
+
+    if      (schur1->get_system()->type == LinSys::MAT_IS) {
+
+        // extract local matrix
+        ierr = MatISGetLocalMat( schur1->get_system()->get_matrix(), &sub_matrix );
+
+        // create serial vector of diagonal
+        Vec subDiag;
+        PetscInt m, n;
+        ierr = MatGetSize( sub_matrix, &m, &n );
+        ASSERT(m == n,"Assumed square matrix.");
+        int sub_size = m;
+        ierr = VecCreateSeq( PETSC_COMM_SELF, sub_size, &subDiag );
+
+        // get local diagonal
+        ierr = MatGetDiagonal( sub_matrix, subDiag ); 
+
+        PetscScalar *subDiagArray;
+        VecGetArray( subDiag, &subDiagArray );
+        // define sub vector of B-block diagonal
+        
+        // get subarray of diagonal corresponding to elements
+        
+        // convert vector to global to local map
+        std::map<int,int> sub4globalElMap;
+        for ( int i = 0; i < el_indices_local.size(); ++i ) {
+            sub4globalElMap.insert( std::make_pair( el_indices_local[i], i ) );
+        }
+
+        std::vector<int> subdomain_indices( (dynamic_cast<LinSys_MATIS*>(schur1->get_system()))->get_subdomain_size() );
+        (dynamic_cast<LinSys_MATIS*>(schur1->get_system()))->get_subdomain_indices( &(subdomain_indices[0]) );
+
+        std::vector<PetscReal> diagSubArray(sub4globalElMap.size());
+        for ( int i = 0; i < subdomain_indices.size(); ++i ) {
+            int ind = subdomain_indices[i];
+            std::map<int,int>::iterator itP = sub4globalElMap.find( ind );
+            if ( itP != sub4globalElMap.end() ) {
+                diagSubArray[(*itP).second] = subDiagArray[i];
+            }
+        }
+
+        // create serial vector of diagonal of block A
+        Vec locDiagA;
+        loc_el_size = el_ds->lsize();
+        ierr = VecCreateSeqWithArray( PETSC_COMM_SELF, loc_el_size, &(diagSubArray[0]), &locDiagA );
+
+        // compute inverse
+        VecReciprocal( locDiagA );
+
+        // create mapping for PETSc
+        ierr = ISLocalToGlobalMappingCreate(PETSC_COMM_WORLD, el_ds->lsize(), el_4_loc, &map_element_local_to_global);
+        ASSERT(ierr == 0,"Error in ISLocalToGlobalMappingCreate.");
+
+        // create MATIS matrix for local inverse
+        ierr = MatCreateIS(PETSC_COMM_WORLD,  el_ds->lsize(), el_ds->lsize(), el_ds->size(), el_ds->size(), map_element_local_to_global, &(IA2));
+        ASSERT(ierr == 0,"Error in MatCreateIS.");
+
+        // extract local matrix
+        Mat locIA2;
+        ierr = MatISGetLocalMat( IA2, &locIA2 );
+
+        // set diaginal 
+        ierr = MatDiagonalSet( locIA2, locDiagA, INSERT_VALUES);
+
+        ierr = MatAssemblyBegin( IA2, MAT_FINAL_ASSEMBLY ); CHKERRV( ierr ); 
+        ierr = MatAssemblyEnd(   IA2, MAT_FINAL_ASSEMBLY ); CHKERRV( ierr ); 
+
+        // destroy serial vector of diagonal
+        VecDestroy( locDiagA );
+        VecRestoreArray( subDiag, &subDiagArray );
+        VecDestroy(subDiag);
+    }
+    else if (schur1->get_system()->type == LinSys::MAT_MPIAIJ)
+    {
+        // get subdiagonal of local size == loc num of elements
+        loc_el_size = el_ds->lsize();
+        VecCreateMPI(PETSC_COMM_WORLD, schur1->get_system()->vec_lsize(),
+                PETSC_DETERMINE, &Diag);
+        MatGetDiagonal(schur1->get_system()->get_matrix(), Diag); // get whole diagonal
+        VecGetArray(Diag,&vDiag);
+        // define sub vector of B-block diagonal
+        VecCreateMPIWithArray(PETSC_COMM_WORLD, loc_el_size, PETSC_DETERMINE,
+                vDiag, &DiagB);
+        // compute inverse
+        VecReciprocal(DiagB);
+
+        ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, loc_el_size, loc_el_size,
+                PETSC_DETERMINE, PETSC_DETERMINE, 1, PETSC_NULL, 0, PETSC_NULL,
+                &(IA2)); // construct matrix
+
+        MatDiagonalSet(IA2, DiagB, INSERT_VALUES);
+        VecDestroy(DiagB); // clean up
+        VecRestoreArray(Diag,&vDiag);
+        VecDestroy(Diag);
+    }
+
+    schur2 = new SchurComplement(schur1->get_system(), IA2, isA2block);
     schur2->form_schur();
     schur2->scale(-1.0);
     schur2->set_spd();
@@ -852,7 +996,7 @@ void DarcyFlowMH_Steady::prepare_parallel() {
     F_ENTRY;
     MPI_Barrier(PETSC_COMM_WORLD);
 
-    if (solver->type == PETSC_MATIS_SOLVER) {
+    //if (solver->type == PETSC_MATIS_SOLVER) {
         xprintf(Msg,"Compute optimal partitioning of elements.\n");
 
         // prepare dual graph
@@ -867,7 +1011,7 @@ void DarcyFlowMH_Steady::prepare_parallel() {
         WARN_ASSERT(element_graph->is_symmetric(),"Attention graph for partitioning is not symmetric!\n");
 
         element_graph->partition(loc_part);
-        //DBGPRINT_INT("loc_part",init_el_ds.lsize(),loc_part);
+        DBGPRINT_INT("loc_part",init_el_ds.lsize(),loc_part);
 
         // prepare parallel distribution of dofs linked to elements
         id_4_old = new int[mesh_->n_elements()];
@@ -914,84 +1058,84 @@ void DarcyFlowMH_Steady::prepare_parallel() {
         delete[] id_4_old;
 
 
-    } else {
-        xprintf(Msg,"Compute optimal partitioning of edges.\n");
+    //} else {
+    //    xprintf(Msg,"Compute optimal partitioning of edges.\n");
 
-        SparseGraph *edge_graph = new SparseGraphMETIS(mesh_->n_edges());                     // graph for partitioning
-        Distribution init_edge_ds = edge_graph->get_distr();  // initial distr.
-        loc_part = new int[init_edge_ds.lsize()];                                     // partitionig in initial distribution
+    //    SparseGraph *edge_graph = new SparseGraphMETIS(mesh_->n_edges());                     // graph for partitioning
+    //    Distribution init_edge_ds = edge_graph->get_distr();  // initial distr.
+    //    loc_part = new int[init_edge_ds.lsize()];                                     // partitionig in initial distribution
 
-        make_edge_conection_graph(mesh_, edge_graph);
-        WARN_ASSERT(edge_graph->is_symmetric(),"Attention graph for partitioning is not symmetric!\n");
+    //    make_edge_conection_graph(mesh_, edge_graph);
+    //    WARN_ASSERT(edge_graph->is_symmetric(),"Attention graph for partitioning is not symmetric!\n");
 
-        edge_graph->partition(loc_part);
+    //    edge_graph->partition(loc_part);
 
-        delete edge_graph;
+    //    delete edge_graph;
 
 
-        // debugging output
+    //    // debugging output
 /*
-        if (init_edge_ds.myp() == 0) {
-            Edge *edg;
-            int i_edg = 0;
-            int stat[3][init_edge_ds.np()];
-            for (int ip = 0; ip < init_edge_ds.np(); ip++) {
-                stat[0][ip] = stat[1][ip] = stat[2][ip] = 0;
-            }
-            for(i_edg=0;i_edg < ;i_edg++) {
-                DBGMSG("edg: %d %d %d\n",
-                       i_edg,edg->side[0]->element->dim-1,loc_part[i_edg]);
-                int dim=edg->side[0]->element->dim - 1;
-                int part=loc_part[i_edg];
-                (stat[dim][part])++;
-                i_edg++;
-            }
-            for (int ip = 0; ip < init_edge_ds.np(); ip++) {
-                DBGMSG("1D: %10d 2d: %10d 3d: %10d\n",
-                        stat[0][ip],stat[1][ip],stat[2][ip]);
-            }
-        }
+    //    if (init_edge_ds.myp() == 0) {
+    //        Edge *edg;
+    //        int i_edg = 0;
+    //        int stat[3][init_edge_ds.np()];
+    //        for (int ip = 0; ip < init_edge_ds.np(); ip++) {
+    //            stat[0][ip] = stat[1][ip] = stat[2][ip] = 0;
+    //        }
+    //        for(i_edg=0;i_edg < ;i_edg++) {
+    //            DBGMSG("edg: %d %d %d\n",
+    //                   i_edg,edg->side[0]->element->dim-1,loc_part[i_edg]);
+    //            int dim=edg->side[0]->element->dim - 1;
+    //            int part=loc_part[i_edg];
+    //            (stat[dim][part])++;
+    //            i_edg++;
+    //        }
+    //        for (int ip = 0; ip < init_edge_ds.np(); ip++) {
+    //            DBGMSG("1D: %10d 2d: %10d 3d: %10d\n",
+    //                    stat[0][ip],stat[1][ip],stat[2][ip]);
+    //        }
+    //    }
 */
-        id_4_old = new int[mesh_->n_edges()];
-        i = 0;
-        FOR_EDGES(mesh_, edg)
-            id_4_old[i++] = edg.index();
-        id_maps(mesh_->n_edges(), id_4_old, init_edge_ds, (int *) loc_part,
-                edge_ds, edge_4_loc, row_4_edge);
+    //    id_4_old = new int[mesh_->n_edges()];
+    //    i = 0;
+    //    FOR_EDGES(mesh_, edg)
+    //        id_4_old[i++] = edg.index();
+    //    id_maps(mesh_->n_edges(), id_4_old, init_edge_ds, (int *) loc_part,
+    //            edge_ds, edge_4_loc, row_4_edge);
 
-        delete[] loc_part;
-        delete[] id_4_old;
+    //    delete[] loc_part;
+    //    delete[] id_4_old;
 
-        //DBGMSG("Compute appropriate element partitioning ...\n");
-        //optimal element part; loc. els. id-> new el. numbering
-        Distribution init_el_ds(Distribution::Block, mesh_->n_elements());
-        // partitioning of elements, element belongs to the proc of his first edge
-        // this is not optimal but simple
-        loc_part = new int[init_el_ds.lsize()];
-        id_4_old = new int[mesh_->n_elements()];
-        {
-            int i_edg;
-            loc_i = 0;
-            FOR_ELEMENTS(mesh_,  el ) {
-                // partition
-                if (init_el_ds.is_local( el.index() )) {
-                    // find (new) proc of the first edge of element
-                    //DBGMSG("%d %d %d %d\n",iel,loc_i,el->side[0]->edge->id,edge_row_4_id[el->side[0]->edge->id]);
-                    i_edg=mesh_->edge.index(el->side[0]->edge); // global index in old numbering
-                    loc_part[loc_i++] = edge_ds->get_proc(row_4_edge[i_edg]);
+    //    //DBGMSG("Compute appropriate element partitioning ...\n");
+    //    //optimal element part; loc. els. id-> new el. numbering
+    //    Distribution init_el_ds(Distribution::Block, mesh_->n_elements());
+    //    // partitioning of elements, element belongs to the proc of his first edge
+    //    // this is not optimal but simple
+    //    loc_part = new int[init_el_ds.lsize()];
+    //    id_4_old = new int[mesh_->n_elements()];
+    //    {
+    //        int i_edg;
+    //        loc_i = 0;
+    //        FOR_ELEMENTS(mesh_,  el ) {
+    //            // partition
+    //            if (init_el_ds.is_local( el.index() )) {
+    //                // find (new) proc of the first edge of element
+    //                //DBGMSG("%d %d %d %d\n",iel,loc_i,el->side[0]->edge->id,edge_row_4_id[el->side[0]->edge->id]);
+    //                i_edg=mesh_->edge.index(el->side[0]->edge); // global index in old numbering
+    //                loc_part[loc_i++] = edge_ds->get_proc(row_4_edge[i_edg]);
 
-                }
-                // id array
-                id_4_old[el.index()] = el.index();
-            }
-        }
-        //    // make trivial part
-        //    for(loc_i=0;loc_i<init_el_ds->lsize;loc_i++) loc_part[loc_i]=init_el_ds->myp;
-        id_maps(mesh_->element.size(), id_4_old, init_el_ds, loc_part, el_ds,
-                el_4_loc, row_4_el);
-        delete[] loc_part;
-        delete[] id_4_old;
-    }
+    //            }
+    //            // id array
+    //            id_4_old[el.index()] = el.index();
+    //        }
+    //    }
+    //    //    // make trivial part
+    //    //    for(loc_i=0;loc_i<init_el_ds->lsize;loc_i++) loc_part[loc_i]=init_el_ds->myp;
+    //    id_maps(mesh_->element.size(), id_4_old, init_el_ds, loc_part, el_ds,
+    //            el_4_loc, row_4_el);
+    //    delete[] loc_part;
+    //    delete[] id_4_old;
+    //}
 
     //DBGMSG("Compute side partitioning ...\n");
     //optimal side part; loc. sides; id-> new side numbering

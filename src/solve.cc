@@ -74,11 +74,11 @@ void solver_init( struct Solver *solver) {
     double solver_accurancy;
 
     F_ENTRY;
-	if ( solver == NULL ) xprintf(PrgErr,"Structure solver not allocated.\n");
+    if ( solver == NULL ) xprintf(PrgErr,"Structure solver not allocated.\n");
 
-	solver->name    = OptGetStr( "Solver", "Solver_name", "petsc" );
-   	solver_set_type(solver);
-   	solver->executable = OptGetStr( "Solver", "Solver_executable",solver->name);
+    solver->name    = OptGetStr( "Solver", "Solver_name", "petsc" );
+    solver_set_type(solver);
+    solver->executable = OptGetStr( "Solver", "Solver_executable",solver->name);
     solver->params  = OptGetStr( "Solver", "Solver_params", "" );
     solver->keep_files    = OptGetBool( "Solver", "Keep_solver_files", "no" );
     solver->manual_run     = OptGetBool( "Solver", "Manual_solver_run", "no" );
@@ -288,6 +288,7 @@ void solver_petsc(Solver *solver)
 	const char *petsc_dflt_opt;
 	char *petsc_str;
 	int nits;
+        void print_matrix_with_export( Mat mat, std::string fileName );
 
 	F_ENTRY;
 
@@ -346,72 +347,33 @@ void solver_petsc(Solver *solver)
  *          PETSC options string, user can overwrite default choice of solver and preconditioner\n
  *          (see doc/petsc_help or flow123 -s ... -help)
  */
- 	 
 	 
 	PetscOptionsInsertString(petsc_str); // overwrites previous options values
 	xfree(petsc_str);
     
         MatSetOption(sys->get_matrix(), MAT_USE_INODES, PETSC_FALSE);
 
-
     //    xprintf(Msg,"View KSP system\n");
-        //Mat matrixForPrint;
-        //PetscErrorCode ierr;
-        //PetscInt m, n;
-        //MatGetSize( sys->get_matrix(), &m, &n );
 
-        //ierr = MatCreate( PETSC_COMM_WORLD, &matrixForPrint ); CHKERRV( ierr ); 
-        //ierr = MatSetType( matrixForPrint, MATMPIAIJ ); CHKERRV( ierr ); 
-        //ierr = MatSetSizes( matrixForPrint, PETSC_DECIDE, PETSC_DECIDE, m, n ); 
+        print_matrix_with_export( sys->get_matrix(), "matrix_to_solve.m" );
 
-        //std::cout << "Size of the matrix is :" << m << ", " << n << std::endl;
-        //Vec auxIn, auxOut;
-        //for ( int i = 0; i < n; i++ ) {
-        //    // create auxiliary vector of unit matrix
-        //    ierr = MatGetVecs( sys->get_matrix(), &auxIn, &auxOut ); CHKERRV( ierr );
-
-        //    VecSetValue( auxIn, i, 1., INSERT_VALUES );
-        //    ierr = VecAssemblyBegin( auxIn ); CHKERRV( ierr ); 
-        //    ierr = VecAssemblyEnd(   auxIn ); CHKERRV( ierr ); 
- 
-        //    ierr = MatMult( sys->get_matrix(), auxIn, auxOut ); CHKERRV( ierr ); 
-
-        //    PetscInt low, high;
-        //    VecGetOwnershipRange( auxOut, &low, &high );
-        //    PetscInt locSize = high - low;
-
-        //    PetscScalar *values;
-        //    VecGetArray( auxOut, &values );
-
-        //    std::vector<PetscInt> rows;
-        //    std::vector<PetscInt> columns;
-        //    for ( int j = low; j < high; j++ ) {
-        //        rows.push_back( j );
-        //    }
-        //    columns.push_back( i );
-
-        //    MatSetValues( matrixForPrint, locSize, &(rows[0]), 1, &(columns[0]), values, INSERT_VALUES );
-
-        //    VecRestoreArray( auxOut, &values );
-        //    VecDestroy( auxIn );
-        //    VecDestroy( auxOut );
-        //}
-        //ierr = MatAssemblyBegin( matrixForPrint, MAT_FINAL_ASSEMBLY ); CHKERRV( ierr ); 
-        //ierr = MatAssemblyEnd(   matrixForPrint, MAT_FINAL_ASSEMBLY ); CHKERRV( ierr ); 
-
+        PetscViewer rhsViewer;
+        PetscViewerASCIIOpen( PETSC_COMM_WORLD, "rhs.m", &rhsViewer );
+        PetscViewerSetFormat(rhsViewer,PETSC_VIEWER_ASCII_MATLAB);
+        VecView( sys->get_rhs(), rhsViewer );
+        PetscViewerDestroy(rhsViewer);
 
         //PetscViewer matViewer;
-        //PetscViewerASCIIOpen( PETSC_COMM_WORLD, "matrix.m", &matViewer );
+        //char dbgFileName[12];
+        //int rank;
+        //MPI_Comm_rank( PETSC_COMM_WORLD, &rank );
+        //sprintf ( dbgFileName, "matrix_%3.3d.m", rank );
+        //PetscViewerASCIIOpen( PETSC_COMM_SELF, dbgFileName, &matViewer );
         //PetscViewerSetFormat(matViewer,PETSC_VIEWER_ASCII_MATLAB);
-        //MatView( matrixForPrint, matViewer );
-        //MatDestroy( matrixForPrint );
+        //Mat aux;
+        //MatISGetLocalMat(sys->get_matrix(), &aux);
+        //MatView( aux, matViewer );
         //PetscViewerDestroy(matViewer);
-
-        //PetscViewer rhsViewer;
-        //PetscViewerASCIIOpen( PETSC_COMM_WORLD, "rhs.m", &rhsViewer );
-        //PetscViewerSetFormat(rhsViewer,PETSC_VIEWER_ASCII_MATLAB);
-        //VecView( sys->get_rhs(), rhsViewer );
-        //PetscViewerDestroy(rhsViewer);
 
 	KSPCreate(PETSC_COMM_WORLD,&System);
 	KSPSetOperators(System, sys->get_matrix(), sys->get_matrix(), DIFFERENT_NONZERO_PATTERN);
@@ -423,6 +385,27 @@ void solver_petsc(Solver *solver)
 	DBGMSG ("convergence reason %d, number of iterations is %d", Reason, nits);
         Profiler::instance()->set_timer_subframes("SOLVING MH SYSTEM", nits);
 	KSPDestroy(System);
+
+        //MPI_Barrier(PETSC_COMM_WORLD);
+        //std::cout << "Stopped intentionally." << std::endl;
+        //abort();
+
+        //debug
+        //PetscScalar *sol_array;
+        //VecGetArray( sys->get_solution(), &sol_array );
+        //int size = sys->vec_lsize();
+        //for ( int j = 0; j < size; j++ ) {
+        //    sol_array[j] = 1.;
+        //}
+        //VecRestoreArray( sys->get_solution(), &sol_array );
+
+        PetscViewer solViewer;
+        PetscViewerASCIIOpen( PETSC_COMM_WORLD, "sol.m", &solViewer );
+        PetscViewerSetFormat(solViewer,PETSC_VIEWER_ASCII_MATLAB);
+        VecView( sys->get_solution(), solViewer );
+        PetscViewerDestroy(solViewer);
+
+
 
 }
 

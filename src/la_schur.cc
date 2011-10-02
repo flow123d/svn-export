@@ -49,6 +49,8 @@
 #include <la_linsys.hh>
 #include <la_schur.hh>
 
+#include <iterator>
+
 /**
  *  Create Schur complement system.
  *  @param[in] Orig  : original system
@@ -130,18 +132,37 @@ SchurComplement :: SchurComplement(LinSys *orig, Mat & inv_a, IS ia)
 
        VecGetOwnershipRange(Orig->get_rhs(),&vec_orig_low,&vec_orig_high);
 
-       if (IsA == NULL) {
-           // create A block index set
-           // assume 'a_inv->local_size' be local part of A block
-           ISCreateStride(PETSC_COMM_SELF,locSizeA,vec_orig_low,1,&IsA);
+       // for MATIS
+       std::vector<int> subdomain_indices(orig_sub_size);  
+       for ( i = 0; i < orig_sub_size; i++ ) {
+           subdomain_indices[i] = Orig->subdomain_indices[i];
+       }
 
-       } 
+       // debug print
+       //std::cout << " subdomain indices " << std::endl;
+       //std::copy( subdomain_indices.begin(), subdomain_indices.end(), std::ostream_iterator<int>( std::cout, " " ) );
+
+       // convert subdomain indices to global to local map
+       std::map<int,int> sub4globalMap;
+       for ( i = 0; i < subdomain_indices.size(); ++i ) {
+           sub4globalMap.insert( std::make_pair( subdomain_indices[i], i ) );
+       }
+
+       ASSERT( IsA != NULL, "Index set of interior block not given." );
+       //if (IsA == NULL) {
+       //    // create A block index set
+       //    // assume 'a_inv->local_size' be local part of A block
+       //    ISCreateStride(PETSC_COMM_SELF,locSizeA,vec_orig_low,1,&IsA);
+       //} 
        // obtain index set local to subdomain
        ISGetIndices(IsA,&IsAIndices);
        IsALocalIndices = new PetscInt[locSizeA];
        int shift = IsAIndices[0];
        for (i = 0; i < locSizeA; i++) {
-	   IsALocalIndices[i] = IsAIndices[i] - shift;
+	   //IsALocalIndices[i] = IsAIndices[i] - shift;
+           std::map<int,int>::iterator iP = sub4globalMap.find( IsAIndices[i] );
+           ASSERT( iP != sub4globalMap.end(), "Global index not found in subdomain subset." );
+	   IsALocalIndices[i] = (*iP).second;
        }
        ISRestoreIndices(IsA,&IsAIndices);
 
@@ -395,6 +416,14 @@ void SchurComplement::form_schur()
        ierr = MatISGetLocalMat(Orig->get_matrix(), &orig_mat_sub);
        ASSERT(ierr == 0,"Error in MatISGetLocalMat.");
 
+       // A
+       Mat A_sub; //IAA_sub;
+       ierr = MatGetSubMatrix(orig_mat_sub, IsA_sub, IsA_sub, locSizeA, mat_reuse, &A_sub); CHKERRV( ierr ); 
+       // debug
+       // check A*A^-1
+       //ierr = MatMatMult(IA_sub, A_sub, mat_reuse, 1.0 ,&(IAA_sub)); CHKERRV( ierr );
+       //MatView( IAA_sub, PETSC_VIEWER_STDOUT_SELF );
+
        // B
        MatGetSubMatrix(orig_mat_sub, IsA_sub, IsB_sub, locSizeB, mat_reuse, &B_sub);
 
@@ -457,7 +486,8 @@ void SchurComplement::form_schur()
        //DBGMSG("C block:\n");
 
        //MatView(Schur->Compl->A,PETSC_VIEWER_STDOUT_WORLD);
-       MatAXPY(Compl->get_matrix(), 1, xA, SUBSET_NONZERO_PATTERN);
+       //MatAXPY(Compl->get_matrix(), 1, xA, SUBSET_NONZERO_PATTERN);
+       MatAXPY(Compl->get_matrix(), 1, xA, DIFFERENT_NONZERO_PATTERN);
        //DBGMSG("C block:\n");
        //MatView(Schur->Compl->A,PETSC_VIEWER_STDOUT_WORLD);
        //
@@ -467,18 +497,6 @@ void SchurComplement::form_schur()
 
     }
 
-    /*
-    PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matAinv.output",&myViewer);
-    PetscViewerSetFormat(myViewer,PETSC_VIEWER_ASCII_MATLAB);
-    MatView( IA, myViewer );
-    PetscViewerDestroy(myViewer);
-
-    PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matSchur.output",&myViewer);
-    PetscViewerSetFormat(myViewer,PETSC_VIEWER_ASCII_MATLAB);
-    MatView( Compl->get_matrix( ), myViewer );
-    PetscViewerDestroy(myViewer);
-*/
-
     form_rhs();
 
     state=formed;
@@ -487,7 +505,7 @@ void SchurComplement::form_schur()
 
 void SchurComplement::form_rhs()
 {
-    PetscScalar *rhs_interior, *rhs_boundary, *rhs_update_array, *subdomain_rhs_array;
+    PetscScalar *rhs_interior, *rhs_boundary, *subdomain_rhs_array;
     PetscErrorCode ierr;
     PetscInt *ind_interior;
     const PetscInt *IsALocalIndices;
@@ -580,56 +598,87 @@ void SchurComplement::resolve()
     PetscErrorCode ierr;
     Vec sol1_vec_loc;
     PetscScalar *sol1_array_loc;
+    const PetscInt *IsALocalIndices;
+    PetscScalar *rhs_interior, *subdomain_rhs_array;
+    int i;
+    int locIndex;
+    Vec rhs1_vec_loc;
 
     if      (Compl->type == LinSys::MAT_IS)
     {
+       Vec subdomain_rhs;
+       VecCreateSeq(PETSC_COMM_SELF, orig_sub_size, &subdomain_rhs);
+
+       LinSys_MATIS *ls_IS_Orig = dynamic_cast<LinSys_MATIS*>(Orig);
+       ierr = VecScatterBegin(ls_IS_Orig->get_scatter(), Orig->get_rhs(), subdomain_rhs, INSERT_VALUES, SCATTER_FORWARD);
+       ierr = VecScatterEnd(  ls_IS_Orig->get_scatter(), Orig->get_rhs(), subdomain_rhs, INSERT_VALUES, SCATTER_FORWARD);
+
+       ISGetIndices( IsA_sub, &IsALocalIndices );
+       VecGetArray( subdomain_rhs, &subdomain_rhs_array );
+
+       rhs_interior = new PetscScalar[locSizeA];
+
+       for (i = 0; i<locSizeA; i++) 
+       {
+	  locIndex = IsALocalIndices[i];
+          rhs_interior[i] = subdomain_rhs_array[locIndex];
+       }
+       VecRestoreArray( subdomain_rhs, &subdomain_rhs_array );
+       ISRestoreIndices( IsA_sub, &IsALocalIndices );
+
+       // block A of right hand side created
+       VecCreateSeqWithArray(PETSC_COMM_SELF,locSizeA,rhs_interior,&rhs1_vec_loc);
+
        /*  scatter the global vector x into the local work vector */
-       LinSys_MATIS *ls_IS = dynamic_cast<LinSys_MATIS*>(Compl);
-       ierr = VecScatterBegin(ls_IS->get_scatter(),Compl->get_solution(),sub_vec_block2, INSERT_VALUES,SCATTER_FORWARD);
-       ierr = VecScatterEnd(ls_IS->get_scatter(),Compl->get_solution(),  sub_vec_block2, INSERT_VALUES,SCATTER_FORWARD);
+       LinSys_MATIS *ls_IS_compl = dynamic_cast<LinSys_MATIS*>(Compl);
+       ierr = VecScatterBegin(ls_IS_compl->get_scatter(), Compl->get_solution(), sub_vec_block2, INSERT_VALUES, SCATTER_FORWARD);
+       ierr = VecScatterEnd(  ls_IS_compl->get_scatter(), Compl->get_solution(), sub_vec_block2, INSERT_VALUES, SCATTER_FORWARD);
 
-       VecGetArray(Sol1,&sol1_array_loc);
-       VecCreateSeqWithArray(PETSC_COMM_SELF,locSizeA,sol1_array_loc,&sol1_vec_loc);
+       VecGetArray( Sol1, &sol1_array_loc);
+       VecCreateSeqWithArray(PETSC_COMM_SELF, locSizeA, sol1_array_loc, &sol1_vec_loc);
+       //ierr = MatGetVecs( IAB_sub, PETSC_NULL, &sol1_vec_loc ); CHKERRV( ierr );
 
-       MatMult(IAB_sub,sub_vec_block2,sol1_vec_loc);
-       VecRestoreArray(Sol1,&sol1_array_loc);
+       MatMult(IAB_sub, sub_vec_block2, sol1_vec_loc);
+       //VecGetArray( sol1_vec_loc, &sol1_array_loc);
 
-       VecDestroy(sol1_vec_loc);
+       VecScale(sol1_vec_loc,-1);
+
+       MatMultAdd( IA_sub, rhs1_vec_loc, sol1_vec_loc, sol1_vec_loc );
+
+       VecDestroy( rhs1_vec_loc );
+       delete [ ] rhs_interior;
+
+       // join local portions of solution 
+       PetscScalar * sol_array_loc;
+       VecGetArray( Orig->get_solution(),&sol_array_loc );
+
+       PetscScalar * sol2_array_loc;
+       VecGetArray( Sol1, &sol1_array_loc );
+       VecGetArray( Compl->get_solution(), &sol2_array_loc );
+
+       for (int i = 0; i<locSizeA; i++) 
+       {
+           sol_array_loc[i] = sol1_array_loc[i];
+       }
+       int locSizeB_vec = orig_lsize - locSizeA;
+       for (int i = 0; i<locSizeB_vec; i++) 
+       {
+           int index = locSizeA + i;
+           sol_array_loc[ index ] = sol2_array_loc[i];
+       }
+
+       VecRestoreArray( Orig->get_solution(),  &sol_array_loc );
+       VecRestoreArray( Sol1, &sol1_array_loc );
+       VecRestoreArray( Compl->get_solution(), &sol2_array_loc );
 
     }
     else if (Orig->type == LinSys::MAT_MPIAIJ)
     {
        MatMult(IAB,Compl->get_solution(),Sol1);
-    }
 
-    VecScale(Sol1,-1);
+       VecScale(Sol1,-1);
 
-    MatMultAdd(IA,RHS1,Sol1,Sol1);
-
-    // join local portions of solution 
-    if      (Orig->type == LinSys::MAT_IS)
-    {
-        PetscScalar * sol_array_loc;
-        VecGetArray( Orig->get_solution(),&sol_array_loc );
-
-        PetscScalar * sol2_array_loc;
-        VecGetArray( Sol1, &sol1_array_loc );
-        VecGetArray( Compl->get_solution(), &sol2_array_loc );
-
-        for (int i = 0; i<locSizeA; i++) 
-        {
-            sol_array_loc[i] = sol1_array_loc[i];
-        }
-        int locSizeB_vec = orig_lsize - locSizeA;
-        for (int i = 0; i<locSizeB_vec; i++) 
-        {
-            int index = locSizeA + i;
-            sol_array_loc[ index ] = sol2_array_loc[i];
-        }
-
-        VecRestoreArray( Orig->get_solution(),  &sol_array_loc );
-        VecRestoreArray( Sol1, &sol1_array_loc );
-        VecRestoreArray( Compl->get_solution(), &sol2_array_loc );
+       MatMultAdd(IA,RHS1,Sol1,Sol1);
     }
 
 }

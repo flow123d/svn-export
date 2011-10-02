@@ -81,7 +81,8 @@ $(OBJS)/xio.o\
 $(OBJS)/sparse_graph.o\
 $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
-$(OBJS)/hc_explicit_sequential.o
+$(OBJS)/hc_explicit_sequential.o \
+$(OBJS)/debug_tools.o
 
 #$(OBJS)/convert.o\
 #$(OBJS)/mesh/ini_constants_mesh.o\
@@ -147,7 +148,7 @@ ${OBJS}/%.o: %.cpp ../makefile.in
 
 # Rule to compile one of the target
 ${BIN}/flow123d: ${FLOW123D_OBJS}
-	${CPP_LINKER} ${CFLAGS} -o $@ $^ ${LIBS}
+	${CPP_LINKER} ${CFLAGS} -o $@ $^ ${LIBS} ${DEBUG_TOOLS}
 
 # The rule to delete all generated files	
 clean: 

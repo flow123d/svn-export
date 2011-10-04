@@ -23,6 +23,7 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup la
  * @brief   Wrappers for linear systems based on MPIAIJ and MATIS format.
  * @author  Jan Brezina
  *
@@ -30,8 +31,8 @@
 
 #include <algorithm>
 #include <petscmat.h>
-#include <system.hh>
-#include <la_linsys.hh>
+#include "system/system.hh"
+#include "la_linsys.hh"
 
 /**
  *  @brief Constructs a parallel system with given local size.
@@ -293,7 +294,6 @@ void LinSys_MPIAIJ::start_allocation()
      VecDuplicate(on_vec,&(off_vec));
      status=ALLOCATE;
 
-     DBGMSG("allocation started\n");
 }
 
 void LinSys_MPIAIJ::preallocate_matrix()
@@ -379,7 +379,7 @@ LinSys_MATIS::LinSys_MATIS(unsigned int vec_lsize,  int sz, int *global_row_4_su
 
     int i;
 
-    xprintf(Msg,"sub size %d \n",subdomain_size);
+    //xprintf(Msg,"sub size %d \n",subdomain_size);
 
     // ulozit global_row_4_sub_row
     subdomain_indices = new int[subdomain_size];
@@ -415,7 +415,7 @@ void LinSys_MATIS::start_allocation()
      ASSERT(err == 0,"Error in MatISGetLocalMat.");
 
      // extract scatter
-     Mat_IS *mis = (Mat_IS*) matrix->data;
+     MatMyIS *mis = (MatMyIS*) matrix->data;
      sub_scatter = mis->ctx;
 
      subdomain_nz= new int[subdomain_size];      // count local nozero for every row of subdomain matrix
@@ -519,11 +519,6 @@ LinSys_MATIS:: ~LinSys_MATIS()
 {
      PetscErrorCode err;
 
-     // destroy local subdomain matrix
-     err = MatDestroy(local_matrix);
-     ASSERT(err == 0,"Error in MatDestroy.");
-     xprintf(Msg,"Error code MatDestroy %d \n",err);
-
      // destroy mapping
      err = ISLocalToGlobalMappingDestroy(map_local_to_global);
      ASSERT(err == 0,"Error in ISLocalToGlobalMappingDestroy.");
@@ -537,3 +532,18 @@ LinSys_MATIS:: ~LinSys_MATIS()
      }
 
 }
+
+#ifdef HAVE_ATLAS_ONLY_LAPACK
+/*
+ * This is a workaround to build Flow with PETSC 3.0 and ATLAS, since one particular and unimportant preconditioner (asa)
+ * needs this Lapack function, which is not implemented in ATLAS.
+ */
+extern "C" {
+
+void dgeqrf_(int m, int n, double **A, double *TAU, double *work, int lwork, int info)
+{
+}
+
+}
+#endif
+

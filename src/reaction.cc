@@ -23,19 +23,17 @@
  * $LastChangedDate$
  *
  * @file
+ * @ingroup transport
  * @brief Reactions
  * Read input data and perform reaction computation
  *
  */
 
-#include "constantdb.h"
-#include "mesh/ini_constants_mesh.hh"
+#include "transport/transport.h"
 
-#include "transport.h"
-
-#include "system.hh"
+#include "system/system.hh"
 #include "xio.h"
-#include "mesh.h"
+#include "mesh/mesh.h"
 #include "reaction.h"
 #include "materials.hh"
 #include "elements.h"
@@ -184,5 +182,4 @@ void read_reaction_list( struct Transport *transport )
 				parse_reaction_line(transport, i ,line );
 			}
             xfclose( in );
-            xprintf( Msg, "O.K.\n")/*orig verb 2*/;
 }

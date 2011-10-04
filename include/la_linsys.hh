@@ -45,11 +45,11 @@
 #define LA_LINSYS_HH_
 
 #include "petscmat.h"
-#include "la_schur.hh"
-#include "par_distribution.hh"
+#include "private/matimpl.h"
 
-// used to access private PETSc data
-#include "../src/mat/impls/is/matis.h"
+#include "la_schur.hh"
+#include "system/par_distribution.hh"
+
 
 // **************************************************************
 /*!  @brief  Linear System structure accepted by Solver module
@@ -101,12 +101,6 @@ public:
        {
 	  return local_matrix;
        }
-       else if (type == MAT_MPIAIJ)
-       {
-	  local_matrix == NULL;
-          return local_matrix; 
-       }
-       return NULL;
     }
 
     /// Get RHS.
@@ -196,21 +190,21 @@ public:
     virtual ~LinSys();
 
 protected:
-    Distribution vec_ds;            ///< Distribution of continuous blocks of system rows among the processors.
+    Distribution vec_ds;        ///< Distribution of continuous blocks of system rows among the processors.
     bool     symmetric;         ///< Flag for the symmetric system.
     bool     positive_definite; ///< Flag for positive definite system.
     bool     own_solution;      ///< Indicates if the solution array has been allocated by this class.
-    SetValuesMode status;        ///< Set value status of the linear system.
+    SetValuesMode status;       ///< Set value status of the linear system.
 
-    Mat     matrix;                  ///< Petsc matrix of the problem.
-    Vec     rhs;                  ///< PETSc vector constructed with vx array.
-    Vec     solution;                  ///< PETSc vector constructed with vb array.
-    double  *v_rhs;                ///< RHS vector.
-    double  *v_solution;                ///< Vector of solution.
+    Mat     matrix;             ///< Petsc matrix of the problem.
+    Vec     rhs;                ///< PETSc vector constructed with vx array.
+    Vec     solution;           ///< PETSc vector constructed with vb array.
+    double  *v_rhs;             ///< RHS vector.
+    double  *v_solution;        ///< Vector of solution.
 
     // for MATIS
-    int *subdomain_indices;                     ///< Remember indices which created mapping
-    Mat local_matrix;                           ///< local matrix of subdomain (used in LinSys_MATIS)
+    int *subdomain_indices;     ///< Remember indices which created mapping
+    Mat local_matrix;           ///< local matrix of subdomain (used in LinSys_MATIS)
 
     friend void SchurComplement::form_schur();
     friend class SchurComplement;
@@ -265,6 +259,16 @@ private:
     int subdomain_size;                         ///< size of subdomain in MATIS matrix
     int *subdomain_nz;                          ///< For counting non-zero enteries of local subdomain.
 
+    // mimic PETSc struct for IS matrices - included from matis.h
+    // used to access private PETSc data
+    typedef struct {
+       Mat                    A;             /* the local Neumann matrix */
+       VecScatter             ctx;           /* update ghost points for matrix vector product */
+       Vec                    x,y;           /* work space for ghost values for matrix vector product */
+       ISLocalToGlobalMapping mapping;
+       int                    rstart,rend;   /* local row ownership */
+       PetscTruth             pure_neumann;
+    } MatMyIS ;
 };
 
 

@@ -48,6 +48,16 @@ Generic_node & Object_node::get_key_check(const string & key, int & err_code) {
     }
 }
 
+void Object_node::insert_key(const string & key, Generic_node & node) {
+    map<string, Generic_node &>::iterator it;
+
+    it = object_.find(key);
+    if (it != object_.end()) {
+        object_.erase(it);
+    }
+    object_.insert( pair<string,Generic_node&>(key,node) );
+}
+
 Object_node::~Object_node() {
     //deep destructor?
     // TODO Auto-generated destructor stub

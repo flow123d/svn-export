@@ -30,6 +30,8 @@ public:
         return *empty_node_generic_;
     }
 
+    void insert_key( const string & key, Generic_node & node );
+
     virtual Generic_node & get_key( const string & key );
     virtual Generic_node & get_key( const string & key, Generic_node & default_tree );
     virtual Generic_node & get_key_check( const string & key, int & err_code );

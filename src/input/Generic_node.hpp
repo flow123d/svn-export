@@ -37,10 +37,17 @@ Moznosti ziskani skalarnich hodnot:
 
   get_*_check( & err_code ) - kdyz neni, vrati chybu a pokracuje
 
-Moznosti vkladani hodnot:
-  err_code insert_key( "klic", & node ) - vlozi; pokud existuje, prepise
-  err_code insert_item( index, & node ) - vlozi; pokud existuje, prepise
+Vytvareni novych nodu:
+  Generic_node()
+  Object_node()
+  Vector_node()
+  Value_node()(int)(double)(char*)(string)(bool)
 
+Moznosti vkladani hodnot:
+  pro Object_node: void insert_key( "klic", & node ) - vlozi; pokud existuje, prepise
+  pro Vector_node: void insert_item( index, & node ) - vlozi; pokud existuje, prepise
+  pro Value_node:  (int)(double)(char*)(string)(bool) set_value( ... ) - nastavi hodnotu a rovnou ji vrati
+                   void  set_null()
 Finalni pouziti:
   root.get_key("output").get_key("step").get_int();
   root.get_key("output").get_key("step").get_int(0);
@@ -69,21 +76,18 @@ string & Value_type_to_str( const Value_type vt );
  */
 class Generic_node {
 protected:
-    Value_type           value_type_;
+    Value_type            value_type_;
     //class data
-    static Generic_node * empty_node_generic_;  //prazdna instance
+    static Generic_node * empty_node_generic_; //prazdna instance
     static Object_node  * empty_node_object_;  //prazdna instance
     static Vector_node  * empty_node_vector_;  //prazdna instance
-    static Value_node   * empty_node_value_;  //prazdna instance
+    static Value_node   * empty_node_value_;   //prazdna instance
     static string         value_type_to_string[10]; //pro preklad enum Value_type na string.
                                                     //Lazy inicializace = pri prvnim cteni.
     static bool value_type_to_string_filled;        //Uz je inicializovano?
 
 public:
-    Generic_node() {
-        value_type_ = type_generic;
-    }
-
+    Generic_node():value_type_(type_generic) {}
     //Generic_node( Generic_node const & n ); //copy constructor - deep?
 
     Value_type get_type( void ) const { return value_type_; } //ziska typ nodu. To by mel umet kazdy

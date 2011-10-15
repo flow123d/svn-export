@@ -32,6 +32,8 @@ public:
         return *empty_node_generic_;
     }
 
+    void insert_item( const size_t id, Generic_node & node );
+
     virtual Vector_node & as_vector( void ) { return (*this); }
     friend ostream & operator<<( ostream & stream, const Vector_node & node );
 

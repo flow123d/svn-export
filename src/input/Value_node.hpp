@@ -13,16 +13,18 @@ class Value_node : public Generic_node {
     string              value_string_;
     double              value_number_;
     bool                value_bool_;
+
 public:
-    Value_node() {
-        value_type_   = type_null;
-        value_number_ = 0.0;
-        value_bool_   = false;
-        value_string_ = "";
-    }
-
-    //TODO: Value node constructory s hodnotou
-
+    //null value
+    Value_node()             { value_type_ = type_null; }
+    //bool value
+    Value_node( bool b )     { value_type_ = type_bool;   value_bool_ = b;}
+    //number value
+    Value_node( int i )      { value_type_ = type_number; value_number_ = i; }
+    Value_node( double lf )  { value_type_ = type_number; value_number_ = lf; }
+    //string value
+    Value_node(char * str)   { value_type_ = type_string; value_string_ = str; }
+    Value_node(string & str) { value_type_ = type_string; value_string_ = str; }
 
     virtual Generic_node & get_item( const int id ) {
         //pristup jako do vektoru, ale jsme ve skalaru => vzdy vrati prazdnou instanci
@@ -55,6 +57,13 @@ public:
 
     virtual Value_node & as_value( void ) { return (*this); }
     friend ostream & operator<<( ostream & stream, const Value_node & node );
+
+    int      set_value( int i )        { value_type_ = type_number; return value_number_ = i;}
+    double   set_value( double lf )    { value_type_ = type_number; return value_number_ = lf; }
+    bool     set_value( bool b )       { value_type_ = type_bool;   return value_bool_   = b; }
+    char *   set_value( char * str )   { value_type_ = type_string; value_string_ = str; return str; }
+    string & set_value( string & str ) { value_type_ = type_string; value_string_ = str; return str; }
+    void     set_null()                { value_type_ = type_null; }
 
     //TODO: pokazde kontrolovat, zda je to skutecne Value_node, a ne jen pretypovany jiny?
     virtual bool get_bool( void );

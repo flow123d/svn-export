@@ -40,6 +40,21 @@ ostream & operator <<(ostream & stream, const Vector_node & node) {
     return stream;
 }
 
+void Vector_node::insert_item( const size_t id, Generic_node & node) {
+    if (id < value_array_.size()) {
+        value_array_.at(id) = &node;
+    } else {
+        //have room?
+        if ( value_array_.size() == value_array_.max_size())
+        {
+            //TODO: neco lepsiho!!!
+            cout<<"FUCK"<<endl;
+        }
+
+        value_array_.push_back( &node );
+    }
+}
+
 Vector_node::~Vector_node() {
     //deep destructor?
     // TODO Auto-generated destructor stub

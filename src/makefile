@@ -104,8 +104,7 @@ FLOW123D_DEPS = $(addprefix $(DEPS)/, $(notdir $(FLOW123D_OBJS:.o=.d)))
 all: $(TARGETS)
 
 ${BUILD_DIRS}:
-	echo "make dir:" $@
-	mkdir -pf $@ 
+	mkdir -p $@ 
 	
 deps: $(BUILD_DIRS) $(FLOW123D_DEPS)
 
@@ -137,8 +136,8 @@ ${OBJS}/%.o: %.cpp ../makefile.in
 	${CPP} -c -o $@ ${CFLAGS} ${CDEFS} ${LOCAL_INCLUDE} ${INCLUDE} $<	
 
 # Rule to compile one of the target
-${BIN}/flow123d: ${FLOW123D_OBJS}
-	${CPP_LINKER} ${CFLAGS} -o $@ $^ ${LIBS}
+${BIN}/flow123d: $(BUILD_DIRS) ${FLOW123D_OBJS}
+	${CPP_LINKER} ${CFLAGS} -o $@ ${FLOW123D_OBJS} ${LIBS}
 
 # The rule to delete all generated files	
 clean: 

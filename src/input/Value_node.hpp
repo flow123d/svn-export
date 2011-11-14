@@ -31,11 +31,11 @@ public:
         return *empty_node_generic_;
     }
     virtual Generic_node & get_key( const string & key ) {
-        //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        //pristup jako do recordu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
         return *empty_node_generic_;
     }
     virtual Generic_node & get_key_check( const string & key, int & err_code ) {
-        //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        //pristup jako do recordu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
         //s chybou
         err_code = 0;
         return *empty_node_generic_;
@@ -45,7 +45,7 @@ public:
         return *empty_node_generic_;
     }
     virtual Generic_node & get_key( const string & key, Generic_node & default_tree ) {
-        //pristup jako do objektu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
+        //pristup jako do recordu, ale jsme ve skalaru => vzdy vrati prazdnou instanci
         return *empty_node_generic_;
     }
     virtual Generic_node & get_item_check( const size_t id, int & err_code ) {

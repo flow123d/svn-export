@@ -19,23 +19,24 @@ public:
     virtual Generic_node & get_item( const size_t id, Generic_node & default_tree );
     virtual Generic_node & get_item_check( const size_t id, int & err_code );
     virtual Generic_node & get_key( const string & key ) {
-        //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati prazdnou instanci
+        //pristup jako do recordu, ale jsme ve vektoru => vzdy vrati prazdnou instanci
         return *empty_node_generic_;
     }
     virtual Generic_node & get_key( const string & key, Generic_node & default_tree ) {
-        //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati default
+        //pristup jako do recordu, ale jsme ve vektoru => vzdy vrati default
         return default_tree;
     }
     virtual Generic_node & get_key_check( const string & key, int & err_code ) {
-        //pristup jako do objektu, ale jsme ve vektoru => vzdy vrati prazdnou instanci, s chybou
+        //pristup jako do recordu, ale jsme ve vektoru => vzdy vrati prazdnou instanci, s chybou
         err_code = 1;
         return *empty_node_generic_;
     }
 
     void insert_item( const size_t id, Generic_node & node );
+    size_t get_size( void ) { return value_array_.size(); }
 
     virtual Vector_node & as_vector( void ) { return (*this); }
-    friend ostream & operator<<( ostream & stream, const Vector_node & node );
+    friend ostream & operator<<( ostream & stream, Vector_node & node );
 
     //Generic_node & operator[]( const int & id );
     // get_vector pres template, aby se snazil dodat vse v konkretnim typu ??

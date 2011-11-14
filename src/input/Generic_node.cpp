@@ -1,13 +1,13 @@
 #include <string>
 #include "Generic_node.hpp"
-#include "Object_node.hpp"
+#include "Record_node.hpp"
 #include "Vector_node.hpp"
 #include "Value_node.hpp"
 
 namespace flow {
 
 //inicializace class dat
-Object_node   * Generic_node::empty_node_object_  = new Object_node();  //prazdna instance
+Record_node   * Generic_node::empty_node_record_  = new Record_node();  //prazdna instance
 Vector_node   * Generic_node::empty_node_vector_  = new Vector_node();  //prazdna instance
 Value_node    * Generic_node::empty_node_value_   = new Value_node();   //prazdna instance
 Generic_node  * Generic_node::empty_node_generic_ = new Generic_node(); //prazdna instance
@@ -20,7 +20,7 @@ const string & Generic_node::get_type_str( void ) const
         value_type_to_string[type_generic] = "type_generic";
         value_type_to_string[type_string] = "type_string";
         value_type_to_string[type_number] = "type_number";
-        value_type_to_string[type_object] = "type_object";
+        value_type_to_string[type_record] = "type_record";
         value_type_to_string[type_vector] = "type_vector";
         value_type_to_string[type_bool] = "type_bool";
         value_type_to_string[type_null] = "type_null";
@@ -54,13 +54,13 @@ Generic_node & Generic_node::get_key(const string & key, Generic_node & default_
     return default_tree;
 }
 
-Object_node & Generic_node::as_object(void)
+Record_node & Generic_node::as_record(void)
 {
-   if ( value_type_ == type_object ) {
-       return * dynamic_cast < Object_node * > (this) ;
+   if ( value_type_ == type_record ) {
+       return * dynamic_cast < Record_node * > (this) ;
    } else {
-       //zkousime pristoupit jako k objektu, ale neni objekt - vrat empty
-       return *empty_node_object_;
+       //zkousime pristoupit jako k recordu, ale neni record - vrat empty
+       return *empty_node_record_;
    }
 }
 
@@ -85,12 +85,24 @@ Value_node & Generic_node::as_value(void)
     }
 }
 
-ostream & operator<<(ostream & stream, const Generic_node & node)
+ostream & operator<<(ostream & stream, Generic_node & node)
 {
-    stream << "Node begin: Generic: ";
-    stream << "type " << node.get_type() << ", ";
-    stream << "\"" << node.get_type_str() << "\". ";
-    stream << "Node end.";
+    switch (node.get_type()) {
+    case type_string:
+    case type_number:
+    case type_bool:
+    case type_null:
+        cout << node.as_value();
+        break;
+    case type_record:
+        cout << node.as_record();
+        break;
+    case type_vector:
+        cout << node.as_vector();
+        break;
+    default:
+        break;
+    }
     return stream;
 }
 

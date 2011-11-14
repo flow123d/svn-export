@@ -32,11 +32,16 @@ Generic_node & Vector_node::get_item_check(const size_t id, int & err_code) {
     }
 }
 
-ostream & operator <<(ostream & stream, const Vector_node & node) {
-    stream << "Node begin: Vector: ";
-    stream << "type " << node.get_type() << ", ";
-    stream << "\"" << node.get_type_str() << "\". ";
-    stream << "Node end.";
+ostream & operator <<(ostream & stream, Vector_node & node) {
+    size_t i;
+    stream << "[";
+    for ( i = 0; i < node.get_size(); ++i )
+    {
+        cout << node.get_item( i );
+        if ( (i+1) < node.get_size() )
+            cout << ",";
+    }
+    stream << "]";
     return stream;
 }
 

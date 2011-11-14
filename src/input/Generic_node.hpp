@@ -10,15 +10,15 @@ using namespace std;
 
 namespace flow {
 
-class Object_node;
+class Record_node;
 class Vector_node;
 class Value_node;
 
 /*
 Kam to smeruje:
 
-  Object         = cca MAP,        "klic"= objekt O , vektor V nebo skalar S
-  Vector         = cca VECTOR,     "klic"= vector[ (O nebo V nebo S), (O V S), (O V S), ... ]
+  Record         = cca MAP,        "klic"= record R , vektor V nebo skalar S
+  Vector         = cca VECTOR,     "klic"= vector[ (R nebo V nebo S), (R V S), (R V S), ... ]
   Value (skalar) = cca basic type  = string, number, bool, null
 
 Pro vsechny tridy, ziskani podstromu:
@@ -39,12 +39,12 @@ Moznosti ziskani skalarnich hodnot:
 
 Vytvareni novych nodu:
   Generic_node()
-  Object_node()
+  Record_node()
   Vector_node()
   Value_node()(int)(double)(char*)(string)(bool)
 
 Moznosti vkladani hodnot:
-  pro Object_node: void insert_key( "klic", & node ) - vlozi; pokud existuje, prepise
+  pro Record_node: void insert_key( "klic", & node ) - vlozi; pokud existuje, prepise
   pro Vector_node: void insert_item( index, & node ) - vlozi; pokud existuje, prepise
   pro Value_node:  (int)(double)(char*)(string)(bool) set_value( ... ) - nastavi hodnotu a rovnou ji vrati
                    void  set_null()
@@ -58,8 +58,8 @@ Finalni pouziti:
   }
 
 Pri chybe:
-  vytvorit ve stromu lehky objekt, ktery si uchova informace o chybe a vratit referenci na nej
-  (ted to vraci referenci na jediny tridni prazdny objekt)
+  vytvorit ve stromu lehky record, ktery si uchova informace o chybe a vratit referenci na nej
+  (ted to vraci referenci na jediny tridni prazdny record)
 
 */
 
@@ -67,7 +67,7 @@ Pri chybe:
 /*!
  * Types of nodes in graph
  */
-enum Value_type { type_generic, type_string, type_number, type_object, type_vector, type_bool, type_null };
+enum Value_type { type_generic, type_record, type_vector, type_string, type_number, type_bool, type_null };
 
 string & Value_type_to_str( const Value_type vt );
 
@@ -79,7 +79,7 @@ protected:
     Value_type            value_type_;
     //class data
     static Generic_node * empty_node_generic_; //prazdna instance
-    static Object_node  * empty_node_object_;  //prazdna instance
+    static Record_node  * empty_node_record_;  //prazdna instance
     static Vector_node  * empty_node_vector_;  //prazdna instance
     static Value_node   * empty_node_value_;   //prazdna instance
     static string         value_type_to_string[10]; //pro preklad enum Value_type na string.
@@ -103,7 +103,7 @@ public:
     /* Implementace as_* tady nefunguje, je potreba znat presnou deklaraci tridy.
      * Forward deklarace nestaci (nevi, jake ma k dispozici metody apod.)
      */
-    virtual Object_node & as_object( void );
+    virtual Record_node & as_record( void );
     virtual Vector_node & as_vector( void );
     virtual Value_node & as_value( void );
 
@@ -133,7 +133,7 @@ public:
 
 
     // hierarchicky projde cely podstrom do hloubky a vypise ho
-    friend ostream & operator<<( ostream & stream, const Generic_node & node ); //TODO dodelat
+    friend ostream & operator<<( ostream & stream, Generic_node & node );
 
     virtual ~Generic_node();
 private:

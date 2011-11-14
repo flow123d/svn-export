@@ -4,10 +4,23 @@ namespace flow {
 
 ostream & operator <<(ostream & stream, const Value_node & node)
 {
-    stream << "Node begin: Value: ";
-    stream << "type " << node.get_type() << ", ";
-    stream << "\"" << node.get_type_str() << "\". ";
-    stream << "Node end.";
+    switch ( node.value_type_ ) {
+    case type_string:
+        stream << "\"" << node.value_string_ << "\"";
+        break;
+    case type_bool:
+        stream << (node.value_bool_?"true":"false");
+        break;
+    case type_number:
+        stream << node.value_number_;
+        break;
+    case type_null:
+        stream << "null";
+        break;
+    default:
+        break;
+    }
+
     return stream;
 }
 

@@ -31,6 +31,7 @@ public:
         return *empty_node_generic_;
     }
 
+    //insert new pair of "key":any_node into record
     void insert_key( const string & key, Generic_node & node );
 
     virtual Generic_node & get_key( const string & key );
@@ -41,7 +42,7 @@ public:
 
     friend ostream & operator<<( ostream & stream, Record_node & node );
 
-    virtual ~Record_node();
+    virtual ~Record_node();     //TODO deep destructor?
 };
 
 }

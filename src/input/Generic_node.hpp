@@ -88,7 +88,7 @@ protected:
 
 public:
     Generic_node():value_type_(type_generic) {}
-    //Generic_node( Generic_node const & n ); //copy constructor - deep?
+    //Generic_node( Generic_node const & n ); //copy constructor - staci implicitni...
 
     Value_type get_type( void ) const { return value_type_; } //ziska typ nodu. To by mel umet kazdy
     const string & get_type_str( void ) const;                //ziska typ nodu jako string popis
@@ -136,8 +136,6 @@ public:
     friend ostream & operator<<( ostream & stream, Generic_node & node );
 
     virtual ~Generic_node();
-private:
-    Generic_node & operator=( Generic_node const & n ) { return (*this); }
 };
 
 

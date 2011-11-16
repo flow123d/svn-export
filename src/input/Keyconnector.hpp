@@ -8,6 +8,12 @@ using namespace std;
 
 namespace flow {
 
+/*!
+ * @brief Key connector - used for declaration, key description and default value.
+ *          It is inserted between JSON key and value in record type.
+ *          Until user calls DECLARE_* function, it is not possible to read stored value.
+ *
+ */
 class Key_connector {
     bool declared_ ;
     Generic_node * default_node_;
@@ -28,6 +34,8 @@ public:
         description_ = desc;
         default_node_ = &default_node;
     }
+    //TODO: Deep copy constructor. Bude vubec potreba? Je tu pointer, takze bacha...
+    //zatim delam shallow kopii...
 
     bool is_declared() {
         return declared_;
@@ -37,8 +45,8 @@ public:
         return description_;
     }
 
-    Generic_node * get_default() {
-        return default_node_;
+    Generic_node & get_default() {
+        return * default_node_;
     }
 
     void set_declared(bool declared) {

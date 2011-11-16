@@ -61,8 +61,8 @@ public:
     int      set_value( int i )        { value_type_ = type_number; return value_number_ = i;}
     double   set_value( double lf )    { value_type_ = type_number; return value_number_ = lf; }
     bool     set_value( bool b )       { value_type_ = type_bool;   return value_bool_   = b; }
-    char *   set_value( char * str )   { value_type_ = type_string; value_string_ = str; return str; }
-    string & set_value( string & str ) { value_type_ = type_string; value_string_ = str; return str; }
+    const char *   set_value( char * str )   { value_type_ = type_string; value_string_ = str; return value_string_.c_str(); }
+    string & set_value( string & str ) { value_type_ = type_string; value_string_ = str; return value_string_; }
     void     set_null()                { value_type_ = type_null; }
 
     //TODO: pokazde kontrolovat, zda je to skutecne Value_node, a ne jen pretypovany jiny?

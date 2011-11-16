@@ -6,11 +6,10 @@
 #include <cfloat>
 
 #include "json_spirit/json_spirit.h"
-#include "data_tree.hpp"
+#include "input.hpp" //jediny potrebny header, vse ostatni se includuje vevnitr
 
 using namespace std;
 using namespace flow;
-//using namespace json_spirit;
 
 int main()
 {
@@ -69,7 +68,7 @@ int main()
         tree = new Data_tree(in_s);
         in_s.close();
 
-        cout << "Tree error: " << tree->err << endl;
+        cout << "Tree error: " << tree->err_status << endl;
 
         cout << "JSON dump: ";
         tree->tree_dump_json();

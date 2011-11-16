@@ -14,6 +14,7 @@ class Vector_node : public Generic_node {
     vector< Generic_node * >  value_array_;
 public:
     Vector_node () { value_type_ = type_vector; }
+    //TODO: deep copy constructor?
 
     virtual Generic_node & get_item( const size_t id );
     virtual Generic_node & get_item( const size_t id, Generic_node & default_tree );
@@ -38,8 +39,8 @@ public:
     virtual Vector_node & as_vector( void ) { return (*this); }
     friend ostream & operator<<( ostream & stream, Vector_node & node );
 
-    //Generic_node & operator[]( const int & id );
-    // get_vector pres template, aby se snazil dodat vse v konkretnim typu ??
+    //TODO: Generic_node & operator[]( const int & id );
+    //get_vector pres template, aby se snazil dodat vse v konkretnim typu ??
     //bool get_vector( vector<Generic_node> & ret_vector );
     virtual ~Vector_node();
 };

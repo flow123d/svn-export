@@ -4,7 +4,7 @@ namespace flow {
 
 Generic_node & Vector_node::get_item(const size_t id) {
     if (id >= value_array_.size()) {
-        //mimo rozsah pole, vratime prazndou
+        //mimo rozsah pole, vratime prazdnou
         return *empty_node_generic_;
     } else {
         return *value_array_[id];
@@ -34,11 +34,15 @@ Generic_node & Vector_node::get_item_check(const size_t id, int & err_code) {
 
 ostream & operator <<(ostream & stream, Vector_node & node) {
     size_t i;
+    size_t size;
+
+    size = node.value_array_.size();
+
     stream << "[";
-    for ( i = 0; i < node.get_size(); ++i )
+    for ( i = 0; i < size; ++i )
     {
         cout << node.get_item( i );
-        if ( (i+1) < node.get_size() )
+        if ( (i+1) < size )
             cout << ",";
     }
     stream << "]";
@@ -52,8 +56,8 @@ void Vector_node::insert_item( const size_t id, Generic_node & node) {
         //have room?
         if ( value_array_.size() == value_array_.max_size())
         {
-            //TODO: neco lepsiho!!!
-            cout<<"FUCK"<<endl;
+            //TODO: nejakou lepsi hlasku...
+            cout<<"Array FUCK"<<endl;
         }
 
         value_array_.push_back( &node );
@@ -61,8 +65,7 @@ void Vector_node::insert_item( const size_t id, Generic_node & node) {
 }
 
 Vector_node::~Vector_node() {
-    //deep destructor?
-    // TODO Auto-generated destructor stub
+    //TODO: deep destructor?
 }
 
 }

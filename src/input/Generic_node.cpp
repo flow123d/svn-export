@@ -16,6 +16,7 @@ bool            Generic_node::value_type_to_string_filled = false; //definice
 
 const string & Generic_node::get_type_str( void ) const
 {
+    //lazy inicializace dat - az pri prvnim pouziti
     if ( !value_type_to_string_filled ) {
         value_type_to_string[type_generic] = "type_generic";
         value_type_to_string[type_string] = "type_string";
@@ -92,13 +93,13 @@ ostream & operator<<(ostream & stream, Generic_node & node)
     case type_number:
     case type_bool:
     case type_null:
-        cout << node.as_value();
+        cout << node.as_value(); //spolecne pro vsechny skalarni hodnoty (dynamic cast)
         break;
     case type_record:
-        cout << node.as_record();
+        cout << node.as_record(); //record vypis jako record (dynamic cast)
         break;
     case type_vector:
-        cout << node.as_vector();
+        cout << node.as_vector(); //vector vypis jako vector (dynamic cast)
         break;
     default:
         break;
@@ -191,7 +192,7 @@ string Generic_node::get_string_check(int & err_code) {
 }
 
 Generic_node::~Generic_node() {
-    //TODO deep destructor?
+    //Tady nic. Neobsahuje zadna data apod.
 }
 
 }

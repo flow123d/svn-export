@@ -69,8 +69,7 @@ void Record_node::insert_key(const string & key, Generic_node & node) {
 }
 
 Record_node::~Record_node() {
-    //deep destructor?
-    // TODO Auto-generated destructor stub
+
 }
 
 }

@@ -41,15 +41,6 @@ $(OBJS)/flow/local_matrix.o\
 $(OBJS)/flow/darcy_flow_mh.o\
 $(OBJS)/flow/darcy_flow_mh_output.o\
 \
-$(OBJS)/input/json_spirit/json_spirit_reader.o\
-$(OBJS)/input/json_spirit/json_spirit_value.o\
-$(OBJS)/input/json_spirit/json_spirit_writer.o\
-$(OBJS)/input/data_tree.o\
-$(OBJS)/input/Generic_node.o\
-$(OBJS)/input/Object_node.o\
-$(OBJS)/input/Value_node.o\
-$(OBJS)/input/Vector_node.o\
-\
 $(OBJS)/io/read_ini.o\
 $(OBJS)/io/output.o\
 $(OBJS)/io/output_vtk.o\
@@ -91,7 +82,18 @@ $(OBJS)/sparse_graph.o\
 $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
 $(OBJS)/hc_explicit_sequential.o\
-$(OBJS)/field_p0.o
+$(OBJS)/field_p0.o\
+\
+$(OBJS)/input/json_spirit/json_spirit_reader.o\
+$(OBJS)/input/json_spirit/json_spirit_value.o\
+$(OBJS)/input/json_spirit/json_spirit_writer.o\
+$(OBJS)/input/data_tree.o\
+$(OBJS)/input/Generic_node.o\
+$(OBJS)/input/Keyconnector.o\
+$(OBJS)/input/Record_node.o\
+$(OBJS)/input/Value_node.o\
+$(OBJS)/input/Vector_node.o
+
 
 
 # src subdirs

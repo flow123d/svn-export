@@ -26,9 +26,6 @@ include ../makefile.in
 all: armadillo fparser
 
 
-metis:
-	make -C metis-4.0
-
 # use CMAKE_PREFIX_PETH to use our copy of boost
 #
 # unfortunately I didn't succeed with blas and lapack form PETSC ...
@@ -45,7 +42,6 @@ fparser:
 
 clean:
 	rm -f all
-	make -C metis-4.0 realclean
 	make -C armadillo-1.1.92 clean
 	make -C fparser-4.4.3 clean
 	

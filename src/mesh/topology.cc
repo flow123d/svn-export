@@ -268,13 +268,13 @@ void side_to_node(Mesh* mesh)
 
     FOR_ELEMENTS(mesh,  ele )
 		switch( ele->type ) {
-			case LINE:
+                        case Element::LINE:
 				side_to_node_line( ele );
 				break;
-			case TRIANGLE:
+                        case Element::TRIANGLE:
 				side_to_node_triangle( ele );
 				break;
-			case TETRAHEDRON:
+                        case Element::TETRAHEDRON:
 				side_to_node_tetrahedron( ele );
 				break;
 		}

@@ -44,20 +44,26 @@
 #ifndef LA_LINSYS_HH_
 #define LA_LINSYS_HH_
 
-#include "petscmat.h"
-#include "private/matimpl.h"
-
-#include "la/schur.hh"
-#include "system/par_distribution.hh"
-
-
-// **************************************************************
-/*!  @brief  Linear System structure accepted by Solver module
+/**
+ *  @brief  Abstract linear system class.
  *
- *  The system is based on PETSc matrix A and vector of RHS (b) and solution (x),
- *  both vectors are build on the regular arrays vx, vb.
- *  CSR storage are optional and generated on demand by LinSysSetCSR.
+ *  Linear system consists of Matrix, RHS and solution.
+ *  It provides general methods for:
+ *  - matrix preallocation
+ *  - assembling matrix and RHS
+ *  - application of linear constrains (Dirichlet conditions) either during assembly or
+ *    on assembled system
+ *  - solution of the system
+ *  - output in Matlab format
+ *
+ *  Method operates on the system as single object. But some methods for matrix only manipulation
+ *  can be provided until we have matrix as separate class.
  */
+
+#include "system/par_distribution.hh"
+#include "mesh/mesh.h"
+
+#include <mpi.h>
 
 class LinSys
 {
@@ -71,206 +77,255 @@ public:
     } SetValuesMode;
 
     typedef enum {
-        MAT_MPIAIJ,
-        MAT_IS
-    } SetType;
+        PETSC_MPIAIJ_preallocate_by_assembly,
+        PETSC_MPIAIJ_assembly_by_triples,
+        BDDC,
+        PETSC_schur_complement   // possibly we can implement Schur as another kind of lin solver
+    } LinSysType;
 
-    /// Construct a parallel system with given local size.
-    LinSys(unsigned int lsize, double *sol_array = NULL);
+private:
+    typedef std::pair<unsigned,double>       Constraint_;
+    typedef std::vector< Constraint_ >       ConstraintVec_;
 
-    SetType  type;   ///< MAT_IS or MAT_MPIAIJ anyone can inquire my type
+public:
+    /**
+     * Constructor.
+     * Constructor of abstract class should not be called directly, but is used for initialization of member common
+     * to all particular solvers.
+     *
+     * @param lsize - local size of the solution vector
+     * @param sol_array - optionally one can provide pointer to array allocated to size lsize, where
+     *  the solution should be stored,
+     */
+    LinSys( MPI_Comm comm = MPI_COMM_WORLD )
+      : comm_( comm )
+    { };
 
-    /// @name access members @{
-    /// Get global system size.
+    /// Particular type of the linear system.
+    LinSysType  type;   ///< MAT_IS or MAT_MPIAIJ anyone can inquire my type
+
+    virtual void load_mesh( Mesh *mesh,
+                            Distribution *edge_ds,  
+                            Distribution *el_ds,        
+                            Distribution *side_ds,     
+                            Distribution *rows_ds,    
+                            int *el_4_loc,    
+                            int *row_4_el,     
+                            int *side_id_4_loc, 
+                            int *side_row_4_id, 
+                            int *edge_4_loc,   
+                            int *row_4_edge ){};
+
+    /**
+     *  Returns global system size.
+     */
     inline unsigned int size()
-    { return vec_ds.size(); }
-    /// Get local system size.
-    inline unsigned int vec_lsize()
-    { return vec_ds.lsize(); }
-    /// Get distribution of rows.
-    inline const Distribution &ds()
-    { return vec_ds; }
-    /// Get matrix.
-    inline const Mat &get_matrix()
-    { return matrix; }
-
-    /// Get subdomain matrix.
-    inline const Mat &get_matrix_sub()
     { 
-       if      (type == MAT_IS)
-       {
-	  return local_matrix;
-       }
+        ASSERT ( rows_ds_ != NULL, "Empty distribution." );
+        return rows_ds_-> size(); 
     }
 
-    /// Get RHS.
-    inline const Vec &get_rhs()
-    { return rhs; }
-    /// Get solution.
-    inline const Vec &get_solution()
-    { return solution; }
-    inline double *get_solution_array()
-    { return v_solution; }
-    /// @}
+    /**
+     * Returns local system size. (for partitioning of solution vectors)
+     * for PETSC_MPIAIJ it is also partitioning of the matrix
+     */
+    inline unsigned int vec_lsize()
+    { 
+        ASSERT ( rows_ds_ != NULL, "Empty distribution." );
+        return rows_ds_ -> lsize(); 
+    }
 
-    virtual void start_allocation()=0;
-    void start_add_assembly();
-    void start_insert_assembly();
-    void finalize(MatAssemblyType assembly_type=MAT_FINAL_ASSEMBLY);
+    /**
+     * Returns whole Distribution class for distribution of the solution.
+     */
+    inline const Distribution* get_ds( )
+    { return rows_ds_; }
 
-    virtual void preallocate_matrix()=0;
-    virtual void preallocate_values(int nrow,int *rows,int ncol,int *cols)=0;
+    /**
+     * Returns PETSC matrix (only for PETSC solvers)
+     */
+    virtual const Mat &get_matrix(){};
+    //{ return matrix; }
 
-    virtual void view_local_matrix()=0;
+    /**
+     * Returns RHS vector  (only for PETSC solvers)
+     */
+    virtual const Vec &get_rhs(){};
+    //{ return rhs; }
+    
 
-    /// Set full rectangular submatrix of the system matrix.
-    inline void mat_set_values(int nrow,int *rows,int ncol,int *cols,PetscScalar *vals)
+    /**
+     *  Returns PETSC vector with solution. Underlying array can be provided on construction.
+     */
+    virtual const Vec &get_solution()
     {
-        switch (status) {
-            case INSERT:
-            case ADD:
-                MatSetValues(matrix,nrow,rows,ncol,cols,vals,(InsertMode)status); break;
-            case ALLOCATE:
-                preallocate_values(nrow,rows,ncol,cols); break;
-            default: DBGMSG("LS SetValues with non allowed insert mode.\n");
-        }
-    }
+        ASSERT( false, "Function get_solution is not implemented.");
+    };
 
-    /// Set one element of the system matrix.
+    /**
+     *  Returns PETSC subarray with solution. Underlying array can be provided on construction.
+     */
+    virtual double *get_solution_array()
+    { 
+        ASSERT( false, "Function get_solution is not implemented.");
+    };
+    
+    /**
+     * Returns whole solution vector.
+     */
+    virtual void get_whole_solution( std::vector<double> & globalSolution ){};
 
-    inline void mat_set_value(int row,int col,PetscScalar val)
+
+    /**
+     * Inserts solution vector.
+     */
+    virtual void set_whole_solution( std::vector<double> & globalSolution ){};
+    
+    /**
+     * Switch linear system into allocating assembly. (only for PETSC_MPIAIJ_preallocate_by_assembly)
+     */
+    virtual void start_allocation(){};
+
+    /**
+     * Switch linear system into adding assembly. (the only one supported by triplets ??)
+     */
+    virtual void start_add_assembly(){};
+
+    /**
+     * Switch linear system into insert assembly. (not currently used)
+     */
+    virtual void start_insert_assembly(){};
+
+    /**
+     * Finish assembly of the whole system. For PETSC this should call MatEndAssembly with MAT_FINAL_ASSEMBLY
+     */
+    virtual void finish_assembly()=0;
+
+    /**
+     * Shortcut for assembling just one element into the matrix.
+     * Similarly we can provide method accepting armadillo matrices.
+     */
+    inline void mat_set_value(int row,int col,double val)
     { mat_set_values(1,&row,1,&col,&val); }
 
-    /// Set values of the system right-hand side.
-    inline void rhs_set_values(int nrow,int *rows,PetscScalar *vals)
-    {
-        switch (status) {
-            case INSERT:
-            case ADD:
-                VecSetValues(rhs,nrow,rows,vals,(InsertMode)status); break;
-            case ALLOCATE: break;
-            default: ASSERT(0, "LinSys's status disallow set values.\n");
-        }
-    }
+    /**
+     *  Assembly full rectangular submatrix into the system matrix.
+     *  Should be virtual, implemented differently in  particular solvers.
+     */
+    virtual void mat_set_values(int nrow,int *rows,int ncol,int *cols,double *vals)=0;
 
-    /// Set one value in the right-hand side.
-    inline void rhs_set_value(int row,PetscScalar val)
+    /**
+     * Shorcut for assembling just one element into RHS vector.
+     */
+    inline void rhs_set_value(int row,double val)
     { rhs_set_values(1,&row,&val); }
 
-    /// Set values in the system matrix and values in the right-hand side vector on corresponding rows.
-    inline void set_values(int nrow,int *rows,int ncol,int *cols,PetscScalar *mat_vals, PetscScalar *rhs_vals)
+    /**
+     *  Set values of the system right-hand side.
+     *  Should be virtual, implemented differently in  particular solvers.
+     */
+    virtual void rhs_set_values(int nrow,int *rows,double *vals)=0;
+
+    /**
+     * Shortcut to assembly into matrix and RHS in one call.
+     * This can also apply constrains at assembly time (only in add assembly regime).
+     *
+     * Constrains can either be set before through add_constrain. Or by additional parameters if we
+     * have only per element knowledge about boundary conditions.
+     *
+     */
+    inline void set_values( int nrow,int *rows,int ncol,int *cols,double *mat_vals, double *rhs_vals )
+//                            std::vector<bool> &constrains_row_mask=std::vector<bool>(), double * constrain_values=NULL )
     {
         mat_set_values(nrow, rows, ncol, cols, mat_vals);
         rhs_set_values(nrow, rows, rhs_vals);
     }
 
+    /**
+     * Adds Dirichlet constrain.
+     * @param row - global number of row that should be eliminated.
+     * @param value - solution value at the given row
+     */
+    void add_constrain(int row, double value) {
+
+        constraints_.push_back( Constraint_( static_cast<unsigned>( row ), value ) );
+    }
+
+    /**
+     * Apply constrains to assembled matrix. Constrains are given by pairs: global row index, value.
+     * i.e. typedef pair<unsigned int, double> Constrain;
+     *
+     * What is th meaning of ( const double factor ) form Cambridge code?
+     */
+
+    virtual void apply_constrains( )=0;
+
+    /**
+     * Solve the system.
+     *
+     * parameters should by provided in input file (currently INI file, but will be changed to JSON)
+     *
+     * If we realize that we need to set something, rather add some set_* function.
+     *
+     * double tol = 1.e-7,                        //!< tolerance on relative residual ||res||/||rhs||
+       int  numLevels = 2,                        //!< number of levels
+       std::vector<int> *  numSubAtLevels = NULL, //!< number of subdomains at levels
+       int verboseLevel = 0,                      //!< level of verbosity of BDDCML library
+                                                  //!< ( 0 - only fatal errors reported,
+                                                  //!<   1 - mild output,
+                                                  //!<   2 - detailed output )
+       int  maxIt = 1000,                         //!< maximum number of iterations
+       int  ndecrMax = 30 );                      //!< maximum number of iterations with non-decreasing residual
+                                                  //!< ( used to stop diverging process )
+     *
+     *
+     * Returns convergence reason
+     */
+    virtual int solve()=0;
+
+
+    /**
+     * Provides user knowledge about symmetry.
+     */
     inline void set_symmetric(bool flag = true)
     {
-        symmetric = flag;
+        symmetric_ = flag;
         if (!flag) set_positive_definite(false);
     }
 
-
     inline bool is_symmetric()
-    { return symmetric; }
+    { return symmetric_; }
 
+    /**
+     * Provides user knowledge about positive definiteness.
+     */
     inline void set_positive_definite(bool flag = true)
     {
-        positive_definite = flag;
+        positive_definite_ = flag;
         if (flag) set_symmetric();
     }
 
     inline bool is_positive_definite()
-    { return positive_definite; }
+    { return positive_definite_; }
 
 
-    /// Output the system in the Matlab format possibly with given ordering.
-    void view(std::ostream output_stream, int * output_mapping = NULL);
+    /**
+     *  Output the system in the Matlab format possibly with given ordering.
+     *  Rather we shoud provide output operator <<, since it is more flexible.
+     */
+    virtual void view(std::ostream output_stream, int * output_mapping = NULL){};
 
-    virtual ~LinSys();
+    //~LinSys(){};
 
 protected:
-    Distribution vec_ds;        ///< Distribution of continuous blocks of system rows among the processors.
-    bool     symmetric;         ///< Flag for the symmetric system.
-    bool     positive_definite; ///< Flag for positive definite system.
-    bool     own_solution;      ///< Indicates if the solution array has been allocated by this class.
-    SetValuesMode status;       ///< Set value status of the linear system.
+    MPI_Comm         comm_;
 
-    Mat     matrix;             ///< Petsc matrix of the problem.
-    Vec     rhs;                ///< PETSc vector constructed with vx array.
-    Vec     solution;           ///< PETSc vector constructed with vb array.
-    double  *v_rhs;             ///< RHS vector.
-    double  *v_solution;        ///< Vector of solution.
+    bool             symmetric_;
+    bool             positive_definite_;
 
-    // for MATIS
-    int *subdomain_indices;     ///< Remember indices which created mapping
-    Mat local_matrix;           ///< local matrix of subdomain (used in LinSys_MATIS)
+    ConstraintVec_   constraints_;
 
-    friend void SchurComplement::form_schur();
-    friend class SchurComplement;
+    Distribution *   rows_ds_;        //!< final distribution of rows of MH matrix
 };
-
-
-
-class LinSys_MPIAIJ : public LinSys
-{
-public:
-    LinSys_MPIAIJ(unsigned int lsize, double *sol_array=NULL) : LinSys(lsize, sol_array) {};
-    virtual void start_allocation();
-    virtual void preallocate_matrix();
-    virtual void preallocate_values(int nrow,int *rows,int ncol,int *cols);
-    virtual void view_local_matrix();
-    virtual ~LinSys_MPIAIJ();
-
-private:
-
-    Vec     on_vec,off_vec; ///< Vectors for counting non-zero entries.
-
-};
-
-
-class LinSys_MATIS : public LinSys
-{
-public:
-    LinSys_MATIS(unsigned int lsize, int sz, int *global_row_4_sub_row, double *sol_array=NULL);
-    virtual void start_allocation();
-    virtual void preallocate_matrix();
-    virtual void preallocate_values(int nrow,int *rows,int ncol,int *cols);
-    virtual void view_local_matrix();
-
-    inline VecScatter get_scatter()
-    { return sub_scatter; }
-    /// Get local subdomain size.
-    inline int get_subdomain_size()
-    { return subdomain_size; }
-  
-    virtual ~LinSys_MATIS();
-
-private:
-
-    ISLocalToGlobalMapping map_local_to_global; ///< PETSC mapping form local indexes of subdomain to global indexes
-    int loc_rows_size;                          ///<
-    int *loc_rows;                              ///< Small auxiliary array for translation of global indexes to local
-                                                ///< during preallocate_set_values. However for MatSetValues
-    VecScatter sub_scatter;                     ///< from global vector with no overlaps constructs local (subdomain)
-                                                ///< vectors with overlaps
-                                                ///< copy of scatter created and used in PETSc in Mat_IS
-
-    int subdomain_size;                         ///< size of subdomain in MATIS matrix
-    int *subdomain_nz;                          ///< For counting non-zero enteries of local subdomain.
-
-    // mimic PETSc struct for IS matrices - included from matis.h
-    // used to access private PETSc data
-    typedef struct {
-       Mat                    A;             /* the local Neumann matrix */
-       VecScatter             ctx;           /* update ghost points for matrix vector product */
-       Vec                    x,y;           /* work space for ghost values for matrix vector product */
-       ISLocalToGlobalMapping mapping;
-       int                    rstart,rend;   /* local row ownership */
-       PetscBool             pure_neumann;	/* PetscBool instead of PetscTruth*/
-    } MatMyIS ;
-};
-
-
 
 #endif /* LA_LINSYS_HH_ */

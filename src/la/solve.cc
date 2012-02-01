@@ -117,6 +117,7 @@ void solver_set_type( Solver *solver )
     solver->type=UNKNOWN;
     TEST_TYPE("petsc",PETSC_SOLVER);
     TEST_TYPE("petsc_matis",PETSC_MATIS_SOLVER);
+    TEST_TYPE("bddcml",BDDCML_SOLVER);
     TEST_TYPE("si2",SI2);
     TEST_TYPE("gi8",GI8);
     TEST_TYPE("isol",ISOL);
@@ -289,34 +290,34 @@ void solver_petsc(Solver *solver)
 
 	//LSView(sys);
 
-	if (solver->type == PETSC_MATIS_SOLVER) {
-           if (sys->ds().np() > 1) {
+	if (solver->type == PETSC_SOLVER) 
+        //   if (sys->ds().np() > 1) {
 
-	       // parallel setting
-              if (sys->is_positive_definite())
-                  petsc_dflt_opt="-ksp_type cg -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
-              else
-                  if (sys->is_symmetric())
-                     petsc_dflt_opt="-ksp_type minres -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
-	          else
-                     petsc_dflt_opt="-ksp_type bcgs -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
+	//       // parallel setting
+        //      if (sys->is_positive_definite())
+        //          petsc_dflt_opt="-ksp_type cg -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
+        //      else
+        //          if (sys->is_symmetric())
+        //             petsc_dflt_opt="-ksp_type minres -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
+	//          else
+        //             petsc_dflt_opt="-ksp_type bcgs -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
 
-	   } else {
-	       // serial setting
-              if (sys->is_positive_definite())
-                  petsc_dflt_opt="-ksp_type cg -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
-              else
-                  if (sys->is_symmetric())
-                     petsc_dflt_opt="-ksp_type minres -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
-	          else
-                     petsc_dflt_opt="-ksp_type bcgs -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
-	   }
-	}
-	else
+	//   } else {
+	//       // serial setting
+        //      if (sys->is_positive_definite())
+        //          petsc_dflt_opt="-ksp_type cg -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
+        //      else
+        //          if (sys->is_symmetric())
+        //             petsc_dflt_opt="-ksp_type minres -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
+	//          else
+        //             petsc_dflt_opt="-ksp_type bcgs -pc_type nn -nn_coarse_pc_factor_mat_solver_package mumps -is_localD_pc_factor_mat_solver_package mumps -is_localN_pc_factor_mat_solver_package mumps";
+	//   }
+	//}
+	//else
 	{
 	   // -mat_no_inode ... inodes are usefull only for
            //  vector problems e.g. MH without Schur complement reduction	
-           if (sys->ds().np() > 1) {
+           if ((sys->get_ds())->np() > 1) {
 	       // parallel setting
               if (sys->is_positive_definite())
                   petsc_dflt_opt="-ksp_type cg -ksp_diagonal_scale_fix -pc_type asm -pc_asm_overlap 4 -sub_pc_type ilu -sub_pc_factor_levels 3 -sub_pc_factor_shift_positive_definite -sub_pc_factor_fill 6.0";
@@ -577,12 +578,17 @@ void read_sol_matlab( struct Solver *solver )
 
 	in = xfopen( "solution.dat", "rt" );
 	int loc_row=0;
+        std::vector<double> solution(sys->size());
 	for( mi = 0; mi < sys->size(); mi++ )
 	{
         xfscanf( in, "%lf", value );
-        if (sys->ds().is_local(mi)) *(sys->get_solution_array() + loc_row)=value;
+
+        solution[mi] = value;
+
 	}
 	xfclose( in );
+
+        sys -> set_whole_solution( solution );
 }
 
 //-----------------------------------------------------------------------------

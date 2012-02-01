@@ -62,7 +62,7 @@ static void block_A_stats(Mesh*);
 static void diag_A_stats(Mesh*);
 
 Element::Element()
-: type(0),
+: type(Element::POINT),
   mid(0),
   rid(0),
   pid(0),

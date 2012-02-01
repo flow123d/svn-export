@@ -425,17 +425,17 @@ void side_shape_specific(Mesh* mesh) {
         ele = sde->element;
         ASSERT(!(ele == NULL), "Side %d has no reference to its element\n", sde->id);
         switch (ele->type) {
-            case LINE:
+            case Element::LINE:
                 sde->shape = S_POINT;
                 sde->dim = 0;
                 sde->n_nodes = 1;
                 break;
-            case TRIANGLE:
+            case Element::TRIANGLE:
                 sde->shape = S_LINE;
                 sde->dim = 1;
                 sde->n_nodes = 2;
                 break;
-            case TETRAHEDRON:
+            case Element::TETRAHEDRON:
                 sde->shape = S_TRIANGLE;
                 sde->dim = 2;
                 sde->n_nodes = 3;

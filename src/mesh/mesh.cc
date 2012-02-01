@@ -237,7 +237,7 @@ int id2pos(Mesh* mesh, int id, int* list, int type) {
         case BC:
             limit = mesh->n_boundaries();
             break;
-        case NODE:
+        case FLOW123D_NODE:
             limit = mesh->node_vector.size();
             break;
     }

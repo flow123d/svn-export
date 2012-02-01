@@ -210,7 +210,7 @@ void output_convert_to_pos_bcd(struct Problem *problem)
         continue;
       }
       switch( bcd->side->shape ) {
-        case xPOINT:
+        case POINT:
             xfprintf( out, "SP (" );
         break;
         case LINE:
@@ -433,7 +433,7 @@ void output_convert_to_pos_transport_bcd(struct Problem *problem)
   FOR_BOUNDARIES(bcd)
   {
     switch( bcd->side->shape ) {
-      case xPOINT:
+      case POINT:
         xfprintf( out, "SP (" );
       break;
       case LINE:

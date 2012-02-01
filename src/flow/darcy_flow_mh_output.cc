@@ -230,13 +230,13 @@ void DarcyFlowMHOutput::make_element_vector() {
     FOR_ELEMENTS(mesh_, ele) {
         arma::vec3 flux_in_centre;
         switch (ele->type) {
-        case LINE:
+        case Element::LINE:
             make_element_vector_line(ele, flux_in_centre);
             break;
-        case TRIANGLE:
+        case Element::TRIANGLE:
             make_element_vector_triangle(ele, flux_in_centre);
             break;
-        case TETRAHEDRON:
+        case Element::TETRAHEDRON:
             make_element_vector_tetrahedron(ele, flux_in_centre);
             break;
         }

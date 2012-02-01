@@ -90,14 +90,14 @@ corlib::SystemSolveBddc::~SystemSolveBddc()
  *     - nodeIterator()
  *     - elementIterator()
  *  it expects the following member functions of nodes:
- *     - isActive()
+ *     - isDDActive()
  *     - giveCoordinates()
  *     - giveId()
  *     - giveNumDofs()
  *     - copyDofArray()
  *  it expects the following member functions of elements:
  *     - giveNodePtr()
- *     - isActive()
+ *     - isDDActive()
  */
 template< typename MESH >
 void corlib::SystemSolveBddc::loadMesh( const MESH     & meshPart,
@@ -126,7 +126,7 @@ void corlib::SystemSolveBddc::loadMesh( const MESH     & meshPart,
     // find number of nodes unique to subdomain
     unsigned numNodesLoc = 0;
     for ( int iNode = 0; iNode < numNodesSub_ ; iNode++ ) {
-        if ( meshPart.nodeIterator( iNode ) -> isActive( ) ) {
+        if ( meshPart.nodeIterator( iNode ) -> isDDActive( ) ) {
             numNodesLoc++;
         }
     }
@@ -255,7 +255,7 @@ void corlib::SystemSolveBddc::loadMesh( const MESH     & meshPart,
         isegn_[ iEle ] = procElemStarts [ rank_ ] + iEle;
 
         // check that the mesh is non-overlapping
-        FTL_VERIFY_DESCRIPTIVE( meshPart.elementIterator( iEle ) -> isActive(),
+        FTL_VERIFY_DESCRIPTIVE( meshPart.elementIterator( iEle ) -> isDDActive(),
                                 "Ghost element detected, SystemSolveBddc can be currently used only "
                                 "with non-overlapping subdomains \n " );
 
@@ -300,14 +300,14 @@ void corlib::SystemSolveBddc::loadMesh( const MESH     & meshPart,
  *     - controlPointIterator()
  *     - elementIterator()
  *  it expects the following member functions of controlPoints:
- *     - isActive()
+ *     - isDDActive()
  *     - giveCoordinates()
  *     - giveId()
  *     - giveNumDofs()
  *     - copyDofArray()
  *  it expects the following member functions of elements:
  *     - getControlPoint()
- *     - isActive()
+ *     - isDDActive()
  */
 template< typename GRID >
 void corlib::SystemSolveBddc::loadGrid( const GRID     & meshPart,
@@ -336,7 +336,7 @@ void corlib::SystemSolveBddc::loadGrid( const GRID     & meshPart,
     // find number of nodes unique to subdomain
     unsigned numNodesLoc = 0;
     for ( int iNode = 0; iNode < numNodesSub_ ; iNode++ ) {
-        if ( meshPart.controlPointIterator( iNode ) -> isActive( ) ) {
+        if ( meshPart.controlPointIterator( iNode ) -> isDDActive( ) ) {
             numNodesLoc++;
         }
     }
@@ -345,8 +345,8 @@ void corlib::SystemSolveBddc::loadGrid( const GRID     & meshPart,
     int numNodesLocInt = static_cast<int>( numNodesLoc );
     MPI_Allreduce ( &numNodesLocInt, &numNodes_, 1, MPI_INT, MPI_SUM, comm_ );
 
-    std::vector<int> procElemStarts( nProc_ + 1 );
     int numElemSubInt = static_cast<int>( numElemSub_ );
+    std::vector<int> procElemStarts( nProc_ + 1 );
     MPI_Allgather( &numElemSubInt,       1, MPI_INT,
                    &(procElemStarts[0]), 1, MPI_INT, comm_ );
     // now procElemStarts_ contains counts of local elements at each process
@@ -465,7 +465,264 @@ void corlib::SystemSolveBddc::loadGrid( const GRID     & meshPart,
         isegn_[ iEle ] = procElemStarts [ rank_ ] + iEle;
 
         // check that the mesh is non-overlapping
-        FTL_VERIFY_DESCRIPTIVE( meshPart.elementIterator( iEle ) -> isActive(),
+        FTL_VERIFY_DESCRIPTIVE( meshPart.elementIterator( iEle ) -> isDDActive(),
+                                "Ghost element detected, SystemSolveBddc can be currently used only "
+                                "with non-overlapping subdomains \n " );
+
+    }
+    global2LocalNodeMap.clear();
+    FTL_VERIFY_DESCRIPTIVE( std::find( inet_.begin(), inet_.end(), -1 ) == inet_.end(),
+                            "array inet_ not constructed properly \n " );
+    FTL_VERIFY_DESCRIPTIVE( std::find( nnet_.begin(), nnet_.end(), -1 ) == nnet_.end(),
+                            "array nnet_ not constructed properly \n " );
+    FTL_VERIFY_DESCRIPTIVE( std::find( isegn_.begin(), isegn_.end(), -1 ) == isegn_.end(),
+                            "array isegn_ not constructed properly \n " );
+
+
+    //debug prints
+    //for ( int iProc = 0; iProc < nProc_; iProc++) {
+    //    if ( rank_ == iProc ) {
+    //        indInet = 0;
+    //        std::cout << "inet on " << iProc << std::endl;
+    //        for ( int p = 0; p < numElemSub_; p++ ) {
+    //            std::cout << p << "  " << isegn_[ p ] << "  " << nnet_[ p ] << " : " ;
+    //            for ( int i = 0; i < nnet_[ p ]; i++ ) {
+    //                std::cout << inet_[ indInet ++ ] << " ";
+    //            }
+    //            std::cout << std::endl;
+    //        }
+    //    }
+    //    std::cout.flush();
+    //    MPI_Barrier( comm_ );
+    //}
+
+    // change the state
+    meshLoaded_     = true;
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+/** Load subdomain mixed grid to the BDDCML solver object.
+ *  To properly construct the data needed by BDDCML, 
+ *  it expects the following member functions of mesh:
+ *     - numElements()
+ *     - numControlPoints()
+ *     - numControlPointsP()
+ *     - controlPointIterator()
+ *     - controlPointPIterator()
+ *     - elementIterator()
+ *  it expects the following member functions of controlPoints:
+ *     - isDDActive()
+ *     - giveCoordinates()
+ *     - giveId()
+ *     - giveNumDofs()
+ *     - copyDofArray()
+ *  it expects the following member functions of elements:
+ *     - getControlPoint()
+ *     - getControlPointP()
+ *     - isDDActive()
+ */
+template< typename GRID >
+void corlib::SystemSolveBddc::loadMixedGrid( const GRID     & meshPart,
+                                             const unsigned   meshDim ) 
+{
+    // give name to the type of mesh
+    typedef  GRID                         Grid;
+    typedef  typename Grid::ControlPoint  ControlPoint;
+    typedef  typename Grid::Cell          Cell;
+
+    // space dimension
+    nDim_ =  Grid::dim;
+ 
+    // set topological dimension of mesh
+    if ( meshDim == 0 ) { // if not specified, use space dimension
+       meshDim_ = nDim_;
+    }
+    else {
+       meshDim_ = static_cast<int>( meshDim ); // if specified, use it
+    }
+
+    // fill internal variables about mesh
+    numElemSub_  = meshPart.numElements( );
+    int numNodesSubU = meshPart.numControlPoints( ); 
+    int numNodesSubP = meshPart.numControlPointsP( ); 
+    numNodesSub_ = numNodesSubU + numNodesSubP;
+
+    // find number of nodes unique to subdomain
+    unsigned numNodesLoc = 0;
+    for ( int iNode = 0; iNode < numNodesSubU ; iNode++ ) {
+        if ( meshPart.controlPointIterator( iNode ) -> isDDActive( ) ) {
+            numNodesLoc++;
+        }
+    }
+    // add pressures
+    for ( int iNode = 0; iNode < numNodesSubP ; iNode++ ) {
+        if ( meshPart.controlPointPIterator( iNode ) -> isDDActive( ) ) {
+            numNodesLoc++;
+        }
+    }
+
+    // find global number of nodes
+    int numNodesLocInt = static_cast<int>( numNodesLoc );
+    MPI_Allreduce ( &numNodesLocInt, &numNodes_, 1, MPI_INT, MPI_SUM, comm_ );
+
+    int numElemSubInt = static_cast<int>( numElemSub_ );
+    std::vector<int> procElemStarts( nProc_ + 1 );
+    MPI_Allgather( &numElemSubInt,       1, MPI_INT,
+                   &(procElemStarts[0]), 1, MPI_INT, comm_ );
+    // now procElemStarts_ contains counts of local elements at each process
+    // change it to starts
+    for ( unsigned i = 1; i < static_cast<unsigned>( nProc_ ); i++ )
+        procElemStarts[i] = procElemStarts[i-1] + procElemStarts[i];
+    // shift it one back
+    for ( unsigned i = nProc_; i > 0; i-- )
+            procElemStarts[i] = procElemStarts[i-1];
+    // start from zero
+    procElemStarts[0] = 0;
+
+    // find global number of elements - assumes nonoverlapping division
+    numElem_ = procElemStarts[ nProc_ ];
+
+    // linearized array of coordinates - all X components, all Y comps. and all Z (in 3D)
+    xyz_.resize( numNodesSub_ * nDim_, 0. );
+
+    // number of dofs for each node
+    nndf_.resize( numNodesSub_, -1 );  
+    // map of local nodes to global nodes
+    isngn_.resize( numNodesSub_, -1 );
+    // map of local variables to global variables
+    isvgvn_.resize( numDofsSub_, -1 );
+
+    std::vector<int>::iterator iterDofSub = isvgvn_.begin();
+    for ( int iNode = 0; iNode < numNodesSubU ; iNode++ ) {
+
+        // copy coordinates into the linearized array
+        for ( int i = 0; i < nDim_; i++ ) {
+
+            xyz_[ i * numNodesSub_ + iNode ] = (meshPart.controlPointIterator( iNode ) -> giveCoordinates( ))[i];
+        }
+
+        // get number of dofs at node
+        nndf_[ iNode ] = static_cast<int>( meshPart.controlPointIterator( iNode ) -> giveNumDofs( ) );
+
+        // global node number
+        isngn_[ iNode ] = meshPart.controlPointIterator( iNode ) -> giveId( );
+
+        // global variables - this fills isvgvn array
+        std::vector<unsigned> aux( nndf_[ iNode ] );
+        meshPart.controlPointIterator( iNode ) -> copyDofArray( aux );
+        iterDofSub = std::copy( aux.begin(), aux.end(), iterDofSub );
+    }
+    for ( int iNode = 0; iNode < numNodesSubP ; iNode++ ) {
+
+        // copy coordinates into the linearized array
+        for ( int i = 0; i < nDim_; i++ ) {
+
+            xyz_[ i * numNodesSub_ + numNodesSubU + iNode ] = (meshPart.controlPointPIterator( iNode ) -> giveCoordinates( ))[i];
+        }
+
+        // get number of dofs at node
+        nndf_[ numNodesSubU + iNode ] = static_cast<int>( meshPart.controlPointPIterator( iNode ) -> giveNumDofs( ) );
+
+        // global node number
+        isngn_[ numNodesSubU + iNode ] = meshPart.controlPointPIterator( iNode ) -> giveId( );
+
+        // global variables - this fills isvgvn array
+        std::vector<unsigned> aux( nndf_[ numNodesSubU + iNode ] );
+        meshPart.controlPointPIterator( iNode ) -> copyDofArray( aux );
+        iterDofSub = std::copy( aux.begin(), aux.end(), iterDofSub );
+    }
+
+    //debug prints
+    //int indDof = 0;
+    //for ( int iProc = 0; iProc < nProc_; iProc++) {
+    //    if ( rank_ == iProc ) {
+    //        std::cout << "isngn_ and isvgvn_ on " << iProc << std::endl;
+    //        for ( int p = 0; p < numNodesSub_; p++ ) {
+    //            std::cout << p << "  " << isngn_[ p ] << " ndofn: " << nndf_[ p ] << " : " ;
+    //            for ( int i = 0; i < nndf_[ p ]; i++ ) {
+    //                std::cout << isvgvn_[ indDof ++ ] << " ";
+    //            }
+    //            for ( int i = 0; i < nDim_; i++ ) {
+    //                std::cout << xyz_[ i * numNodesSub_ + p ] << "  ";
+    //            }
+    //            std::cout << std::endl;
+    //        }
+    //    }
+    //    std::cout.flush();
+    //    MPI_Barrier( comm_ );
+    //}
+    
+    // checking
+    FTL_VERIFY_DESCRIPTIVE( std::find( nndf_.begin(), nndf_.end(), -1 ) == nndf_.end(),
+                            "array nndf_ not constructed properly \n " );
+    FTL_VERIFY_DESCRIPTIVE( std::find( isngn_.begin(), isngn_.end(), -1 ) == isngn_.end(),
+                            "array isngn_ not constructed properly \n " );
+    FTL_VERIFY_DESCRIPTIVE( std::find( isvgvn_.begin(), isvgvn_.end(), -1 ) == isvgvn_.end(),
+                            "array isvgvn_ not constructed properly \n " );
+
+    // prepare auxiliary map for renumbering dofs in the global array
+    for ( unsigned ind = 0; ind < isvgvn_.size(); ++ind ) {
+        global2LocalDofMap_.insert( std::make_pair( static_cast<unsigned>( isvgvn_[ind] ), ind ) );
+    }
+    // prepare auxiliary map for renumbering nodes 
+    Global2LocalMap_ global2LocalNodeMap;
+    for ( unsigned ind = 0; ind < isngn_.size(); ++ind ) {
+        global2LocalNodeMap.insert( std::make_pair( static_cast<unsigned>( isngn_[ind] ), ind ) );
+    }
+
+    // number of splines on cell
+    int numSplinesPerCellU = Cell::numSplines;
+    int numSplinesPerCellP = Cell::numSplinesP;
+    int numSplinesPerCell  = numSplinesPerCellU + numSplinesPerCellP;
+
+    // linearized array of elements
+    inet_.resize( numElemSub_ * numSplinesPerCell, -1 );
+    // array of numbers of nodes on elements
+    nnet_.resize( numElemSub_, -1 );
+    // local to global element array
+    isegn_.resize( numElemSub_, -1 );
+
+    int indInet = 0;
+    for ( int iEle = 0; iEle < numElemSub_; iEle++ ) {
+
+        nnet_[ iEle ] = static_cast<int>( numSplinesPerCell );
+
+        for ( unsigned ien = 0; ien < numSplinesPerCellU; ien++ ) {
+
+            // get global node on element
+            unsigned indGlob = static_cast<int>( meshPart.elementIterator( iEle ) -> getControlPoint( ien ) -> giveId() );
+
+            // map it to local node
+            Global2LocalMap_::iterator pos = global2LocalNodeMap.find( indGlob );
+            FTL_VERIFY_DESCRIPTIVE( pos != global2LocalNodeMap.end(),
+                                    "Cannot remap node index %d to local indices. \n ", indGlob );
+            int indLoc = static_cast<int> ( pos -> second );
+
+            // store the node
+            inet_[ indInet++ ] = indLoc;
+        }
+        for ( unsigned ien = 0; ien < numSplinesPerCellP; ien++ ) {
+
+            // get global node on element
+            unsigned indGlob = static_cast<int>( meshPart.elementIterator( iEle ) -> getControlPointP( ien ) -> giveId() );
+
+            // map it to local node
+            Global2LocalMap_::iterator pos = global2LocalNodeMap.find( indGlob );
+            FTL_VERIFY_DESCRIPTIVE( pos != global2LocalNodeMap.end(),
+                                    "Cannot remap node index %d to local indices. \n ", indGlob );
+            int indLoc = static_cast<int> ( pos -> second );
+
+            // store the node
+            inet_[ indInet++ ] = indLoc;
+        }
+
+        // elements are ordered by linear partitions with respect to their number
+        isegn_[ iEle ] = procElemStarts [ rank_ ] + iEle;
+
+        // check that the mesh is non-overlapping
+        FTL_VERIFY_DESCRIPTIVE( meshPart.elementIterator( iEle ) -> isDDActive(),
                                 "Ghost element detected, SystemSolveBddc can be currently used only "
                                 "with non-overlapping subdomains \n " );
 
@@ -713,7 +970,7 @@ void corlib::SystemSolveBddc::fixDOF( const unsigned index, const double scalar 
 /** Solve the system by BDDCML
  */
 void corlib::SystemSolveBddc::solveSystem( double tol, int  numLevels, std::vector<int> *  numSubAtLevels, 
-                                           int verboseLevel, int  maxIt, int  ndecrMax )
+                                           int verboseLevel, int  maxIt, int  ndecrMax, bool use_adaptive )
 {
 
     // check that mesh was loaded 
@@ -777,6 +1034,8 @@ void corlib::SystemSolveBddc::solveSystem( double tol, int  numLevels, std::vect
     int lfixv   = fixv_.size();
 
     int lrhsVec = rhsVec_.size();
+    int isRhsCompleteInt = 0; // since only local subassembly of right-hand side was performed, it does not contain 
+                              // repeated entries
 
     std::vector<int>    i_sparse;
     std::vector<int>    j_sparse;
@@ -849,7 +1108,7 @@ void corlib::SystemSolveBddc::solveSystem( double tol, int  numLevels, std::vect
                                   &(isngn_[0]),&lisngn, &(isvgvn_[0]),&lisvgvn, &(isegn_[0]),&lisegn, 
                                   &(xyz_[0]),&lxyz1,&lxyz2, 
                                   &(ifix_[0]),&lifix, &(fixv_[0]),&lfixv, 
-                                  &(rhsVec_[0]),&lrhsVec, 
+                                  &(rhsVec_[0]),&lrhsVec, &isRhsCompleteInt,
                                   &(sol_[0]), &lsol,
                                   &matrixTypeInt, &(i_sparse[0]), &(j_sparse[0]), &(a_sparse[0]), &la, &isMatAssembledInt );
     i_sparse.clear();
@@ -862,7 +1121,13 @@ void corlib::SystemSolveBddc::solveSystem( double tol, int  numLevels, std::vect
     int use_defaults_int          = 0;
     int parallel_division_int     = 0;
     int use_arithmetic_int        = 1;
-    int use_adaptive_int          = 0;
+    int use_adaptive_int;
+    if ( use_adaptive ) {
+        use_adaptive_int = 1;
+    }
+    else {
+        use_adaptive_int = 0;
+    }
 
     // setup multilevel BDDC preconditioner
     bddcml_setup_preconditioner( & matrixTypeInt, & use_defaults_int, 
@@ -882,7 +1147,7 @@ void corlib::SystemSolveBddc::solveSystem( double tol, int  numLevels, std::vect
     if      ( matrixType_ == SPD )
         method = 0; // PCG - set for SPD matrix
     else if ( matrixType_ == SPD_VIA_SYMMETRICGENERAL)
-        method = 0; // PCG - set for BENIGN matrix
+        method = 0; // PCG - set for benign matrix
     else
         method = 1; // BICGSTAB - set for any other matrix
 

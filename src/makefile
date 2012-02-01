@@ -72,9 +72,8 @@ $(OBJS)/system/xio.o\
 $(OBJS)/transport/transport.o\
 $(OBJS)/transport/transport_operator_splitting.o\
 \
-$(OBJS)/la/schur.o\
 $(OBJS)/la/solve.o\
-$(OBJS)/la/linsys.o\
+$(OBJS)/la/linsys_BDDC.o\
 $(OBJS)/la/sparse_graph.o\
 \
 $(OBJS)/equation.o\
@@ -86,6 +85,7 @@ $(OBJS)/hc_explicit_sequential.o\
 $(OBJS)/field_p0.o
 
 
+#$(OBJS)/la/schur.o\
 #$(OBJS)/convert.o\
 #$(OBJS)/mesh/ini_constants_mesh.o\
 #$(OBJS)/constantdb.o\

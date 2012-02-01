@@ -101,9 +101,9 @@ void GmshMeshReader::read_nodes(FILE* in, Mesh* mesh) {
  */
 char GmshMeshReader::supported_element_type(int type) {
     switch (type) {
-        case LINE:
-        case TRIANGLE:
-        case TETRAHEDRON:
+        case Element::LINE:
+        case Element::TRIANGLE:
+        case Element::TETRAHEDRON:
             return true;
     }
     return false;
@@ -135,7 +135,13 @@ void GmshMeshReader::parse_element_line(ElementVector &ele_vec, char *line, Mesh
     if (supported_element_type(type) == false)
         xprintf(UsrErr, "Element %d is of the unsupported type %d\n", id, type);
 
-    ele->type = type;
+    if      ( type == 1 ) 
+        ele->type = Element::LINE;
+    else if ( type == 2 )
+        ele->type = Element::TRIANGLE;
+    else if ( type == 4 )
+        ele->type = Element::TETRAHEDRON;
+
     element_type_specific(ele);
     element_allocation_independent(ele);
 
@@ -174,17 +180,17 @@ void GmshMeshReader::parse_element_line(ElementVector &ele_vec, char *line, Mesh
 void GmshMeshReader::element_type_specific(ElementFullIter ele) {
     ASSERT(NONULL(ele), "NULL as argument of function element_type_specific()\n");
     switch (ele->type) {
-        case LINE:
+        case Element::LINE:
             ele->dim = 1;
             ele->n_sides = 2;
             ele->n_nodes = 2;
             break;
-        case TRIANGLE:
+        case Element::TRIANGLE:
             ele->dim = 2;
             ele->n_sides = 3;
             ele->n_nodes = 3;
             break;
-        case TETRAHEDRON:
+        case Element::TETRAHEDRON:
             ele->dim = 3;
             ele->n_sides = 4;
             ele->n_nodes = 4;

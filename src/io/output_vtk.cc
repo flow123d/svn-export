@@ -120,13 +120,13 @@ static void write_vtk_topology(Output *output)
     tmp = 0;
     FOR_ELEMENTS(mesh, ele) {
         switch(ele->type) {
-        case LINE:
+        case Element::LINE:
             tmp += VTK_LINE_SIZE;
             break;
-        case TRIANGLE:
+        case Element::TRIANGLE:
             tmp += VTK_TRIANGLE_SIZE;
             break;
-        case TETRAHEDRON:
+        case Element::TETRAHEDRON:
             tmp += VTK_TETRA_SIZE;
             break;
         }
@@ -140,13 +140,13 @@ static void write_vtk_topology(Output *output)
     /* Write type of nodes for each element */
     FOR_ELEMENTS(mesh, ele) {
         switch(ele->type) {
-        case LINE:
+        case Element::LINE:
             output->get_data_file() << (int)VTK_LINE << " ";
             break;
-        case TRIANGLE:
+        case Element::TRIANGLE:
             output->get_data_file() << (int)VTK_TRIANGLE << " ";
             break;
-        case TETRAHEDRON:
+        case Element::TETRAHEDRON:
             output->get_data_file() << (int)VTK_TETRA << " ";
             break;
         }

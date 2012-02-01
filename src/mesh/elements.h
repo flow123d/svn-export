@@ -43,6 +43,8 @@ struct MaterialDatabase;
 class Element
 {
 public:
+
+
     Element();
     void calc_metrics();
     void calc_volume();
@@ -53,7 +55,12 @@ public:
 
 
     // Data readed from mesh file
-    int      type;      //
+    enum elShape {
+        POINT       = 0,     //!< a point
+        LINE        = 1,     //!< a line element
+        TRIANGLE    = 2,     //!< a triangle element
+        TETRAHEDRON = 4,     //!< a tetrehedral element
+    } type;
     int      mid;       // Id # of material
     int      rid;       // Id # of region
     int      pid;       // Id # of mesh partition
@@ -133,10 +140,6 @@ public:
 
 #define D_DIAG 0        // in D block diagonal is always at zero position in d_val,d_col
 
-#define xPOINT 0
-#define LINE 1
-#define TRIANGLE 2
-#define TETRAHEDRON 4
 
 #define PROP_S 1        //Area of 1D element
 #define PROP_H 2        //Height of 2D element

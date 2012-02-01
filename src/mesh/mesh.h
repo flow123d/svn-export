@@ -43,7 +43,7 @@
 
 #define ELM  0
 #define BC  1
-#define NODE  2
+#define FLOW123D_NODE  2
 
 /**
  *  This parameter limits volume of elements from below.

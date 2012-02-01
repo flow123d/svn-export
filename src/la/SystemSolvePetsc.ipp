@@ -35,14 +35,16 @@ void corlib::SystemSolvePetsc::insertToMatrix( const SubMat_  & subMat,
     for ( unsigned i = 0; i < rowIndices.size(); i++) {
         for ( unsigned j = 0; j < colIndices.size(); j++) {
 
-            // insert value
-            triplet_.insert( rowIndices[i], colIndices[j], subMat(i,j) );
+            // insert value if it is not plain zero (i.e. entry untouched by integration)
+            if ( subMat(i,j) != 0.0 ) {
+                triplet_.insert( rowIndices[i], colIndices[j], subMat(i,j) );
+            }
         }
     }
 
     // set flag
     isMatAssembled_ = false;
-
+    
     return;
 }
 
@@ -345,12 +347,14 @@ void corlib::SystemSolvePetsc::applyConstraints( ConstraintVec_ & constraints,
 {
     // check that system matrix is assembled
     if ( not isMatAssembled_ ) {
-        std::cout << " applyConstraints: The matrix has not been assembled and will be assembled now." << std::endl;
+        // debug print
+        //std::cout << " applyConstraints: The matrix has not been assembled and will be assembled now." << std::endl;
         this -> finishMatAssembly();
     }
     // check that RHS is assembled
     if ( not isRhsAssembled_ ) {
-        std::cout << " applyConstraints: The right-hand side has not been assembled and will be assembled now." << std::endl;
+        // debug print
+        //std::cout << " applyConstraints: The right-hand side has not been assembled and will be assembled now." << std::endl;
         this -> finishRhsAssembly();
     }
 
@@ -395,7 +399,7 @@ void corlib::SystemSolvePetsc::applyConstraints( ConstraintVec_ & constraints,
 }
 
 //------------------------------------------------------------------------------
-//! Simply set the dof with index 'index' to zero
+/** Simply set the dof with index 'index' to zero */
 void corlib::SystemSolvePetsc::fixDOF( const unsigned index, const double scalar )
 {
     std::vector< std::pair<unsigned,double> > thisConstraint;
@@ -409,6 +413,19 @@ void corlib::SystemSolvePetsc::fixDOF( const unsigned index, const double scalar
 /** Let Petsc solve the system  */
 void corlib::SystemSolvePetsc::solveSystem( bool reuseOperators, bool removeConstantNullSpace )
 {
+    // check that system matrix is assembled
+    if ( not isMatAssembled_ ) {
+        // debug print
+        //std::cout << " solveSystem: The matrix has not been assembled and will be assembled now." << std::endl;
+        this -> finishMatAssembly();
+    }
+    // check that RHS is assembled
+    if ( not isRhsAssembled_ ) {
+        // debug print
+        //std::cout << " solveSystem: The right-hand side has not been assembled and will be assembled now." << std::endl;
+        this -> finishRhsAssembly();
+    }
+
     // if this is the first call to this routine
     if ( solver_ == NULL ) {
         // solver object
@@ -431,7 +448,7 @@ void corlib::SystemSolvePetsc::solveSystem( bool reuseOperators, bool removeCons
         }
         ierr_ = KSPSetFromOptions( solver_ ); CHKERRV( ierr_ ); 
 
-        // avoid illeagal settings
+        // avoid illegal settings
         FTL_VERIFY_DESCRIPTIVE( not reuseOperators, "Nothing is loaded in solver, cannot reuse it. \n");  
 
         // create solution vector
@@ -440,7 +457,7 @@ void corlib::SystemSolvePetsc::solveSystem( bool reuseOperators, bool removeCons
         // create a large local solution vector for gathering 
         ierr_ = VecCreateSeq( PETSC_COMM_SELF, numTotalDofs_, &solGathered_ ); CHKERRV( ierr_ ); 
 
-        // prepare grathering scatter
+        // prepare gathering scatter
         ierr_ = VecScatterCreate( sol_, PETSC_NULL, solGathered_, PETSC_NULL, &VSdistToLarge_ ); CHKERRV( ierr_ ); 
     }
     else {

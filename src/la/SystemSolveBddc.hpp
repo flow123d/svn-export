@@ -105,6 +105,14 @@ public:
     void loadGrid( const GRID     & meshPart,
                    const unsigned meshDim = 0 );
 
+    //! Load data about mixed grid
+    //! number of space dimensions
+    //! sub-grid of mixed grid
+    //! (optional) topological dimension of mesh, i.e. 2 for shells in 3D, default is nDim
+    template< typename GRID >
+    void loadMixedGrid( const GRID     & meshPart,
+                        const unsigned   meshDim = 0 );
+
     //! Load raw data about mesh
     void loadRawMesh( const int nDim, const int numNodes, const int numDofs,
                       const std::vector<int> & inet, 
@@ -153,8 +161,9 @@ public:
                                                                  //!<   1 - mild output, 
                                                                  //!<   2 - detailed output )
                       int  maxIt = 1000,                         //!< maximum number of iterations
-                      int  ndecrMax = 30 );                      //!< maximum number of iterations with non-decreasing residual 
+                      int  ndecrMax = 30,                        //!< maximum number of iterations with non-decreasing residual 
                                                                  //!< ( used to stop diverging process )
+                      bool use_adaptive = false );               //!< if adaptive constraints should be used by BDDCML
 
     //! Get norm of right-hand side
     double normRhs( ) { return normRhs_; }

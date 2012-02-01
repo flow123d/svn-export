@@ -156,8 +156,8 @@ protected:
     void preallocate_mh_matrix();
     void assembly_steady_mh_matrix();
     void make_schur0();
-    void make_schur1();
-    void make_schur2();
+//    void make_schur1();
+//    void make_schur2();
 
 
 	int size;				// global size of MH matrix
@@ -189,6 +189,7 @@ protected:
 	//int *old_4_new;               //< aux. array should be only part of parallel LinSys
 
 	// MATIS related arrays
+        std::vector<double> solution_;                   //< sequantial scattered solution vector
         std::vector<int> global_row_4_sub_row;           //< global dof index for subdomain index
 	ISLocalToGlobalMapping map_side_local_to_global; //< PETSC mapping form local SIDE indices of subdomain to global indices
 
@@ -262,6 +263,8 @@ private:
     Vec new_diagonal;
     Vec previous_solution;
     Vec time_term;
+
+
 };
 
 #endif  //DARCY_FLOW_MH_HH

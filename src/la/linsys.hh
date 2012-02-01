@@ -114,7 +114,10 @@ public:
                             int *side_id_4_loc, 
                             int *side_row_4_id, 
                             int *edge_4_loc,   
-                            int *row_4_edge ){};
+                            int *row_4_edge )
+    {
+        ASSERT( false, "Function load_mesh is not implemented for linsys type %d \n.", this -> type );
+    }
 
     /**
      *  Returns global system size.
@@ -144,13 +147,19 @@ public:
     /**
      * Returns PETSC matrix (only for PETSC solvers)
      */
-    virtual const Mat &get_matrix(){};
+    virtual const Mat &get_matrix()
+    {
+        ASSERT( false, "Function get_matrix is not implemented for linsys type %d \n.", this -> type );
+    }
     //{ return matrix; }
 
     /**
      * Returns RHS vector  (only for PETSC solvers)
      */
-    virtual const Vec &get_rhs(){};
+    virtual const Vec &get_rhs()
+    {
+        ASSERT( false, "Function get_rhs is not implemented for linsys type %d \n.", this -> type );
+    }
     //{ return rhs; }
     
 
@@ -159,54 +168,61 @@ public:
      */
     virtual const Vec &get_solution()
     {
-        ASSERT( false, "Function get_solution is not implemented.");
-    };
+        ASSERT( false, "Function get_solution is not implemented for linsys type %d \n.", this -> type );
+    }
 
     /**
      *  Returns PETSC subarray with solution. Underlying array can be provided on construction.
      */
     virtual double *get_solution_array()
-    { 
-        ASSERT( false, "Function get_solution is not implemented.");
-    };
+    {
+        ASSERT( false, "Function get_solution_array is not implemented for linsys type %d \n.", this -> type );
+    }
     
     /**
      * Returns whole solution vector.
      */
-    virtual void get_whole_solution( std::vector<double> & globalSolution ){};
-
+    virtual void get_whole_solution( std::vector<double> & globalSolution )
+    {
+        ASSERT( false, "Function get_whole_solution is not implemented for linsys type %d \n.", this -> type );
+    }
 
     /**
      * Inserts solution vector.
      */
-    virtual void set_whole_solution( std::vector<double> & globalSolution ){};
+    virtual void set_whole_solution( std::vector<double> & globalSolution )
+    {
+        ASSERT( false, "Function set_whole_solution is not implemented for linsys type %d \n.", this -> type );
+    }
     
     /**
      * Switch linear system into allocating assembly. (only for PETSC_MPIAIJ_preallocate_by_assembly)
      */
-    virtual void start_allocation(){};
+    virtual void start_allocation()
+    {
+        ASSERT( false, "Function start_allocation is not implemented for linsys type %d \n.", this -> type );
+    }
 
     /**
      * Switch linear system into adding assembly. (the only one supported by triplets ??)
      */
-    virtual void start_add_assembly(){};
+    virtual void start_add_assembly()
+    {
+        ASSERT( false, "Function start_add_assembly is not implemented for linsys type %d \n.", this -> type );
+    }
 
     /**
      * Switch linear system into insert assembly. (not currently used)
      */
-    virtual void start_insert_assembly(){};
+    virtual void start_insert_assembly()
+    {
+        ASSERT( false, "Function start_insert_assembly is not implemented for linsys type %d \n.", this -> type );
+    }
 
     /**
      * Finish assembly of the whole system. For PETSC this should call MatEndAssembly with MAT_FINAL_ASSEMBLY
      */
     virtual void finish_assembly()=0;
-
-    /**
-     * Shortcut for assembling just one element into the matrix.
-     * Similarly we can provide method accepting armadillo matrices.
-     */
-    inline void mat_set_value(int row,int col,double val)
-    { mat_set_values(1,&row,1,&col,&val); }
 
     /**
      *  Assembly full rectangular submatrix into the system matrix.
@@ -215,16 +231,23 @@ public:
     virtual void mat_set_values(int nrow,int *rows,int ncol,int *cols,double *vals)=0;
 
     /**
-     * Shorcut for assembling just one element into RHS vector.
+     * Shortcut for assembling just one element into the matrix.
+     * Similarly we can provide method accepting armadillo matrices.
      */
-    inline void rhs_set_value(int row,double val)
-    { rhs_set_values(1,&row,&val); }
+    void mat_set_value(int row,int col,double val)
+    { mat_set_values(1,&row,1,&col,&val); }
 
     /**
      *  Set values of the system right-hand side.
      *  Should be virtual, implemented differently in  particular solvers.
      */
     virtual void rhs_set_values(int nrow,int *rows,double *vals)=0;
+
+    /**
+     * Shorcut for assembling just one element into RHS vector.
+     */
+    void rhs_set_value(int row,double val)
+    { rhs_set_values(1,&row,&val); }
 
     /**
      * Shortcut to assembly into matrix and RHS in one call.
@@ -234,7 +257,7 @@ public:
      * have only per element knowledge about boundary conditions.
      *
      */
-    inline void set_values( int nrow,int *rows,int ncol,int *cols,double *mat_vals, double *rhs_vals )
+    void set_values( int nrow,int *rows,int ncol,int *cols,double *mat_vals, double *rhs_vals )
 //                            std::vector<bool> &constrains_row_mask=std::vector<bool>(), double * constrain_values=NULL )
     {
         mat_set_values(nrow, rows, ncol, cols, mat_vals);
@@ -283,7 +306,6 @@ public:
      */
     virtual int solve()=0;
 
-
     /**
      * Provides user knowledge about symmetry.
      */
@@ -308,12 +330,30 @@ public:
     inline bool is_positive_definite()
     { return positive_definite_; }
 
+    /**
+     * Provides user knowledge about positive definiteness via symmetric general approach.
+     * This is useful for solving Darcy flow by mixed hybrid method, where blocks on subdomains are saddle point but 
+     * interface among subdomains is only at the block of Lagrange multipliers and is symmetric positive definite.
+     * Problem condensed to interface can thus be solved by PCG method, although original problem is saddle point.
+     */
+    inline void set_spd_via_symmetric_general(bool flag = true)
+    {
+        spd_via_symmetric_general_ = flag;
+        if (flag) set_symmetric();
+    }
+
+    inline bool is_spd_via_symmetric_general()
+    { return spd_via_symmetric_general_; }
+
 
     /**
      *  Output the system in the Matlab format possibly with given ordering.
      *  Rather we shoud provide output operator <<, since it is more flexible.
      */
-    virtual void view(std::ostream output_stream, int * output_mapping = NULL){};
+    virtual void view(std::ostream output_stream, int * output_mapping = NULL)
+    {
+        ASSERT( false, "Function view is not implemented for linsys type %d \n.", this -> type );
+    }
 
     //~LinSys(){};
 
@@ -322,6 +362,7 @@ protected:
 
     bool             symmetric_;
     bool             positive_definite_;
+    bool             spd_via_symmetric_general_;
 
     ConstraintVec_   constraints_;
 

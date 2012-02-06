@@ -73,6 +73,7 @@ $(OBJS)/transport/transport.o\
 $(OBJS)/transport/transport_operator_splitting.o\
 \
 $(OBJS)/la/solve.o\
+$(OBJS)/la/linsys_PETSC.o\
 $(OBJS)/la/linsys_BDDC.o\
 $(OBJS)/la/sparse_graph.o\
 \
@@ -158,6 +159,7 @@ clean:
 	rm -f ${OBJS}/*.o ${DEPS}/*.d
 	rm -f ${OBJS}/flow/*.o
 	rm -f ${OBJS}/io/*.o
+	rm -f ${OBJS}/la/*.o
 	rm -f ${OBJS}/mesh/*.o
 	rm -f ${OBJS}/reaction/*.o 
 	rm -f ${OBJS}/semchem/*.o

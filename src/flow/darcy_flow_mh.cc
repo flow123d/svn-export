@@ -42,6 +42,7 @@
 #include "flow/darcy_flow_mh.hh"
 #include "la/linsys.hh"
 #include "la/linsys_BDDC.hh"
+#include "la/linsys_PETSC.hh"
 #include "la/solve.h"
 #include "la/schur.hh"
 #include "la/sparse_graph.hh"
@@ -463,19 +464,20 @@ void DarcyFlowMH_Steady::make_schur0() {
     if (schur0 == NULL) { // create Linear System for MH matrix
 
         if (solver->type == BDDCML_SOLVER) {
-            schur0 = new LinSys_BDDC( lsize, global_row_4_sub_row.size(), NULL, MPI_COMM_WORLD, 3, 1 );
+            schur0 = new LinSys_BDDC( lsize, global_row_4_sub_row.size(), MPI_COMM_WORLD, 3, 1 );
             schur0 -> load_mesh( mesh_, edge_ds, el_ds, side_ds, rows_ds, el_4_loc, row_4_el, side_id_4_loc, 
                                  side_row_4_id, edge_4_loc, row_4_edge );
         }
-        else {
-            ASSERT( false, "MPIAIJ not supported at the moment.");
-            //schur0 = new LinSys_MPIAIJ(lsize);
+        else if (solver->type == PETSC_SOLVER) {
+            schur0 = new LinSys_PETSC( lsize, NULL, PETSC_COMM_WORLD );
             schur0->set_symmetric();
             schur0->start_allocation();
             assembly_steady_mh_matrix(); // preallocation
             schur0->start_add_assembly(); // finish allocation and create matrix
         }
-
+        else {
+            ASSERT( false, "MPIAIJ not supported at the moment.");
+        }
     }
 
     END_TIMER("PREALLOCATION");

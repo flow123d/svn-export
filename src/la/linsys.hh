@@ -77,13 +77,14 @@ public:
     } SetValuesMode;
 
     typedef enum {
-        PETSC_MPIAIJ_preallocate_by_assembly,
-        PETSC_MPIAIJ_assembly_by_triples,
-        BDDC,
-        PETSC_schur_complement   // possibly we can implement Schur as another kind of lin solver
+        PETSC,
+        BDDC
+        //PETSC_schur_complement   // possibly we can implement Schur as another kind of lin solver
+        //PETSC_MPIAIJ_preallocate_by_assembly,
+        //PETSC_MPIAIJ_assembly_by_triples,
     } LinSysType;
 
-private:
+protected:
     typedef std::pair<unsigned,double>       Constraint_;
     typedef std::vector< Constraint_ >       ConstraintVec_;
 
@@ -93,16 +94,15 @@ public:
      * Constructor of abstract class should not be called directly, but is used for initialization of member common
      * to all particular solvers.
      *
-     * @param lsize - local size of the solution vector
-     * @param sol_array - optionally one can provide pointer to array allocated to size lsize, where
-     *  the solution should be stored,
+     * @param comm - MPI communicator
      */
     LinSys( MPI_Comm comm = MPI_COMM_WORLD )
-      : comm_( comm )
+      : comm_( comm ), positive_definite_( false ), symmetric_( false ), spd_via_symmetric_general_( false ),
+        status_( NONE )
     { };
 
-    /// Particular type of the linear system.
-    LinSysType  type;   ///< MAT_IS or MAT_MPIAIJ anyone can inquire my type
+    // Particular type of the linear system.
+    LinSysType type;  //!< anyone can inquire my type
 
     virtual void load_mesh( Mesh *mesh,
                             Distribution *edge_ds,  
@@ -142,7 +142,9 @@ public:
      * Returns whole Distribution class for distribution of the solution.
      */
     inline const Distribution* get_ds( )
-    { return rows_ds_; }
+    { 
+        return rows_ds_; 
+    }
 
     /**
      * Returns PETSC matrix (only for PETSC solvers)
@@ -151,7 +153,6 @@ public:
     {
         ASSERT( false, "Function get_matrix is not implemented for linsys type %d \n.", this -> type );
     }
-    //{ return matrix; }
 
     /**
      * Returns RHS vector  (only for PETSC solvers)
@@ -160,9 +161,7 @@ public:
     {
         ASSERT( false, "Function get_rhs is not implemented for linsys type %d \n.", this -> type );
     }
-    //{ return rhs; }
     
-
     /**
      *  Returns PETSC vector with solution. Underlying array can be provided on construction.
      */
@@ -222,7 +221,7 @@ public:
     /**
      * Finish assembly of the whole system. For PETSC this should call MatEndAssembly with MAT_FINAL_ASSEMBLY
      */
-    virtual void finish_assembly()=0;
+    virtual void finish_assembly( )=0;
 
     /**
      *  Assembly full rectangular submatrix into the system matrix.
@@ -281,7 +280,7 @@ public:
      * What is th meaning of ( const double factor ) form Cambridge code?
      */
 
-    virtual void apply_constrains( )=0;
+    virtual void apply_constrains( double scalar )=0;
 
     /**
      * Solve the system.
@@ -350,15 +349,18 @@ public:
      *  Output the system in the Matlab format possibly with given ordering.
      *  Rather we shoud provide output operator <<, since it is more flexible.
      */
-    virtual void view(std::ostream output_stream, int * output_mapping = NULL)
+    //virtual void view(std::ostream output_stream, int * output_mapping = NULL)
+    virtual void view()
     {
         ASSERT( false, "Function view is not implemented for linsys type %d \n.", this -> type );
     }
 
-    //~LinSys(){};
+    ~LinSys()
+    { };
 
 protected:
     MPI_Comm         comm_;
+    SetValuesMode    status_;         //!< Set value status of the linear system.
 
     bool             symmetric_;
     bool             positive_definite_;

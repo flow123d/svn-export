@@ -107,6 +107,7 @@ $(OBJS)/field_p0.o
 SUB_DIRS = \
 system\
 mesh\
+checkpointing\
 io\
 semchem\
 flow\
@@ -164,6 +165,7 @@ clean:
 	rm -f ${OBJS}/*.o ${DEPS}/*.d
 	rm -f ${OBJS}/flow/*.o
 	rm -f ${OBJS}/io/*.o
+	rm -f ${OBJS}/checkpointing/*.o
 	rm -f ${OBJS}/mesh/*.o
 	rm -f ${OBJS}/reaction/*.o 
 	rm -f ${OBJS}/semchem/*.o

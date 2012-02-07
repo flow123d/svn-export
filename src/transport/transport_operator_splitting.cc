@@ -109,13 +109,13 @@ void TransportOperatorSplitting::update_solution() {
     START_TIMER("transport_steps");
 
 
-    xprintf(Msg,"********************************************************.\n");
-    CheckpointingBase* chp;
-    chp = new CheckpointingBase("TransportOperatorSplitting");
-//    chp->get_output()->save_timegovernor(time_);
-//    chp->get_output()->save_data();
-
-    xprintf(Msg,"********************************************************.\n");
+//    xprintf(Msg,"********************************************************.\n");
+//    Checkpointing* chp;
+//    chp = new Checkpointing("TransportOperatorSplitting");
+////    chp->get_output()->save_timegovernor(time_);
+////    chp->get_output()->save_data();
+//
+//    xprintf(Msg,"********************************************************.\n");
 
 
 

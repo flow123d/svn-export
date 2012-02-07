@@ -107,6 +107,18 @@ void TransportOperatorSplitting::update_solution() {
 
     xprintf( Msg, "t: %f (TOS)                  cfl_dt: %f ", convection->time().t(), convection->time().dt() );
     START_TIMER("transport_steps");
+
+
+    xprintf(Msg,"********************************************************.\n");
+    CheckpointingBase* chp;
+    chp = new CheckpointingBase("TransportOperatorSplitting");
+//    chp->get_output()->save_timegovernor(time_);
+//    chp->get_output()->save_data();
+
+    xprintf(Msg,"********************************************************.\n");
+
+
+
     int steps=0;
     while ( convection->time().lt(time_->t()) )
     {

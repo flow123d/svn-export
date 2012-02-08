@@ -100,20 +100,6 @@ private:
     typedef corlib::SystemSolveBddc   Solver_;
     Solver_ *                         solver_;         //!< OpenFTL solver
 
-    Mesh *                            mesh_;
-
-    Distribution *                    edge_ds_;        //!< optimal distribution of edges
-    Distribution *                    el_ds_;          //!< optimal distribution of elements
-    Distribution *                    side_ds_;        //!< optimal distribution of elements
-    
-    int *                             el_4_loc_;       //!< array of idexes of local elements 
-                                                       //!< (in ordering matching the optimal global)
-    int *                             row_4_el_;       //!< element index to matrix row
-    int *                             side_id_4_loc_;  //!< array of ids of local sides
-    int	*                             side_row_4_id_;  //!< side id to matrix row
-    int *                             edge_4_loc_;     //!< array of indexes of local edges
-    int	*                             row_4_edge_;     //!< edge index to matrix row
-
 };
 
 #endif /* LA_LINSYS_BDDC_HH_ */

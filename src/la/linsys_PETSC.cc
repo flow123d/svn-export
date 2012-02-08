@@ -32,6 +32,8 @@
 // derived from base linsys
 #include "la/linsys_PETSC.hh"
 
+#include <boost/bind.hpp>
+
 LinSys_PETSC::LinSys_PETSC( const unsigned lsize,
                             double *sol_array,
                             const MPI_Comm comm ) 
@@ -42,25 +44,47 @@ LinSys_PETSC::LinSys_PETSC( const unsigned lsize,
 
     PetscErrorCode ierr;
 
-    // create distribution
-    rows_ds_ = new Distribution( lsize );
-
     // create PETSC vectors:
     // rhs
-    v_rhs_= new double( rows_ds_->lsize( ) + 1 );
-    ierr = VecCreateMPIWithArray( comm_, rows_ds_->lsize( ), PETSC_DECIDE, v_rhs_, &rhs_ ); CHKERRV( ierr );
-    ierr = VecZeroEntries( rhs_ ); CHKERRV( ierr );
+    v_rhs_= new double[ lsize + 1 ];
+    ierr = VecCreateMPIWithArray( comm_, lsize, PETSC_DECIDE, v_rhs_, &rhs_ ); CHKERRV( ierr );
+    //ierr = VecZeroEntries( rhs_ ); CHKERRV( ierr );
 
     // solution
     if (sol_array == NULL) {
-        v_solution_   = new double( rows_ds_->lsize( ) + 1 );
+        v_solution_   = new double[ lsize + 1 ];
         own_solution_ = true;
     }
     else {
         v_solution_ = sol_array;
         own_solution_ = false;
     }
-    ierr = VecCreateMPIWithArray( comm_, rows_ds_->lsize( ), PETSC_DECIDE, v_solution_, &solution_ ); CHKERRV( ierr );
+    ierr = VecCreateMPIWithArray( comm_, lsize, PETSC_DECIDE, v_solution_, &solution_ ); CHKERRV( ierr );
+}
+
+void LinSys_PETSC::load_mesh( Mesh *mesh,
+                              Distribution *edge_ds,  
+                              Distribution *el_ds,        
+                              Distribution *side_ds,     
+                              Distribution *rows_ds,    
+                              int *el_4_loc,    
+                              int *row_4_el,     
+                              int *side_id_4_loc, 
+                              int *side_row_4_id, 
+                              int *edge_4_loc,   
+                              int *row_4_edge )     
+{
+    mesh_          =  mesh;
+    edge_ds_       =  edge_ds;
+    el_ds_         =  el_ds;  
+    side_ds_       =  side_ds;
+    rows_ds_       =  rows_ds;
+    el_4_loc_      =  el_4_loc;    
+    row_4_el_      =  row_4_el;     
+    side_id_4_loc_ =  side_id_4_loc;
+    side_row_4_id_ =  side_row_4_id;
+    edge_4_loc_    =  edge_4_loc;   
+    row_4_edge_    =  row_4_edge;   
 }
 
 void LinSys_PETSC::start_allocation( )
@@ -165,14 +189,13 @@ void LinSys_PETSC::preallocate_matrix()
     PetscErrorCode ierr;
     PetscInt *on_nz, *off_nz;
     PetscScalar *on_array, *off_array;
-    int i;
 
     // assembly and get values from counting vectors, destroy them
     VecAssemblyBegin(on_vec_);
     VecAssemblyBegin(off_vec_);
 
-    on_nz  = new PetscInt( rows_ds_->lsize() );
-    off_nz = new PetscInt( rows_ds_->lsize() );
+    on_nz  = new PetscInt[ rows_ds_->lsize() ];
+    off_nz = new PetscInt[ rows_ds_->lsize() ];
 
     VecAssemblyEnd(on_vec_);
     VecAssemblyEnd(off_vec_);
@@ -180,7 +203,7 @@ void LinSys_PETSC::preallocate_matrix()
     VecGetArray( on_vec_,  &on_array );
     VecGetArray( off_vec_, &off_array );
 
-    for ( i=0; i<rows_ds_->lsize(); i++ ) {
+    for ( int i=0; i<rows_ds_->lsize(); i++ ) {
         on_nz[i]  = static_cast<PetscInt>( on_array[i]+0.1  );  // small fraction to ensure correct rounding
         off_nz[i] = static_cast<PetscInt>( off_array[i]+0.1 );
     }
@@ -197,8 +220,8 @@ void LinSys_PETSC::preallocate_matrix()
     if (symmetric_) MatSetOption(matrix_, MAT_SYMMETRIC, PETSC_TRUE);
     MatSetOption(matrix_, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);
 
-    delete on_nz;
-    delete off_nz;
+    delete[] on_nz;
+    delete[] off_nz;
 }
 
 void LinSys_PETSC::finish_assembly( )
@@ -327,6 +350,14 @@ int LinSys_PETSC::solve( )
     ierr = KSPDestroy(&system); 
 
     return static_cast<int>(reason);
+
+}
+
+void LinSys_PETSC::get_whole_solution( std::vector<double> & globalSolution )
+{
+    this -> gatherSolution_( );
+    globalSolution.resize( globalSolution_.size( ) );
+    std::copy( globalSolution_.begin(), globalSolution_.end(), globalSolution.begin() );
 }
 
 void LinSys_PETSC::view( )
@@ -363,8 +394,50 @@ LinSys_PETSC::~LinSys_PETSC( )
     ierr = VecDestroy(&rhs_); CHKERRV( ierr );
     ierr = VecDestroy(&solution_); CHKERRV( ierr );
 
-    delete v_rhs_;
-    if ( own_solution_ ) delete v_solution_;
-    delete rows_ds_;
+    delete[] v_rhs_;
+    if ( own_solution_ ) delete[] v_solution_;
+}
+
+void LinSys_PETSC::gatherSolution_( )
+{
+    // unsigned
+    unsigned globalSize = rows_ds_->size( );
+
+    // create a large local solution vector for gathering 
+    PetscErrorCode ierr;
+    Vec solutionGathered;              //!< large vector of global solution stored locally
+    ierr = VecCreateSeq( PETSC_COMM_SELF, globalSize, &solutionGathered ); CHKERRV( ierr ); 
+
+    // prepare gathering scatter
+    VecScatter VSdistToLarge;          //!< scatter for gathering local parts into large vector
+    ierr = VecScatterCreateToAll( solution_, &VSdistToLarge, &solutionGathered ); CHKERRV( ierr ); 
+    //ierr = VecScatterCreate( solution_, PETSC_NULL, solutionGathered, PETSC_NULL, &VSdistToLarge ); CHKERRV( ierr ); 
+
+    // get global solution vector at each process
+    ierr = VecScatterBegin( VSdistToLarge, solution_, solutionGathered, INSERT_VALUES, SCATTER_FORWARD ); CHKERRV( ierr ); 
+    ierr = VecScatterEnd(   VSdistToLarge, solution_, solutionGathered, INSERT_VALUES, SCATTER_FORWARD ); CHKERRV( ierr );
+
+    // extract array of global solution for copy
+    PetscScalar *solutionGatheredArray;
+    ierr = VecGetArray( solutionGathered, &solutionGatheredArray );
+
+    // copy the result to calling routine
+    //std::transform( &(solutionGatheredArray[0]), &(solutionGatheredArray[ globalSize ]), sol_disordered.begin( ), 
+    //                LinSys_PETSC::PetscScalar2Double_( ) ) ;
+    
+    //reorder solution
+    std::vector<unsigned> indices;
+    this->create_renumbering_( indices );
+    globalSolution_.resize( globalSize );
+    for ( int i = 0; i < globalSize; i++ ) {
+        globalSolution_[i] = static_cast<double>( solutionGatheredArray[indices[i]] );
+    }
+
+    // release array
+    ierr = VecRestoreArray( solutionGathered, &solutionGatheredArray );
+
+    // destroy PETSc objects
+    ierr = VecDestroy( &solutionGathered );     CHKERRV( ierr );
+    ierr = VecScatterDestroy( &VSdistToLarge ); CHKERRV( ierr );
 }
 

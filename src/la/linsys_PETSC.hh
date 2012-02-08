@@ -49,6 +49,18 @@ public:
                   double *sol_array = NULL,
                   const MPI_Comm comm = PETSC_COMM_WORLD ); 
 
+    void load_mesh( Mesh *mesh,
+                    Distribution *edge_ds,  
+                    Distribution *el_ds,        
+                    Distribution *side_ds,     
+                    Distribution *rows_ds,    
+                    int *el_4_loc,    
+                    int *row_4_el,     
+                    int *side_id_4_loc, 
+                    int *side_row_4_id, 
+                    int *edge_4_loc,   
+                    int *row_4_edge );
+
     const Mat &get_matrix()
     { 
         return matrix_; 
@@ -91,6 +103,8 @@ public:
 
     int solve( );
 
+    void get_whole_solution( std::vector<double> & globalSolution );
+
     void view( );
 
     ~LinSys_PETSC( );
@@ -104,6 +118,16 @@ private:
         return PETSC_NULL;
     }
 
+    // PetscScalar to double casting functor
+    struct PetscScalar2Double_ : public std::unary_function< PetscScalar, double >
+    {
+        double operator()( PetscScalar arg ) 
+        {
+            return static_cast<double>( arg );
+        }
+    };
+
+    void gatherSolution_( );
 
 private:
 
@@ -118,6 +142,7 @@ private:
     Vec     on_vec_;             //!< Vectors for counting non-zero entries in diagonal block.
     Vec     off_vec_;            //!< Vectors for counting non-zero entries in off-diagonal block.
 
+    std::vector<double>  globalSolution_; //!< global solution in numbering for linear system
 };
 
 #endif /* LA_LINSYS_PETSC_HH_ */

@@ -279,7 +279,6 @@ public:
      *
      * What is th meaning of ( const double factor ) form Cambridge code?
      */
-
     virtual void apply_constrains( double scalar )=0;
 
     /**
@@ -359,6 +358,26 @@ public:
     { };
 
 protected:
+    void create_renumbering_( std::vector<unsigned> & indices ) 
+    {
+        ASSERT( mesh_ != NULL, " Mesh not loaded.");
+        unsigned size = rows_ds_->size( );
+        indices.reserve(size);
+        FOR_ELEMENTS(mesh_, ele) {
+            FOR_ELEMENT_SIDES(ele,si) {
+                indices.push_back( side_row_4_id_[ele->side[si]->id] );
+            }
+        }
+        FOR_ELEMENTS(mesh_, ele) {
+            indices.push_back( row_4_el_[ele.index()] );
+        }
+        FOR_EDGES(mesh_, edg) {
+            indices.push_back( row_4_edge_[edg.index()] );
+        }
+        ASSERT( indices.size() == size, "Size of array does not match number of fills.\n" );
+    }
+
+protected:
     MPI_Comm         comm_;
     SetValuesMode    status_;         //!< Set value status of the linear system.
 
@@ -368,7 +387,20 @@ protected:
 
     ConstraintVec_   constraints_;
 
+    Mesh *           mesh_;
+
     Distribution *   rows_ds_;        //!< final distribution of rows of MH matrix
+    Distribution *   edge_ds_;        //!< optimal distribution of edges
+    Distribution *   el_ds_;          //!< optimal distribution of elements
+    Distribution *   side_ds_;        //!< optimal distribution of elements
+    
+    int *            el_4_loc_;       //!< array of idexes of local elements 
+                                      //!< (in ordering matching the optimal global)
+    int *            row_4_el_;       //!< element index to matrix row
+    int *            side_id_4_loc_;  //!< array of ids of local sides
+    int	*            side_row_4_id_;  //!< side id to matrix row
+    int *            edge_4_loc_;     //!< array of indexes of local edges
+    int	*            row_4_edge_;     //!< edge index to matrix row
 };
 
 #endif /* LA_LINSYS_HH_ */

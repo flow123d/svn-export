@@ -367,23 +367,9 @@ void LinSys_BDDC::gatherSolution_( )
     // broadcast global solution from root
     ierr = MPI_Bcast( &(sol_disordered[0]), sol_disordered.size(), MPI_DOUBLE, 0, comm_ );
 
-    //TODO: special method for getting the entire solution
-    std::vector<unsigned> indices;
-    indices.reserve(numDofs_);
-    FOR_ELEMENTS(mesh_, ele) {
-        FOR_ELEMENT_SIDES(ele,si) {
-            indices.push_back( side_row_4_id_[ele->side[si]->id] );
-        }
-    }
-    FOR_ELEMENTS(mesh_, ele) {
-        indices.push_back( row_4_el_[ele.index()] );
-    }
-    FOR_EDGES(mesh_, edg) {
-        indices.push_back( row_4_edge_[edg.index()] );
-    }
-    ASSERT( indices.size() == numDofs_, "Size of array does not match number of fills.\n" );
-
     //reorder solution
+    std::vector<unsigned> indices;
+    this->create_renumbering_( indices );
     globalSolution_.resize( numDofs_ );
     for ( int i = 0; i < numDofs_; i++ ) {
         globalSolution_[i] = sol_disordered[indices[i]];

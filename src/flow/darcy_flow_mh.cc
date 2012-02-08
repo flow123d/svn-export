@@ -191,7 +191,8 @@ void DarcyFlowMH_Steady::update_solution() {
     xprintf(Msg, "t: %f (Darcy) dt: %f\n",time_->t(), time_->dt());
     modify_system(); // hack for unsteady model
 
-    int convergedReason = schur0 -> solve();
+    int convergedReason = schur0 -> solve( );
+    DBGMSG( "Solved linear problem with converged reason %d \n", convergedReason );
     ASSERT( convergedReason >= 0, "Linear solver failed to converge. Convergence reason %d \n", convergedReason );
 
 
@@ -269,6 +270,7 @@ void  DarcyFlowMH_Steady::get_solution_vector(double * &vec, unsigned int &vec_s
     //    solution_changed_for_scatter=false;
     //}
 
+    if ( solution_.empty() ) solution_.resize( this->size, 0. );
     schur0 -> get_whole_solution( solution_ );
 
     vec=&(solution_[0]);
@@ -465,18 +467,18 @@ void DarcyFlowMH_Steady::make_schur0() {
 
         if (solver->type == BDDCML_SOLVER) {
             schur0 = new LinSys_BDDC( lsize, global_row_4_sub_row.size(), MPI_COMM_WORLD, 3, 1 );
-            schur0 -> load_mesh( mesh_, edge_ds, el_ds, side_ds, rows_ds, el_4_loc, row_4_el, side_id_4_loc, 
-                                 side_row_4_id, edge_4_loc, row_4_edge );
         }
         else if (solver->type == PETSC_SOLVER) {
             schur0 = new LinSys_PETSC( lsize, NULL, PETSC_COMM_WORLD );
+        }
+        schur0 -> load_mesh( mesh_, edge_ds, el_ds, side_ds, rows_ds, el_4_loc, row_4_el, side_id_4_loc, 
+                             side_row_4_id, edge_4_loc, row_4_edge );
+
+        if (solver->type == PETSC_SOLVER) {
             schur0->set_symmetric();
             schur0->start_allocation();
             assembly_steady_mh_matrix(); // preallocation
             schur0->start_add_assembly(); // finish allocation and create matrix
-        }
-        else {
-            ASSERT( false, "MPIAIJ not supported at the moment.");
         }
     }
 

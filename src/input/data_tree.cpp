@@ -9,12 +9,203 @@
 
 namespace flow {
 
+string Data_tree::flow_json_filter( std::istream& is )
+{
+    string ret_s;
+    typedef enum {GO, GO_BSL, IN_QUOTE, IN_QUOTE_BSL, IN_COMMENT, IN_COMMENT_BSL} states;
+    states state;
+    states next_state;
+    char c;
+    int pos = 0;
+
+    next_state = state = GO;
+    while ( is.good() )
+    {
+        c = is.get();
+
+        switch (state) {
+        case GO:
+            switch (c) {
+            case '#':
+                next_state = IN_COMMENT;
+                break;
+            case '\\':
+                next_state = GO_BSL;
+                break;
+            case '"':
+                next_state = IN_QUOTE;
+                ret_s.push_back(c);
+                break;
+            default:
+                ret_s.push_back(c);
+                break;
+            }
+            break;
+        case GO_BSL:
+            ret_s.push_back('\\');
+            ret_s.push_back(c);
+            next_state = GO;
+            break;
+        case IN_QUOTE:
+            switch (c) {
+            case '"':
+                next_state = GO;
+                ret_s.push_back(c);
+                break;
+            case '\\':
+                next_state = IN_QUOTE_BSL;
+                break;
+            default:
+                ret_s.push_back(c);
+                break;
+            }
+            break;
+        case IN_QUOTE_BSL:
+            ret_s.push_back('\\');
+            ret_s.push_back(c);
+            next_state = IN_QUOTE;
+            break;
+        case IN_COMMENT:
+            switch (c) {
+            case '\n':
+                next_state = GO;
+                break;
+            case '\r':
+                next_state = GO;
+                break;
+            case '\\':
+                next_state = IN_COMMENT_BSL;
+                break;
+            default:
+                break;
+            }
+            break;
+        case IN_COMMENT_BSL:
+            switch (c) {
+            case '\n':
+            case '\r':
+                next_state = IN_COMMENT_BSL;
+                break;
+            default:
+                next_state = IN_COMMENT;
+                break;
+            }
+            break;
+        default:
+            cout << "WTF???" << endl; //TODO: lepsi vypis chyby
+            exit(1);
+        }
+
+        state = next_state;
+        ++pos;
+    }
+
+    return ret_s;
+}
+
+
+string Data_tree::flow_json_filter( const std::string& s )
+{
+    string ret_s;
+    typedef enum {GO, GO_BSL, IN_QUOTE, IN_QUOTE_BSL, IN_COMMENT, IN_COMMENT_BSL} states;
+    states state;
+    states next_state;
+    char c;
+    int pos = 0;
+    int size;
+
+    size = s.size();
+    next_state = state = GO;
+    while ( pos < size )
+    {
+        c = s.at(pos);
+
+        switch (state) {
+        case GO:
+            switch (c) {
+            case '#':
+                next_state = IN_COMMENT;
+                break;
+            case '\\':
+                next_state = GO_BSL;
+                break;
+            case '"':
+                next_state = IN_QUOTE;
+                ret_s.push_back(c);
+                break;
+            default:
+                ret_s.push_back(c);
+                break;
+            }
+            break;
+        case GO_BSL:
+            ret_s.push_back('\\');
+            ret_s.push_back(c);
+            next_state = GO;
+            break;
+        case IN_QUOTE:
+            switch (c) {
+            case '"':
+                next_state = GO;
+                ret_s.push_back(c);
+                break;
+            case '\\':
+                next_state = IN_QUOTE_BSL;
+                break;
+            default:
+                ret_s.push_back(c);
+                break;
+            }
+            break;
+        case IN_QUOTE_BSL:
+            ret_s.push_back('\\');
+            ret_s.push_back(c);
+            next_state = IN_QUOTE;
+            break;
+        case IN_COMMENT:
+            switch (c) {
+            case '\n':
+                next_state = GO;
+                break;
+            case '\r':
+                next_state = GO;
+                break;
+            case '\\':
+                next_state = IN_COMMENT_BSL;
+                break;
+            default:
+                break;
+            }
+            break;
+        case IN_COMMENT_BSL:
+            switch (c) {
+            case '\n':
+            case '\r':
+                next_state = IN_COMMENT_BSL;
+                break;
+            default:
+                next_state = IN_COMMENT;
+                break;
+            }
+            break;
+        default:
+            cout << "WTF???" << endl; //TODO: lepsi vypis chyby
+            exit(1);
+        }
+
+        state = next_state;
+        ++pos;
+    }
+
+    return ret_s;
+}
+
 Data_tree::Data_tree( const std::string& s )
 {
     err_status = false;
 
     //load JSON from string
-    if ( !json_spirit::read(s,json_root) )
+    if ( !json_spirit::read( flow_json_filter(s),json_root) )
     {
         err_status = true;
         return;
@@ -33,7 +224,7 @@ Data_tree::Data_tree( std::istream& is )
     err_status = false;
 
     //load JSON from string
-    if ( !json_spirit::read(is,json_root) )
+    if ( !json_spirit::read( flow_json_filter(is), json_root) )
     {
         err_status = true;
         return;

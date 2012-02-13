@@ -39,6 +39,9 @@ private:
 public:
     bool err_status;
 
+    string flow_json_filter( const std::string& s ); //< input filter for string
+    string flow_json_filter( std::istream& is ); //< input filter for stream
+
     Data_tree( const std::string& s ); //< build tree from JSON in string
     Data_tree( std::istream& is );     //< build tree from JSON in stream
 

@@ -5,11 +5,31 @@
 #include <cstdio>
 #include <cfloat>
 
-#include "src/json_spirit/json_spirit.h"
-#include "src/input.hpp" //jediny potrebny header, vse ostatni se includuje vevnitr
+#include "../json_spirit/json_spirit.h"
+#include "../input.hpp" //jediny potrebny header, vse ostatni se includuje vevnitr
 
 using namespace std;
 using namespace flow;
+
+
+bool minitest_stream( const string & fname );
+bool minitest_string( const string & fname );
+
+void minitest( const string & fname )
+{
+    cout << "string test: ";
+    if ( minitest_string( fname ) )
+        cout << "FAILED" << endl;
+    else
+        cout << "OK" << endl;
+
+
+    cout << "stream test: ";
+    if ( minitest_stream( fname ) )
+        cout << "FAILED" << endl;
+    else
+        cout << "OK" << endl;
+}
 
 int main()
 {
@@ -17,7 +37,7 @@ int main()
 
     //read from stream
     json_spirit::mValue tree_root;
-    ifstream in_s("flow_mini.json");
+    ifstream in_s("src/test/flow_mini.json");
     json_spirit::read(in_s, tree_root);
     in_s.close();
 
@@ -64,7 +84,7 @@ int main()
         Data_tree * tree;
 
         //read from file
-        ifstream in_s("flow_mini.json");
+        ifstream in_s("src/test/flow_mini.json");
         tree = new Data_tree(in_s);
         in_s.close();
 
@@ -102,8 +122,74 @@ int main()
         cout << "gnode reference to vnode " << gnode_r << endl;
         cout << "gnode pointer to vnode " << (*gnode_p) << endl;
 */
+        delete tree;
     }
 
-    printf( "END\n" );
+    //test JSON FLOW extended format
+    cout << endl << "===== JSON FLOW extended format =====" << endl;
+
+    cout << "Test filtru komentaru:" << endl;
+    minitest("src/test/comments.fjson");
+
+    cout << "Test carek:" << endl;
+    minitest("src/test/carky.fjson");
+
+    cout << "Test rovnitek:" << endl;
+    minitest("src/test/dvojtecka-rovnitko.fjson");
+
+    cout << "Test uvozovek:" << endl;
+    minitest("src/test/uvozovky.fjson");
+
+    cout << "END." << endl << flush;
     return 0;
+}
+
+bool minitest_stream( const string & fname )
+{
+    Data_tree * tree;
+    string in_str;
+    bool retval;
+
+    ifstream in_s( fname.c_str() );
+    if (in_s.is_open())
+    {
+        tree = new Data_tree(in_s);
+        in_s.close();
+    } else {
+        cout << "Unable to open file!" << endl;
+        return false;
+    }
+
+    retval = tree->err_status;
+
+    delete tree;
+    return retval;
+}
+
+bool minitest_string( const string & fname )
+{
+    Data_tree * tree;
+    string in_str;
+    bool retval;
+
+    ifstream in_s( fname.c_str() );
+    if (in_s.is_open())
+    {
+        while (in_s.good())
+        {
+            in_str.push_back(in_s.get());
+        }
+        in_s.close();
+        // The complete file content is in memory now...
+    } else {
+        cout << "Unable to open file!" << endl;
+        return false;
+    }
+
+    tree = new Data_tree(in_str);
+
+    retval = tree->err_status;
+
+    delete tree;
+    return retval;;
 }

@@ -474,7 +474,7 @@ namespace json_spirit
                     ;
 
                 members_
-                    = pair_ >> *( ',' >> pair_ )
+                    = pair_ >> *( ( ch_p(',') | *space_p ) >> pair_ )
                     ;
 
                 pair_

@@ -473,7 +473,7 @@ namespace json_spirit
 
                 pair_
                     = string_[ new_name ]
-                    >> ( ':' | eps_p[ &throw_not_colon ] )
+                    >> ( ch_p(':') | ch_p('=') | eps_p[ &throw_not_colon ] )
                     >> ( value_ | eps_p[ &throw_not_value ] )
                     ;
 

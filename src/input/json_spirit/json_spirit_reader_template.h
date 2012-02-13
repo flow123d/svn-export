@@ -167,8 +167,14 @@ namespace json_spirit
 
         typedef typename String_type::const_iterator Iter_type;
 
-        Iter_type str_without_quotes( ++begin );
-        Iter_type end_without_quotes( --end );
+        if ( ( *begin == '"' ) && ( *(end-1) == '"' ) )
+        {
+        ++begin;
+        --end;
+        }
+
+        Iter_type str_without_quotes( begin );
+        Iter_type end_without_quotes( end );
 
         return substitute_esc_chars< String_type >( str_without_quotes, end_without_quotes );
     }
@@ -472,7 +478,7 @@ namespace json_spirit
                     ;
 
                 pair_
-                    = string_[ new_name ]
+                    = ( string_[ new_name ] | key_name_[ new_name ] )
                     >> ( ch_p(':') | ch_p('=') | eps_p[ &throw_not_colon ] )
                     >> ( value_ | eps_p[ &throw_not_value ] )
                     ;
@@ -499,6 +505,11 @@ namespace json_spirit
                       ]
                     ;
 
+               key_name_
+                    = alpha_p
+                    >> *( alnum_p | ch_p('_') )
+                    ;
+
                 number_
                     = strict_real_p[ new_real   ] 
                     | int64_p      [ new_int    ]
@@ -506,7 +517,7 @@ namespace json_spirit
                     ;
             }
 
-            spirit_namespace::rule< ScannerT > json_, object_, members_, pair_, array_, elements_, value_, string_, number_;
+            spirit_namespace::rule< ScannerT > json_, object_, members_, pair_, array_, elements_, value_, string_, key_name_, number_;
 
             const spirit_namespace::rule< ScannerT >& start() const { return json_; }
         };

@@ -23,7 +23,7 @@
  * $LastChangedDate: 2012-1-4 20:34:14 +0100 (So, 10 pro 2011) $
  *
  * @file    CheckpointingOutput.cpp
- * @brief   Output class for Checkpointing.
+ * @brief   Output class for CheckpointingOutput.
  *
  */
 

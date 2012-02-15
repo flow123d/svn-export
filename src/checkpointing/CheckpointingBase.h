@@ -41,16 +41,16 @@
 //#include <time_governor.hh>
 
 
-class Checkpointing {
+class CheckpointingBase {
 public:
-    /** \brief Default constructor for Checkpointing class */
-    Checkpointing(string fileName);//string fileName
+    /** \brief Default constructor for CheckpointingBase class */
+    CheckpointingBase(string fileName);//string fileName
 
-    /** \brief Default copy constructor for Checkpointing class */
-    Checkpointing(const Checkpointing* ch);
+    /** \brief Default copy constructor for CheckpointingBase class */
+    CheckpointingBase(const CheckpointingBase* ch);
 
-    /** \brief Default destructor for Checkpointing class */
-    virtual ~Checkpointing();
+    /** \brief Default destructor for CheckpointingBase class */
+    virtual ~CheckpointingBase();
 
     /** \brief public getter for output_ */
     CheckpointingOutput* get_output() const;
@@ -61,12 +61,18 @@ public:
     /** \brief public getter for CheckpointingOn */
     bool is_checkpointing_on();
 
+    /** \brief virtual method for saving objects state */
+    virtual void save_state();
+
+    /** \brief virtual method for loading/restoring objects state */
+    virtual void load_state();
+
 private:
     CheckpointingOutput* output_;
 
 
     /** \brief Parse values from .ini file to OutFielFormat\n
-     * parameters are stored in section-[Checkpointing], key-Output_format
+     * parameters are stored in section-[CheckpointingBase], key-Output_format
      * \param ini value TXT --> CH_OUTPUT_TXT
      * \param ini value BIN --> CH_OUTPUT_BIN
      * \param ini value JSON --> CH_OUTPUT_JSON  */
@@ -81,7 +87,7 @@ private:
     /** \brief Current output file format*/
     CheckpointingOutFileFormat out_file_format_;
 
-    /** \brief Checkpointing enabled/disabled */
+    /** \brief CheckpointingBase enabled/disabled */
     bool checkpointing_on_;
 
     /** \brief Base name of the file for storing Vectors, Matrixes TimeGovernor and other variables\n

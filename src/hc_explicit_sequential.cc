@@ -137,6 +137,7 @@ void HC_ExplicitSequential::run_simulation()
 
 
     while (! (water->time().is_end() && transport_reaction->time().is_end() ) ) {
+        xprintf(Msg,"********************************CYKLUS********************************************************\n");
 
         transport_reaction->set_time_step_constrain(water->time().dt());
         // in future here could be re-estimation of transport planed time according to
@@ -144,10 +145,11 @@ void HC_ExplicitSequential::run_simulation()
         // which suddenly rise in time 3*w_dt. First we the planed transport time step t_dt could be quite big, but
         // in time 3*w_dt we can reconsider value of t_dt to better capture changing velocity.
         velocity_interpolation_time= theta * transport_reaction->planned_time() + (1-theta) * transport_reaction->solved_time();
-
+        xprintf(Msg,"velocity_interpolation_time: %f, water->solved_time(): %f, transport_reaction->planned_time():%f, transport_reaction->solved_time():%f\n", velocity_interpolation_time, water->solved_time(), transport_reaction->planned_time(), transport_reaction->solved_time());
         // if transport is off, transport should return infinity solved and planned times so that
         // only water branch takes the place
         if (water->solved_time() < velocity_interpolation_time) {
+            xprintf(Msg,"sem to nikdy nejde\n");
             // solve water over the nearest transport interval
             water->update_solution();
             water_output->postprocess();
@@ -159,6 +161,7 @@ void HC_ExplicitSequential::run_simulation()
 
             velocity_changed = true;
         } else {
+            xprintf(Msg,"sem to jde dycky\n");
             // having information about velocity field we can perform transport step
 
             // here should be interpolation of the velocity at least if the interpolation time
@@ -170,9 +173,46 @@ void HC_ExplicitSequential::run_simulation()
                 transport_reaction->set_velocity_field(velocity_field);
                 velocity_changed = false;
             }
+            xprintf(Msg,"dělá se jen todle\n");
             transport_reaction->update_solution();
             transport_reaction->output_data();
         }
+
+        xprintf(Msg,"water TG\n");
+
+//        TimeMarks marks;
+//        marks = water->time().marks();
+//        cout << water->time().marks() << endl;
+//        for(vector<TimeMark>::const_iterator it =water->time().marks().get_marks().begin(); it != water->time().marks().get_marks().end(); ++it)
+//            cout << *it << endl;
+//        xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().is_current(transport_reaction->time().end_time()));
+
+        xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().end_time());
+        xprintf(Msg,"estimate_time:%f, begin:%f, end :%f\n", transport_reaction->time().estimate_time(), transport_reaction->time().marks().get_marks().begin(), water->time().marks().get_marks().end());
+
+        for(vector<TimeMark>::const_iterator it =transport_reaction->time().marks().get_marks().begin(); it != transport_reaction->time().marks().get_marks().end(); ++it)
+                    cout << *it << endl;
+
+        if(transport_reaction->solved_time()==0.5){
+            xprintf(Msg,"Přidávám marku\n");
+            transport_reaction->time().marks().add(TimeMark(1.5, transport_reaction->time().marks().type_checkpointing()));
+        }
+
+        if( transport_reaction->time().is_current(transport_reaction->time().marks().type_checkpointing())){
+            xprintf(Msg,"Je cjheckpointing current\n");
+        }else{
+            xprintf(Msg,"NEJe cjheckpointing current\n");
+        }
+        /**tak se to přidává*/
+//        time_->marks().add(TimeMark(target_time, target_mark_type));
+
+//        for(vector<TimeMark>::const_iterator it =marks.marks_.begin(); it != marks.marks_.end(); ++it);
+//                cout << *it << endl;
+
+
+//        xprintf(Msg,"dělá se jen todle\n");
+
+//        delete marks;
 
     }
 

@@ -42,10 +42,11 @@ $(OBJS)/flow/darcy_flow_mh.o\
 $(OBJS)/flow/darcy_flow_mh_output.o\
 \
 $(OBJS)/checkpointing/CheckpointingUtil.o\
-$(OBJS)/checkpointing/Checkpointing.o\
+$(OBJS)/checkpointing/CheckpointingBase.o\
 $(OBJS)/checkpointing/CheckpointingOutput.o\
 $(OBJS)/checkpointing/CheckpointingOutputTxt.o\
 $(OBJS)/checkpointing/CheckpointingOutputBin.o\
+$(OBJS)/checkpointing/CheckpointingManager.o\
 \
 $(OBJS)/io/read_ini.o\
 $(OBJS)/io/output.o\

@@ -22,15 +22,15 @@
  * $LastChangedBy: vojtech.wrnata $
  * $LastChangedDate: 2011-12-10 20:34:14 +0100 (So, 10 pro 2011) $
  *
- * @file    Checkpointing.c
+ * @file    CheckpointingBase.c
  * @brief   Header: The functions for checkpointing_base class.
  *
  */
 
-#include "Checkpointing.h"
+#include "CheckpointingBase.h"
 
-Checkpointing::Checkpointing(string file_name) {
-    xprintf(Msg,"Checkpointing constructor.\n");
+CheckpointingBase::CheckpointingBase(string file_name) {
+    xprintf(Msg,"CheckpointingBase constructor.\n");
 
     this->file_name_ = file_name;
     //    this->fullFileName = fullFileName(fileName);
@@ -51,19 +51,19 @@ Checkpointing::Checkpointing(string file_name) {
     xprintf(Msg,"Checkpointing constructor - constructed.\n");
 };
 
-Checkpointing::Checkpointing(const Checkpointing* ch){
+CheckpointingBase::CheckpointingBase(const CheckpointingBase* ch){
 
 };
 
-Checkpointing::~Checkpointing() {
+CheckpointingBase::~CheckpointingBase() {
     delete output_;
 };
 
-CheckpointingOutput* Checkpointing::get_output() const{
+CheckpointingOutput* CheckpointingBase::get_output() const{
     return output_;
 }
 
-CheckpointingOutput* Checkpointing::set_output(){
+CheckpointingOutput* CheckpointingBase::set_output(){
     xprintf(Msg,"CheckpointingBase::set_output.\n");
 
     CheckpointingOutput* output;
@@ -88,13 +88,19 @@ CheckpointingOutput* Checkpointing::set_output(){
     return output;
 };
 
-bool Checkpointing::is_checkpointing_on(){
+bool CheckpointingBase::is_checkpointing_on(){
     return checkpointing_on_;
 };
 
+
+
+void CheckpointingBase::save_state(){};
+
+void CheckpointingBase::load_state(){};
+
 /*************************************************************************************************/
 /**Supplementary methods *************************************************************************/
-CheckpointingOutFileFormat Checkpointing::parse_output_format(char* format_name)
+CheckpointingOutFileFormat CheckpointingBase::parse_output_format(char* format_name)
 {
     if(strcmp(format_name,"TXT") == 0) {
         return CH_OUTPUT_TXT;

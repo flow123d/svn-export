@@ -29,22 +29,35 @@
 
 #include "CheckpointingManager.h"
 
-CheckpointingManager::CheckpointingManager() {
+CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//TimeMarks* marks
     xprintf(Msg,"CheckpointingManager constructor.\n");
+    static_timemarks = true;
+
+    if (static_timemarks){
+        create_timemarks(marks);
+    };
 
 }
 
 CheckpointingManager::~CheckpointingManager() {
     xprintf(Msg,"CheckpointingManager destructor.\n");
 
-    delete registered_classes;
+//    if (registered_classes != NULL){
+//        delete registered_classes;
+//    }
 }
 
 
-void CheckpointingManager::create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks){
-
+void CheckpointingManager::create_timemarks(TimeMarks* marks){
+    double begin_time;
+    double end_time;
+    double number_of_marks;
+    begin_time=0;
+    end_time=2;
+    number_of_marks=5;
     for (double t = begin_time; t < end_time; t += (end_time-begin_time)/number_of_marks) {
-        marks->add(TimeMark(t, marks->type_checkpointing()));
+        xprintf(Msg,"Přidávám marku v:%f, typu:%i\n", t, marks->type_checkpointing());
+        marks->add(TimeMark(t, marks->type_checkpointing()|marks->type_fixed_time()));
     }
 
 

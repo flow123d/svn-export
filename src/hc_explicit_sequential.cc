@@ -90,6 +90,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
         transport_reaction = new TransportNothing(*main_time_marks, *mesh, *material_database);
     }
 
+    checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
 }
 
 /**
@@ -221,12 +222,17 @@ void HC_ExplicitSequential::run_simulation()
 
 HC_ExplicitSequential::~HC_ExplicitSequential() {
 
+    xprintf(Msg, "HC_ExplicitSequential destructor\n");
+
     delete mesh;
     delete material_database;
     delete main_time_marks;
     delete water;
     delete water_output;
     delete transport_reaction;
+
+    delete checkpointing_manager;
+
 }
 
 

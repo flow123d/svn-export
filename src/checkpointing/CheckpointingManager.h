@@ -42,18 +42,20 @@ typedef std::vector<CheckpointingBase*> RegisteredClasses;
  */
 class CheckpointingManager {
 public:
-    CheckpointingManager();
-    virtual ~CheckpointingManager();
+    CheckpointingManager(TimeMarks* marks);//TimeMarks* marks
+    ~CheckpointingManager();
 
     void register_class(CheckpointingBase* ch);
 
     void save_state();
 
-    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
+//    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
 
 private:
     RegisteredClasses* registered_classes;
-//    void create_timemarks(TimeMarks* marks);
+    bool static_timemarks;
+
+    void create_timemarks(TimeMarks* marks);
 };
 
 #endif /* CHECKPOINTINGMANAGER_H_ */

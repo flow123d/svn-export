@@ -287,7 +287,7 @@ void ConvectionTransport::read_initial_condition() {
 
 	    for (i = 0; i < n_concentrations; i++) {
 	    	xfgets( line, LINE_SIZE - 2, in );
-	    	DBGMSG("%s\n",line);
+//	    	DBGMSG("%s\n",line);
 	    	ASSERT(!(line == NULL),"NULL as argument of function parse_concentration_line()\n");
 	    	eid    = atoi( xstrtok( line) );
 	    	global_idx =row_4_el[mesh_->element.find_id(eid).index()];

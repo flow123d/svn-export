@@ -35,13 +35,16 @@
 #include "CheckpointingOutput.h"
 #include "CheckpointingOutputTxt.h"
 #include "CheckpointingOutputBin.h"
+
+#include "equation.hh"
+
 //#include <time.h>
 
 //#include <time_marks.hh>
 //#include <time_governor.hh>
 
 
-class CheckpointingBase {
+class CheckpointingBase{ // : public EquationBase
 public:
     /** \brief Default constructor for CheckpointingBase class */
     CheckpointingBase(string fileName);//string fileName
@@ -52,6 +55,9 @@ public:
     /** \brief Default destructor for CheckpointingBase class */
     virtual ~CheckpointingBase();
 
+    /** \brief public getter for class_name_ */
+    std::string get_class_name();
+
     /** \brief public getter for output_ */
     CheckpointingOutput* get_output() const;
 
@@ -60,6 +66,9 @@ public:
 
     /** \brief public getter for CheckpointingOn */
     bool is_checkpointing_on();
+
+    /**mark_type is already in equation base - so it has to be removed later*/
+//    virtual TimeMark::Type mark_type();
 
     /** \brief virtual method for saving objects state */
     virtual void save_state();
@@ -93,7 +102,7 @@ private:
     /** \brief Base name of the file for storing Vectors, Matrixes TimeGovernor and other variables\n
      * Usually it should be name of the class, where Vectors, Matrixes TimeGovernor and other variables belongs to.\
      * it is used for generating file name (util->fullFileName()) */
-    std::string file_name_;
+    std::string class_name_;
 
 
 protected:

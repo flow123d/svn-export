@@ -29,10 +29,10 @@
 
 #include "CheckpointingBase.h"
 
-CheckpointingBase::CheckpointingBase(string file_name) {
+CheckpointingBase::CheckpointingBase(string class_name) {
     xprintf(Msg,"CheckpointingBase constructor.\n");
 
-    this->file_name_ = file_name;
+    this->class_name_ = class_name;
     //    this->fullFileName = fullFileName(fileName);
 
     //default checkpointing is disabled
@@ -59,6 +59,10 @@ CheckpointingBase::~CheckpointingBase() {
     delete output_;
 };
 
+std::string CheckpointingBase::get_class_name(){
+    return class_name_;
+}
+
 CheckpointingOutput* CheckpointingBase::get_output() const{
     return output_;
 }
@@ -71,17 +75,17 @@ CheckpointingOutput* CheckpointingBase::set_output(){
     switch (out_file_format_) {
     case CH_OUTPUT_TXT: {
         xprintf(Msg,"Output TXT.\n");
-        output = new CheckpointingOutputTxt(file_name_);
+        output = new CheckpointingOutputTxt(class_name_);
     }
     break;
     case CH_OUTPUT_BIN: {
         xprintf(Msg,"Output BIN.\n");
-        output = new CheckpointingOutputBin(file_name_);
+        output = new CheckpointingOutputBin(class_name_);
     }
     break;
 //    case CH_OUTPUT_JSON: output = new CheckpointingOutputJSON(fileName);
 //    break;
-    default: output = new CheckpointingOutputTxt(file_name_);
+    default: output = new CheckpointingOutputTxt(class_name_);
     break;
     }
 
@@ -93,6 +97,9 @@ bool CheckpointingBase::is_checkpointing_on(){
 };
 
 
+//TimeMark::Type CheckpointingBase::mark_type(){
+//    return 1;
+//};
 
 void CheckpointingBase::save_state(){};
 

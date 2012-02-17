@@ -90,7 +90,10 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
         transport_reaction = new TransportNothing(*main_time_marks, *mesh, *material_database);
     }
 
+    xprintf(Msg, "transport_reaction->mark_type():%i, water->mark_type():%i\n", transport_reaction->mark_type(), water->mark_type());
+
     checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
+    checkpointing_manager->register_class(transport_reaction);
 }
 
 /**
@@ -215,6 +218,9 @@ void HC_ExplicitSequential::run_simulation()
 
 //        delete marks;
 
+
+
+        checkpointing_manager->save_state();
     }
 
 }

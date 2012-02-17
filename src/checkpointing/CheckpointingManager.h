@@ -35,8 +35,13 @@
 #include "CheckpointingBase.h"
 
 /**\brief Definition of registered classes vector */
-typedef std::vector<CheckpointingBase*> RegisteredClasses;
 
+typedef struct RegisteredClass{
+    CheckpointingBase*  obj;
+    std::string         obj_name;
+}_RegisteredClass;
+
+typedef std::vector<RegisteredClass> RegisteredClasses;
 
 /** Checkpointing manager class.
  */
@@ -52,10 +57,13 @@ public:
 //    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
 
 private:
-    RegisteredClasses* registered_classes;
+    RegisteredClasses *registered_classes_;
     bool static_timemarks;
 
-    void create_timemarks(TimeMarks* marks);
+    /**\brief pointer to main_time_marks for internal use*/
+    TimeMarks* marks_;
+
+    void create_timemarks();//TimeMarks* marks
 };
 
 #endif /* CHECKPOINTINGMANAGER_H_ */

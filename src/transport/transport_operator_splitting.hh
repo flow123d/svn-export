@@ -6,6 +6,7 @@
 #include "semchem/semchem_interface.hh"
 #include <limits>
 #include "io/output.h"
+#include "checkpointing/CheckpointingBase.h"
 
 /// external types:
 //class LinSys;
@@ -22,10 +23,10 @@ class MaterialDatabase;
  * Here one has to specify methods for setting or getting data particular to
  * transport equations.
  */
-class TransportBase : public EquationBase{
+class TransportBase : public EquationBase, public CheckpointingBase{
 public:
     TransportBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)
-    : EquationBase(marks, mesh, mat_base)
+    : EquationBase(marks, mesh, mat_base), CheckpointingBase("TransportBase")
     {}
 
     /**

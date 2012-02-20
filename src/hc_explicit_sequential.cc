@@ -93,7 +93,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     xprintf(Msg, "transport_reaction->mark_type():%i, water->mark_type():%i\n", transport_reaction->mark_type(), water->mark_type());
 
     checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
-    checkpointing_manager->register_class(transport_reaction);
+    checkpointing_manager->register_class(transport_reaction, "transport_reaction");
 }
 
 /**
@@ -149,7 +149,7 @@ void HC_ExplicitSequential::run_simulation()
         // which suddenly rise in time 3*w_dt. First we the planed transport time step t_dt could be quite big, but
         // in time 3*w_dt we can reconsider value of t_dt to better capture changing velocity.
         velocity_interpolation_time= theta * transport_reaction->planned_time() + (1-theta) * transport_reaction->solved_time();
-        xprintf(Msg,"velocity_interpolation_time: %f, water->solved_time(): %f, transport_reaction->planned_time():%f, transport_reaction->solved_time():%f\n", velocity_interpolation_time, water->solved_time(), transport_reaction->planned_time(), transport_reaction->solved_time());
+        xprintf(Msg,"velocity_interpolation_time: %f, water->solved_time(): %f, transport_reaction->planned_time():%f, transport_reaction->solved_time():%f, transport_reaction->time().estimate_time():%f\n", velocity_interpolation_time, water->solved_time(), transport_reaction->planned_time(), transport_reaction->solved_time(), transport_reaction->time().estimate_time());
         // if transport is off, transport should return infinity solved and planned times so that
         // only water branch takes the place
         if (water->solved_time() < velocity_interpolation_time) {

@@ -30,13 +30,14 @@
 #ifndef CHECKPOINING_BASE_H_
 #define CHECKPOINING_BASE_H_
 
+#include "equation.hh"
 #include "system/system.hh"
 #include "CheckpointingUtil.h"
 #include "CheckpointingOutput.h"
 #include "CheckpointingOutputTxt.h"
 #include "CheckpointingOutputBin.h"
 
-#include "equation.hh"
+//#include "equation.hh"
 
 //#include <time.h>
 
@@ -44,13 +45,15 @@
 //#include <time_governor.hh>
 
 
-class CheckpointingBase{ // : public EquationBase
+class CheckpointingBase : public EquationBase{ // : public EquationBase
 public:
     /** \brief Default constructor for CheckpointingBase class */
-    CheckpointingBase(string fileName);//string fileName
+    CheckpointingBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base);
+//    : EquationBase(marks, mesh, mat_base);
+//    {};
 
     /** \brief Default copy constructor for CheckpointingBase class */
-    CheckpointingBase(const CheckpointingBase* ch);
+//    CheckpointingBase(const CheckpointingBase* ch);
 
     /** \brief Default destructor for CheckpointingBase class */
     virtual ~CheckpointingBase();

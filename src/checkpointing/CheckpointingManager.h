@@ -50,7 +50,7 @@ public:
     CheckpointingManager(TimeMarks* marks);//TimeMarks* marks
     ~CheckpointingManager();
 
-    void register_class(CheckpointingBase* ch);
+    void register_class(CheckpointingBase* ch, std::string class_name);
 
     void save_state();
 

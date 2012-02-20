@@ -38,6 +38,7 @@
 #include <limits>
 
 #include "system/system.hh"
+//#include "checkpointing/CheckpointingBase.h"
 
 class Mesh;
 class MaterialDatabase;
@@ -63,7 +64,7 @@ class TimeGovernor;
  * TODO: clarify initialization of data members
  *
  */
-class EquationBase {
+class EquationBase{// : public CheckpointingBase
 public:
     /**
      * Common initialization constructor.

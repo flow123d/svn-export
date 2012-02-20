@@ -36,6 +36,7 @@ EquationBase::EquationBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_b
   mat_base(&mat_base),
   time_(NULL),
   equation_mark_type_(time_marks->new_mark_type())
+//  CheckpointingBase()
 {}
 
 

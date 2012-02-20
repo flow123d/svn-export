@@ -23,14 +23,14 @@ class MaterialDatabase;
  * Here one has to specify methods for setting or getting data particular to
  * transport equations.
  */
-class TransportBase : public EquationBase, public CheckpointingBase{
+class TransportBase : public CheckpointingBase{
 public:
     TransportBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)
-    : EquationBase(marks, mesh, mat_base), CheckpointingBase("TransportBase")
+    : CheckpointingBase(marks, mesh, mat_base)
     {}
 
     /**
-     * This method takes sequantial PETSc vector of side velocities and update
+     * This method takes sequential PETSc vector of side velocities and update
      * transport matrix. The ordering is same as ordering of sides in the mesh.
      *
      * TODO: We should pass whole velocity field object (description of base functions and dof numbering) and vector.
@@ -87,6 +87,8 @@ public:
 	 virtual void get_parallel_solution_vector(Vec &vc);
 	 virtual void get_solution_vector(double* &vector, unsigned int &size);
 	 void compute_until_save_time();
+
+	 void save_state();
 protected:
 
 private:

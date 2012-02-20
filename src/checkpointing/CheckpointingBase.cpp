@@ -29,10 +29,12 @@
 
 #include "CheckpointingBase.h"
 
-CheckpointingBase::CheckpointingBase(string class_name) {
+CheckpointingBase::CheckpointingBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)
+: EquationBase(marks, mesh, mat_base)
+  {//string class_name
     xprintf(Msg,"CheckpointingBase constructor.\n");
 
-    this->class_name_ = class_name;
+//    this->class_name_ = class_name;
     //    this->fullFileName = fullFileName(fileName);
 
     //default checkpointing is disabled
@@ -51,9 +53,9 @@ CheckpointingBase::CheckpointingBase(string class_name) {
     xprintf(Msg,"Checkpointing constructor - constructed.\n");
 };
 
-CheckpointingBase::CheckpointingBase(const CheckpointingBase* ch){
-
-};
+//CheckpointingBase::CheckpointingBase(const CheckpointingBase* ch){
+//
+//};
 
 CheckpointingBase::~CheckpointingBase() {
     delete output_;

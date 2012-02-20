@@ -150,3 +150,7 @@ void TransportOperatorSplitting::get_solution_vector(double * &x, unsigned int &
 	convection->compute_one_step();
 };
 
+
+void TransportOperatorSplitting::save_state(){
+    xprintf(Msg, "Saving state of TransportOperatorSplitting\n");
+}

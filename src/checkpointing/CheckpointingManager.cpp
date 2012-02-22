@@ -36,6 +36,9 @@ CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//TimeMarks* marks
 
     registered_classes_ = new RegisteredClasses();
 
+    start_time_ = time(NULL);
+    xprintf(Msg,"CheckpointingManager construction time %i\n", start_time_);
+
     static_timemarks = true;
 
     if (static_timemarks){
@@ -67,9 +70,11 @@ void CheckpointingManager::create_timemarks(){//TimeMarks* marks
     double end_time;
     double number_of_marks;
     begin_time=0;
-    end_time=2;
-    number_of_marks=5;
-    /**todle nevím jestli je nutné, ale pro každou registrovanou třídu, je potřeba přidat typ timemarky té třídy*/
+
+    /**end_time se buď dá získat z .ini, nebo je v každém TG*/
+    end_time=OptGetDbl("Global", "Stop_time", "1.0");
+    number_of_marks=OptGetInt("Checkpointing", "Number_of_static_marks", "1");;
+
     TimeMark::Type checkpointing_mark;
     checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();
     for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it)
@@ -82,6 +87,8 @@ void CheckpointingManager::create_timemarks(){//TimeMarks* marks
 };
 
 void CheckpointingManager::save_state(){
+    last_checkpointing_time_ = time(NULL);
+    xprintf(Msg, "Rozdíl: %i\n", (start_time_-last_checkpointing_time_));
 
     for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it){
         xprintf(Msg, "Saving state of object: %s\n", it->obj_name.c_str());

@@ -94,6 +94,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
+    checkpointing_manager->create_timemarks();
 }
 
 /**

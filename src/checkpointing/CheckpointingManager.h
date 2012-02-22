@@ -30,17 +30,20 @@
 #ifndef CHECKPOINTINGMANAGER_H_
 #define CHECKPOINTINGMANAGER_H_
 
+#include <time.h>
 //#include <time_marks.hh>
 //#include "CheckpointingUtil.h"
 #include "CheckpointingBase.h"
 
-/**\brief Definition of registered classes vector */
-
+/**\brief Definition of registered class structure */
 typedef struct RegisteredClass{
+    /** pointer to registered class */
     CheckpointingBase*  obj;
+    /**name of registered class*/
     std::string         obj_name;
 }_RegisteredClass;
 
+/**\brief Definition of registered classes vector */
 typedef std::vector<RegisteredClass> RegisteredClasses;
 
 /** Checkpointing manager class.
@@ -54,7 +57,12 @@ public:
 
     void save_state();
 
-//    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
+    //    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
+
+    /**\ brief creates checkpointing marks for all registered classes
+     * it has to be called after all classes are registered
+     */
+    void create_timemarks();//TimeMarks* marks
 
 private:
     RegisteredClasses *registered_classes_;
@@ -63,7 +71,16 @@ private:
     /**\brief pointer to main_time_marks for internal use*/
     TimeMarks* marks_;
 
-    void create_timemarks();//TimeMarks* marks
+    /** \brief time when simulation started (CheckpointingManager was constructed)
+     * it's used for computing dynamic TimeMarks
+     * it's in seconds since January 1, 1970!
+     */
+    time_t start_time_;
+
+    /** \brief time when last checkpointing was saved (save_state method was called)
+     * it is used for computing dynamic TimeMarks   */
+    time_t last_checkpointing_time_;
+
 };
 
 #endif /* CHECKPOINTINGMANAGER_H_ */

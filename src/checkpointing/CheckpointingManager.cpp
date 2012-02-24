@@ -59,8 +59,8 @@ CheckpointingManager::~CheckpointingManager() {
 void CheckpointingManager::register_class(CheckpointingBase* ch, std::string class_name){
     xprintf(Msg, "obj:%p, name: \n", ch);
     RegisteredClass obj;// = new RegisteredClass();
-    obj.obj = ch;
-    obj.obj_name = class_name;
+    obj.registered_class = ch;
+    obj.registered_class_name = class_name;
     registered_classes_->push_back(obj);
 
 }
@@ -78,7 +78,7 @@ void CheckpointingManager::create_timemarks(){//TimeMarks* marks
     TimeMark::Type checkpointing_mark;
     checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();
     for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it)
-        checkpointing_mark |= it->obj->mark_type();
+        checkpointing_mark |= it->registered_class->mark_type();
     for (double t = begin_time; t < end_time; t += (end_time-begin_time)/number_of_marks) {
         xprintf(Msg,"Přidávám marku v:%f, typu:%i\n", t, checkpointing_mark);
         marks_->add(TimeMark(t, checkpointing_mark));//marks->type_checkpointing()|marks->type_fixed_time()
@@ -90,12 +90,16 @@ void CheckpointingManager::save_state(){
     last_checkpointing_time_ = time(NULL);
     xprintf(Msg, "Rozdíl: %i\n", (start_time_-last_checkpointing_time_));
 
+    /**
+     * TODO tady by se asi měly ukládat TimeMarks - protože jsou globální pro všechny třídy
+     * */
+
     for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it){
-        xprintf(Msg, "Saving state of object: %s\n", it->obj_name.c_str());
+        xprintf(Msg, "Saving state of object: %s\n", it->registered_class_name.c_str());
         TimeMark::Type checkpointing_mark;
         checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();//|it->obj->mark_type();
-//        if(marks_->is_current(it->obj->time(), checkpointing_mark)){
-            it->obj->save_state();
+//        if(marks_->is_current(it->registered_class->time(), checkpointing_mark)){
+            it->registered_class->save_state();
 //        }
     }
 

@@ -25,8 +25,8 @@ class MaterialDatabase;
  */
 class TransportBase : public CheckpointingBase{
 public:
-    TransportBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)
-    : CheckpointingBase(marks, mesh, mat_base)
+    TransportBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base, std::string class_name)
+    : CheckpointingBase(marks, mesh, mat_base, class_name)
     {}
 
     /**
@@ -47,7 +47,7 @@ public:
 class TransportNothing : public TransportBase {
 public:
     TransportNothing(TimeMarks &marks, Mesh &mesh_in, MaterialDatabase &mat_base_in)
-    : TransportBase(marks, mesh_in, mat_base_in)
+    : TransportBase(marks, mesh_in, mat_base_in, "TransportNothing")
     {
         // make module solved for ever
         time_=new TimeGovernor();
@@ -89,6 +89,7 @@ public:
     void compute_until_save_time();
 
     void save_state();
+    void restore_state();
 protected:
 
 private:

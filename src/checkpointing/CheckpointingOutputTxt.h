@@ -41,44 +41,46 @@ public:
      * \brief General method for storing petsc Vector
      * \param[in] Vec - petsc Vector to be stored
      * \param[in] vecName - name of the stored vector     */
-    void save_vec(Vec vec, std::string vec_name);
+    void save_data(Vec vec, std::string vec_name);
 
     /**
      * \brief General method for loading petsc Vector
      * \param[out] Vec - petsc Vector to be loaded
      * \param[in] vecName - name of the loaded vector     */
-    void load_vec(Vec vec, std::string vec_name);
+    void load_data(Vec vec, std::string vec_name);
 
     /**
      * \brief General method for storing petsc Matrix
      * \param Mat - petsc Matrix to be stored
      * \param matName - name of the stored matrix     */
-    void save_mat(Mat mat, std::string mat_name);
+    void save_data(Mat mat, std::string mat_name);
 
     /**
      * \brief General method for loading petsc Matrix
      * \param Mat - petsc Matrix to be stored
      * \param matName - name of the stored matrix     */
-    void load_mat(Mat mat, std::string mat_name);
+    void load_data(Mat mat, std::string mat_name);
 
     /**
      * \brief General method for stroing TimeGovernor object
      * \param TimeGovernor - pointer to TimeGovernor instance */
-    void save_timegovernor(TimeGovernor* tg);
+    void save_data(TimeGovernor* tg);
 
     /**
      * \brief General method for loading/restoring TimeGovernor object
      * \param TimeGovernor - pointer to TimeGovernor instance */
-    void load_timegovernor(TimeGovernor* tg);
+    void load_data(TimeGovernor* tg);
 
-
-    template <typename T>
-    void save_data(T &data);//, std::string name
-
-    void save_data(TimeGovernor* tg);
-    void save_data(TimeMark* time_mark);
     void save_data(TimeMarks* time_marks);
-    void save_data(double &data);
+    void load_data(TimeMarks* time_marks);
+    void save_data(double& data);
+    void load_data(double& data);
+
+    void save_data(int& data);
+    void load_data(int& data);
+
+
+//    void save_data(TimeMark* time_mark);
 
 
 
@@ -96,6 +98,8 @@ private:
     void load_timemark_txt(TimeMark* time_mark);
     void save_double_txt(double& data);
     void load_double_txt(double& data);
+    void save_int_txt(int& data);
+    void load_int_txt(int& data);
 };
 
 #endif /* CHECKPOINTINGOUTPUTTXT_H_ */

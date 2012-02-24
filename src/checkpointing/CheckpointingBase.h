@@ -48,7 +48,7 @@
 class CheckpointingBase : public EquationBase{ // : public EquationBase
 public:
     /** \brief Default constructor for CheckpointingBase class */
-    CheckpointingBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base);
+    CheckpointingBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base, std::string class_name);
 //    : EquationBase(marks, mesh, mat_base);
 //    {};
 
@@ -77,7 +77,7 @@ public:
     virtual void save_state();
 
     /** \brief virtual method for loading/restoring objects state */
-    virtual void load_state();
+    virtual void restore_state();
 
 private:
     CheckpointingOutput* output_;

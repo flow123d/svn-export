@@ -69,7 +69,7 @@
 
 
 ConvectionTransport::ConvectionTransport(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database)
-: EquationBase(marks,init_mesh,material_database)
+: CheckpointingBase(marks, init_mesh, material_database, "ConvectionTransport")
 {
     F_ENTRY;
 
@@ -1388,4 +1388,27 @@ int *ConvectionTransport::get_el_4_loc(){
 
 int ConvectionTransport::get_n_substances() {
 	return n_substances;
+}
+void ConvectionTransport::save_state(){
+    xprintf(Msg, "Saving state of ConvectionTransport\n");
+    double xx;
+    xx=5678.1234567897789;
+//    std::string name;
+    get_output()->save_data(*vsources_density, "vsources_density");
+    get_output()->save_data(*vsources_sigma, "vsources_sigma");
+    get_output()->save_data(*vsources_conc, "vsources_conc");
+    get_output()->save_data(*vsources_corr, "vsources_corr");
+    get_output()->save_data(*vcumulative_corr, "vcumulative_corr");
+
+}
+
+void ConvectionTransport::restore_state(){
+    xprintf(Msg, "Restoring state of ConvectionTransport\n");
+
+    get_output()->load_data(*vsources_density, "vsources_density");
+    get_output()->load_data(*vsources_sigma, "vsources_sigma");
+    get_output()->load_data(*vsources_conc, "vsources_conc");
+    get_output()->load_data(*vsources_corr, "vsources_corr");
+    get_output()->load_data(*vcumulative_corr, "vcumulative_corr");
+
 }

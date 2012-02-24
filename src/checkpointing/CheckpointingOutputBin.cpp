@@ -45,7 +45,7 @@ CheckpointingOutputBin::~CheckpointingOutputBin() {
     }
 }
 
-void CheckpointingOutputBin::save_vec(Vec vec, std::string vec_name){
+void CheckpointingOutputBin::save_data(Vec vec, std::string vec_name){
     save_vec_binary(vec, vec_name);
 };
 
@@ -53,7 +53,7 @@ void CheckpointingOutputBin::save_vec(Vec vec, std::string vec_name){
  * \brief General method for loading petsc Vector
  * \param[out] Vec - petsc Vector to be loaded
  * \param[in] vec_name - name of the loaded vector     */
-void CheckpointingOutputBin::load_vec(Vec vec, std::string vec_name){
+void CheckpointingOutputBin::load_data(Vec vec, std::string vec_name){
     load_vec_binary(vec, vec_name);
 };
 
@@ -61,7 +61,7 @@ void CheckpointingOutputBin::load_vec(Vec vec, std::string vec_name){
  * \brief General method for storing petsc Matrix
  * \param Mat - petsc Matrix to be stored
  * \param matName - name of the stored matrix     */
-void CheckpointingOutputBin::save_mat(Mat mat, std::string mat_name){
+void CheckpointingOutputBin::save_data(Mat mat, std::string mat_name){
     save_mat_binary(mat, mat_name);
 };
 
@@ -69,38 +69,48 @@ void CheckpointingOutputBin::save_mat(Mat mat, std::string mat_name){
  * \brief General method for loading petsc Matrix
  * \param Mat - petsc Matrix to be stored
  * \param matName - name of the stored matrix     */
-void CheckpointingOutputBin::load_mat(Mat mat, std::string mat_name){
+void CheckpointingOutputBin::load_data(Mat mat, std::string mat_name){
     load_mat_binary(mat, mat_name);
 };
 
 /**
  * \brief General method for stroing TimeGovernor object
  * \param TimeGovernor - pointer to TimeGovernor instance */
-void CheckpointingOutputBin::save_timegovernor(TimeGovernor* tg){
+void CheckpointingOutputBin::save_data(TimeGovernor* tg){
     save_timegovernor_binary(tg);
 };
 
 /**
  * \brief General method for loading/restoring TimeGovernor object
  * \param TimeGovernor - pointer to TimeGovernor instance */
-void CheckpointingOutputBin::load_timegovernor(TimeGovernor* tg){
+void CheckpointingOutputBin::load_data(TimeGovernor* tg){
     xprintf(Msg, "CheckpointingOutputBin::save_timegovernor");
     load_timegovernor_binary(tg);
 };
 
-void CheckpointingOutputBin::save_data(TimeGovernor* tg){
-    save_timegovernor_binary(tg);
-};
-void CheckpointingOutputBin::save_data(TimeMark* time_mark){
-    /**TODO out_stream je blbost ...*/
-    save_timemark_binary(time_mark, out_stream);
-};
+//void CheckpointingOutputBin::save_data(TimeMark* time_mark){
+//    /**TODO out_stream je blbost ...*/
+//    save_timemark_binary(time_mark, out_stream);
+//};
 void CheckpointingOutputBin::save_data(TimeMarks* time_marks){
     /**TODO in_stream je blbost ...*/
     save_timemarks_binary(*time_marks, out_stream);
 };
+void CheckpointingOutputBin::load_data(TimeMarks* time_marks){
+    /**TODO in_stream je blbost ...*/
+//    save_timemarks_binary(*time_marks, out_stream);
+};
 void CheckpointingOutputBin::save_data(double &data){
     save_double_binary(data);
+};
+void CheckpointingOutputBin::load_data(double &data){
+//    save_double_binary(data);
+};
+void CheckpointingOutputBin::save_data(int &data){
+//    save_double_binary(data);
+};
+void CheckpointingOutputBin::load_data(int &data){
+//    save_double_binary(data);
 };
 
 /******************************************************************************************/
@@ -195,10 +205,10 @@ void CheckpointingOutputBin::load_timegovernor_binary(TimeGovernor* tg){
     }
 };
 
-template <typename T>
-    void CheckpointingOutputBin::save_data(T &data){//, std::string name
-    xprintf(Msg, "CheckpointingOutputBin::save_data(T &data, ..) - Až to tady bude, tak to uložím :-)\n");
-};
+//template <typename T>
+//    void CheckpointingOutputBin::save_data(T &data){//, std::string name
+//    xprintf(Msg, "CheckpointingOutputBin::save_data(T &data, ..) - Až to tady bude, tak to uložím :-)\n");
+//};
 
 void CheckpointingOutputBin::save_timemarks_binary(TimeMarks& time_marks, ofstream& out_stream){//, std::string name
     xprintf(Msg, "CheckpointingOutputBin::save_timemarks_binary(T &data, ..)\n");

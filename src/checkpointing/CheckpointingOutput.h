@@ -32,7 +32,6 @@
 
 #include "CheckpointingUtil.h"
 #include "system/system.hh"
-//#include <iomanip>
 #include <fstream>
 //#include <time_marks.hh>
 #include <time_governor.hh>
@@ -50,48 +49,79 @@ public:
      * \brief General method for storing petsc Vector
      * \param[in] Vec - petsc Vector to be stored
      * \param[in] vecName - name of the stored vector     */
-    virtual void save_vec(Vec vec, std::string vecName);
+    virtual void save_data(Vec vec, std::string vecName);
 
     /**
      * \brief General method for loading petsc Vector
      * \param[out] Vec - petsc Vector to be loaded
      * \param[in] vecName - name of the loaded vector     */
-    virtual void load_vec(Vec vec, std::string vecName);
+    virtual void load_data(Vec vec, std::string vecName);
 
     /**
      * \brief General method for storing petsc Matrix
      * \param Mat - petsc Matrix to be stored
      * \param matName - name of the stored matrix     */
-    virtual void save_mat(Mat mat, std::string matName);
+    virtual void save_data(Mat mat, std::string matName);
 
     /**
      * \brief General method for loading petsc Matrix
      * \param Mat - petsc Matrix to be stored
      * \param matName - name of the stored matrix     */
-    virtual void load_mat(Mat mat, std::string matName);
+    virtual void load_data(Mat mat, std::string matName);
 
     /**
      * \brief General method for storing TimeGovernor object
      * \param TimeGovernor - pointer to TimeGovernor instance */
-    void save_timegovernor(TimeGovernor* tg);
+    virtual void save_data(TimeGovernor* tg);
 
     /**
      * \brief General method for loading/restoring TimeGovernor object
      * \param TimeGovernor - pointer to TimeGovernor instance */
-    void load_timegovernor(TimeGovernor* tg);
+    virtual void load_data(TimeGovernor* tg);
+
+    /**
+     * \brief General method for storing TimeMarks vector
+     * \param TimeMarks - pointer to TimeMarks instance */
+    virtual void save_data(TimeMarks* time_marks);
+
+    /**
+     * \brief General method for loading/restoring TimeMarks vector
+     * \param TimeMarks - pointer to TimeMarks instance */
+    virtual void load_data(TimeMarks* time_marks);
+
+    /**
+     * \brief General method for storing double data
+     * \param double - pointer to double instance */
+    virtual void save_data(double& data);
+
+    /**
+     * \brief General method for loading/restoring double data
+     * \param double - pointer to double instance */
+    virtual void load_data(double& data);
+
+    /**
+     * \brief General method for storing int data
+     * \param int - pointer to int instance */
+    virtual void save_data(int& data);
+
+    /**
+     * \brief General method for loading/restoring int data
+     * \param int - pointer to int instance */
+    virtual void load_data(int& data);
+
+
+
 
     /**
      * \brief General template method for storing values\n
      * there has to be explicit specialization for each used data type
      * \param &data - value to be stored */
-    template <typename T>
-    void save_data(T &data);//, std::string name
+//    template <typename T>
+//    void save_data(T &data);//, std::string name
+//
+//
+//    virtual void save_data(double &data);
 
-
-    virtual void save_data(double &data);
-    virtual void save_data(TimeGovernor* tg);
-    virtual void save_data(TimeMark* time_mark);
-    virtual void save_data(TimeMarks* time_marks);
 
 
 protected:
@@ -105,6 +135,7 @@ protected:
     /** \brief default output file stream\n
      * not used for Vec, Mat or TimeGovernor */
     ofstream    out_stream;
+
     /** \brief default output file stream\n
      * not used for Vec, Mat or TimeGovernor */
     ifstream    in_stream;

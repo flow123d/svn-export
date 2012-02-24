@@ -29,12 +29,12 @@
 
 #include "CheckpointingBase.h"
 
-CheckpointingBase::CheckpointingBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)
+CheckpointingBase::CheckpointingBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base, std::string class_name)
 : EquationBase(marks, mesh, mat_base)
-  {//string class_name
+  {//
     xprintf(Msg,"CheckpointingBase constructor.\n");
 
-//    this->class_name_ = class_name;
+    this->class_name_ = class_name;
     //    this->fullFileName = fullFileName(fileName);
 
     //default checkpointing is disabled
@@ -105,7 +105,7 @@ bool CheckpointingBase::is_checkpointing_on(){
 
 void CheckpointingBase::save_state(){};
 
-void CheckpointingBase::load_state(){};
+void CheckpointingBase::restore_state(){};
 
 /*************************************************************************************************/
 /**Supplementary methods *************************************************************************/

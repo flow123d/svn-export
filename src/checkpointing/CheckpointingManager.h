@@ -38,9 +38,9 @@
 /**\brief Definition of registered class structure */
 typedef struct RegisteredClass{
     /** pointer to registered class */
-    CheckpointingBase*  obj;
+    CheckpointingBase*  registered_class;
     /**name of registered class*/
-    std::string         obj_name;
+    std::string         registered_class_name;
 }_RegisteredClass;
 
 /**\brief Definition of registered classes vector */

@@ -41,19 +41,41 @@ CheckpointingOutput::~CheckpointingOutput() {
     delete util;
 }
 
-void CheckpointingOutput::save_vec(Vec vec, std::string vec_name){};
-void CheckpointingOutput::load_vec(Vec vec, std::string vec_Name){};
-void CheckpointingOutput::save_mat(Mat mat, std::string mat_name){};
-void CheckpointingOutput::load_mat(Mat mat, std::string mat_name){};
-void CheckpointingOutput::save_timegovernor(TimeGovernor* tg){
-    xprintf(Msg, "CheckpointingOutput::save_timegovernor");
+void CheckpointingOutput::save_data(Vec vec, std::string vec_name){};
+void CheckpointingOutput::load_data(Vec vec, std::string vec_Name){};
+void CheckpointingOutput::save_data(Mat mat, std::string mat_name){};
+void CheckpointingOutput::load_data(Mat mat, std::string mat_name){};
+void CheckpointingOutput::save_data(TimeGovernor* tg){
+    xprintf(Msg, "CheckpointingOutput::save_data timegovernor");
 };
-void CheckpointingOutput::load_timegovernor(TimeGovernor* tg){};
+void CheckpointingOutput::load_data(TimeGovernor* tg){
+    xprintf(Msg, "CheckpointingOutput::load_data timegovernor");
+};
+void CheckpointingOutput::save_data(TimeMarks* time_marks){//, std::string name
+    xprintf(Msg, "CheckpointingOutput::save_data(TimeMarks* time_marks) - Až to tady bude, tak to uložím :-)\n");
+};
+void CheckpointingOutput::load_data(TimeMarks* time_marks){//, std::string name
+    xprintf(Msg, "CheckpointingOutput::load_data(TimeMarks* time_marks) - Až to tady bude, tak to uložím :-)\n");
+};
 
-template <typename T>
-void CheckpointingOutput::save_data(T &data){//, std::string name
-    xprintf(Msg, "CheckpointingOutput::save_data(T &data, ..) - Až to tady bude, tak to uložím :-)\n");
+void CheckpointingOutput::save_data(double& data){//, std::string name
+    xprintf(Msg, "CheckpointingOutput::save_data(double* data) - Až to tady bude, tak to uložím :-)\n");
 };
+void CheckpointingOutput::load_data(double& data){//, std::string name
+    xprintf(Msg, "CheckpointingOutput::load_data(double* data) - Až to tady bude, tak to uložím :-)\n");
+};
+void CheckpointingOutput::save_data(int& data){//, std::string name
+    xprintf(Msg, "CheckpointingOutput::save_data(int* data) - Až to tady bude, tak to uložím :-)\n");
+};
+void CheckpointingOutput::load_data(int& data){//, std::string name
+    xprintf(Msg, "CheckpointingOutput::load_data(int* data) - Až to tady bude, tak to uložím :-)\n");
+};
+
+
+//template <typename T>
+//void CheckpointingOutput::save_data(T &data){//, std::string name
+//    xprintf(Msg, "CheckpointingOutput::save_data(T &data, ..) - Až to tady bude, tak to uložím :-)\n");
+//};
 //template void save_data<double>(double);//, std::string name
 
 //template <>
@@ -61,18 +83,6 @@ void CheckpointingOutput::save_data(T &data){//, std::string name
 //    xprintf(Msg, "CheckpointingOutput::save_data<double>(double &data, ..) - explicitní specializace -Až to tady bude, tak to uložím :-)\n");
 //};
 
-void CheckpointingOutput::save_data(double &data){//, std::string name
-    xprintf(Msg, "CheckpointingOutput::save_data(T &data, ..) - Až to tady bude, tak to uložím :-)\n");
-};
 
-void CheckpointingOutput::save_data(TimeGovernor* tg){//, std::string name
-    xprintf(Msg, "CheckpointingOutput::save_data(TimeGovernor* tg) - Až to tady bude, tak to uložím :-)\n");
-};
-void CheckpointingOutput::save_data(TimeMark* time_mark){//, std::string name
-    xprintf(Msg, "CheckpointingOutput::save_data(TimeStamp* time_mark) - Až to tady bude, tak to uložím :-)\n");
-};
-void CheckpointingOutput::save_data(TimeMarks* time_marks){//, std::string name
-    xprintf(Msg, "CheckpointingOutput::save_data(TimeMarks* time_marks) - Až to tady bude, tak to uložím :-)\n");
-};
 
 

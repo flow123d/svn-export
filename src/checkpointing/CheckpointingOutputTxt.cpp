@@ -135,8 +135,8 @@ void CheckpointingOutputTxt::save_vec_txt(Vec vec, std::string vec_name){
     PetscViewer    viewer;
     std::string full_name;
 
-    full_name = util->full_file_name(vec_name);
-//    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
+    full_name = util->full_file_name_vec_mat(vec_name);
+    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
     /**ulozeni vectoru binarne */
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
     VecView(vec,viewer);
@@ -149,7 +149,7 @@ void CheckpointingOutputTxt::load_vec_txt(Vec vec, std::string vec_name){
 
     std::string full_name;
 
-    full_name = util->full_file_name(vec_name);
+    full_name = util->full_file_name_vec_mat(vec_name);
     /**nacteni vectoru z ASCII (Txt) souboru*/
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
     //        VecCreate(PETSC_COMM_WORLD,&vec);
@@ -161,7 +161,7 @@ void CheckpointingOutputTxt::save_mat_txt(Mat mat, std::string mat_name){
     PetscViewer    viewer;
     std::string full_name;
 
-    full_name = util->full_file_name(mat_name);
+    full_name = util->full_file_name_vec_mat(mat_name);
 //    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
     /**ulozeni Mat do ACSII (Txt) souboru */
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
@@ -175,7 +175,7 @@ void CheckpointingOutputTxt::load_mat_txt(Mat mat, std::string mat_name){
 
     std::string full_name;
 
-    full_name = util->full_file_name(mat_name);
+    full_name = util->full_file_name_vec_mat(mat_name);
     /**nacteni matice z ASCII (Txt) souboru*/
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
     //        VecCreate(PETSC_COMM_WORLD,&vec);
@@ -193,11 +193,11 @@ void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
     /**sets output precision for double to 10 digits*/
     tm_out_stream.precision(std::numeric_limits<double>::digits10);
 
-    tm_out_stream << "type_fixed_time: " << scientific << time_marks->type_fixed_time() << endl;
-    tm_out_stream << "type_output" << scientific << time_marks->type_output() << endl;
-    tm_out_stream << "type_bc_change" << scientific << time_marks->type_bc_change() << endl;
-    tm_out_stream << "type_checkpointing:" << scientific << time_marks->type_checkpointing() << endl;
-    tm_out_stream << "type_next_mark_type:" << scientific << time_marks->type_next_mark_type() << endl;
+    tm_out_stream << "type_fixed_time: 0x" << hex << time_marks->type_fixed_time() << dec << endl;
+    tm_out_stream << "type_output: 0x" << hex << time_marks->type_output() << endl;
+    tm_out_stream << "type_bc_change: 0x" << hex << time_marks->type_bc_change() << endl;
+    tm_out_stream << "type_checkpointing: 0x" << hex << time_marks->type_checkpointing() << endl;
+    tm_out_stream << "type_next_mark_type: 0x" << hex << time_marks->type_next_mark_type() << endl;
 
     for(vector<TimeMark>::const_iterator it = time_marks->get_marks().begin(); it != time_marks->get_marks().end(); ++it){
         save_timemark_txt(*it, tm_out_stream);//, tm_out_stream
@@ -212,7 +212,10 @@ void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
 };
 void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){};
 void CheckpointingOutputTxt::save_timemark_txt(const TimeMark &time_mark, ofstream& out_stream){
-    out_stream << time_mark << endl;
+//    out_stream << time_mark << endl;
+    out_stream << scientific << time_mark.time();
+    out_stream << ": 0x" << hex << time_mark.mark_type() << dec << endl;
+
 };
 void CheckpointingOutputTxt::load_timemark_txt(TimeMark* time_mark, ifstream& in_stream){};
 void CheckpointingOutputTxt::save_double_txt(double& data){

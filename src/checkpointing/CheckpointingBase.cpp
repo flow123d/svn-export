@@ -70,7 +70,7 @@ CheckpointingOutput* CheckpointingBase::get_output() const{
 }
 
 CheckpointingOutput* CheckpointingBase::set_output(){
-    xprintf(Msg,"CheckpointingBase::set_output.\n");
+    xprintf(Msg,"CheckpointingBase::set_output - %s.\n", class_name_.c_str());
 
     CheckpointingOutput* output;
 

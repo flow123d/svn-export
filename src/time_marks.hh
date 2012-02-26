@@ -219,6 +219,10 @@ public:
     inline TimeMark::Type type_checkpointing()
     { return type_checkpointing_;}
 
+    /// Predefined base TimeMark type for checkpointing.
+    inline TimeMark::Type type_next_mark_type()
+    { return next_mark_type_;}
+
 
     /**
      * Basic method for inserting TimeMarks.
@@ -276,8 +280,14 @@ public:
     /// Friend output operator.
     friend ostream& operator<<(ostream& stream, const TimeMarks &marks);
 
-
+    /**
+     * \brief public getter for TimeMark vector
+     * @return the TimeMark vector.
+     */
     vector<TimeMark> get_marks();
+
+
+    void save_timemarks();
 
     /// TimeMarks list sorted according to the their time.
 //        vector<TimeMark> marks_;

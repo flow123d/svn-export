@@ -212,7 +212,7 @@ void CheckpointingOutputBin::load_timegovernor_binary(TimeGovernor* tg){
 
 void CheckpointingOutputBin::save_timemarks_binary(TimeMarks& time_marks, ofstream& out_stream){//, std::string name
     xprintf(Msg, "CheckpointingOutputBin::save_timemarks_binary(T &data, ..)\n");
-//    for(vector<TimeMark>::const_iterator it = time_marks.marks_.begin(); it != time_marks.marks_.end(); ++it){
+//    for(vector<TimeMark>::const_iterator it = time_marks.get_marks().begin(); it != time_marks.get_marks().end(); ++it){
 //        save_timemark_binary(it, out_stream);
 //    }
 };

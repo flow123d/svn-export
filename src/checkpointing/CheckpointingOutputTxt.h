@@ -62,7 +62,8 @@ public:
     void load_data(Mat mat, std::string mat_name);
 
     /**
-     * \brief General method for stroing TimeGovernor object
+     * \brief General method for storing TimeGovernor object
+     * !DOES NOT store TimeMarks
      * \param TimeGovernor - pointer to TimeGovernor instance */
     void save_data(TimeGovernor* tg);
 
@@ -94,8 +95,8 @@ private:
     void load_timegovernor_txt(TimeGovernor* tg);
     void save_timemarks_txt(TimeMarks* time_marks);
     void load_timemarks_txt(TimeMarks* time_marks);
-    void save_timemark_txt(TimeMark* time_mark);
-    void load_timemark_txt(TimeMark* time_mark);
+    void save_timemark_txt(const TimeMark &time_mark, ofstream& out_stream);
+    void load_timemark_txt(TimeMark* time_mark, ifstream& in_stream);
     void save_double_txt(double& data);
     void load_double_txt(double& data);
     void save_int_txt(int& data);

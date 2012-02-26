@@ -184,10 +184,37 @@ void CheckpointingOutputTxt::load_mat_txt(Mat mat, std::string mat_name){
 };
 void CheckpointingOutputTxt::save_timegovernor_txt(TimeGovernor* tg){};
 void CheckpointingOutputTxt::load_timegovernor_txt(TimeGovernor* tg){};
-void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){};
+void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
+    xprintf(Msg,"CheckpointingOutputTxt::save_timemarks_txt.\n");
+    ofstream tm_out_stream;
+    tm_out_stream.open(util->full_file_name("TimeMarks").c_str());
+    INPUT_CHECK( tm_out_stream.is_open() , "Can not open output file: %s\n", util->full_file_name("TimeMarks").c_str() );
+
+    /**sets output precision for double to 10 digits*/
+    tm_out_stream.precision(std::numeric_limits<double>::digits10);
+
+    tm_out_stream << "type_fixed_time: " << scientific << time_marks->type_fixed_time() << endl;
+    tm_out_stream << "type_output" << scientific << time_marks->type_output() << endl;
+    tm_out_stream << "type_bc_change" << scientific << time_marks->type_bc_change() << endl;
+    tm_out_stream << "type_checkpointing:" << scientific << time_marks->type_checkpointing() << endl;
+    tm_out_stream << "type_next_mark_type:" << scientific << time_marks->type_next_mark_type() << endl;
+
+    for(vector<TimeMark>::const_iterator it = time_marks->get_marks().begin(); it != time_marks->get_marks().end(); ++it){
+        save_timemark_txt(*it, tm_out_stream);//, tm_out_stream
+    }
+
+    if(tm_out_stream != NULL) {
+        tm_out_stream.close();
+        //        delete outStream;
+    }
+
+//    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - constructed.\n");
+};
 void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){};
-void CheckpointingOutputTxt::save_timemark_txt(TimeMark* time_mark){};
-void CheckpointingOutputTxt::load_timemark_txt(TimeMark* time_mark){};
+void CheckpointingOutputTxt::save_timemark_txt(const TimeMark &time_mark, ofstream& out_stream){
+    out_stream << time_mark << endl;
+};
+void CheckpointingOutputTxt::load_timemark_txt(TimeMark* time_mark, ifstream& in_stream){};
 void CheckpointingOutputTxt::save_double_txt(double& data){
     out_stream << scientific << data << endl;
 };

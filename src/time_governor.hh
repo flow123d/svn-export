@@ -279,6 +279,28 @@ public:
     /// Infinity time used for steady case.
     static const double inf_time;
 
+
+    /**
+     * Returns fixed_dt.
+     */
+    inline double get_fixed_dt() const
+    {return fixed_dt;}
+    /**
+     * Returns time_step_constrain.
+     */
+    inline double get_time_step_constrain() const
+    {return time_step_constrain;}
+    /**
+     * Returns max_time_step.
+     */
+    inline double get_max_time_step() const
+    {return max_time_step;}
+    /**
+     * Returns min_time_step.
+     */
+    inline double get_min_time_step() const
+    {return min_time_step;}
+
 private:
     inline double comparison_fracture() const
     {
@@ -293,7 +315,7 @@ private:
     static const double time_step_lower_bound;
 
     /// Number of time_next calls, i.e. total number of performed time steps.
-    int time_level;
+    int time_level;//w
     /// End of actual time interval; i.e. where the solution is computed.
     double time;
     /// Beginning of the actual time interval; i.e. the time of last computed solution.
@@ -301,10 +323,10 @@ private:
     /// End of interval if fixed time step. (defers from @var time only if overhead is positive)
     double end_of_fixed_dt_interval;
     /// End time of the simulation.
-    double end_time_;
+    double end_time_;//w
 
     /// Length of actual time interval; i.e. the actual time step.
-    double time_step;
+    double time_step;//w
     /// time step just before last_time
     double last_time_step;
     /// next fixed time step

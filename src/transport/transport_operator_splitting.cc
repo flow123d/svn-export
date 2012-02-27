@@ -162,6 +162,7 @@ void TransportOperatorSplitting::save_state(){
     double xx;
     xx=1234.5678;
     get_output()->save_data(time_marks);
+    get_output()->save_data(time_);
 //    get_output()->save_data(xx);
     convection->save_state();
 

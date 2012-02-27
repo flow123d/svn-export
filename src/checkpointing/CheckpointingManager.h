@@ -64,6 +64,9 @@ public:
      */
     void create_timemarks();//TimeMarks* marks
 
+    /**\brief public getter to checkpoint_ value*/
+    int checkpoint();
+
 private:
     RegisteredClasses *registered_classes_;
     bool static_timemarks;
@@ -80,6 +83,17 @@ private:
     /** \brief time when last checkpointing was saved (save_state method was called)
      * it is used for computing dynamic TimeMarks   */
     time_t last_checkpointing_time_;
+
+    /**\brief max number of stored checkpointing states
+     * @default value = 1
+     * can be setup in flow.ini*/
+    int max_checkpoints_;
+
+    /**\brief next checkpointing state
+     * value is used in each file name, where values are saved, regardless of data type (txt, bin, ...)*/
+    int checkpoint_;
+
+    void next_checkpoint();
 
 };
 

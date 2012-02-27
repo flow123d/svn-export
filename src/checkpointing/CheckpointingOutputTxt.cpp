@@ -136,8 +136,8 @@ void CheckpointingOutputTxt::save_vec_txt(Vec vec, std::string vec_name){
     std::string full_name;
 
     full_name = util->full_file_name_vec_mat(vec_name);
-    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
-    /**ulozeni vectoru binarne */
+//    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
+    /**ulozeni vectoru do ACSII (Txt) souboru*/
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
     VecView(vec,viewer);
 
@@ -182,7 +182,33 @@ void CheckpointingOutputTxt::load_mat_txt(Mat mat, std::string mat_name){
     MatLoad(mat,viewer);
     PetscViewerDestroy(&viewer);
 };
-void CheckpointingOutputTxt::save_timegovernor_txt(TimeGovernor* tg){};
+void CheckpointingOutputTxt::save_timegovernor_txt(TimeGovernor* tg){
+    xprintf(Msg,"CheckpointingOutputTxt::save_timegovernor_txt.\n");
+       ofstream tg_out_stream;
+       tg_out_stream.open(util->full_file_name_vec_mat("TimeGovernor").c_str());
+       INPUT_CHECK( tg_out_stream.is_open() , "Can not open output file: %s\n", util->full_file_name_vec_mat("TimeGovernor").c_str() );
+
+       /**sets output precision for double to 10 digits*/
+       tg_out_stream.precision(std::numeric_limits<double>::digits10);
+
+       tg_out_stream << "time_level: " << tg->tlevel() << endl;
+       tg_out_stream << "time: " << tg->t() << endl;
+       tg_out_stream << "end_of_fixed_dt_interval: " << tg->end_of_fixed_dt() << endl;
+       tg_out_stream << "end_time_: " << tg->end_time() << endl;
+       tg_out_stream << "time_step: " << tg->dt() << endl;
+       tg_out_stream << "last_time_step: " << tg->last_dt() << endl;
+       tg_out_stream << "fixed_dt: " << tg->get_fixed_dt() << endl;
+       tg_out_stream << "dt_changed: " << tg->is_changed_dt() << endl;
+       tg_out_stream << "time_step_constrain: " << tg->get_time_step_constrain() << endl;
+       tg_out_stream << "max_time_step: " << tg->get_max_time_step() << endl;
+       tg_out_stream << "min_time_step: " << tg->get_min_time_step() << endl;
+
+
+       if(tg_out_stream != NULL) {
+           tg_out_stream.close();
+           //        delete outStream;
+       }
+};
 void CheckpointingOutputTxt::load_timegovernor_txt(TimeGovernor* tg){};
 void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
     xprintf(Msg,"CheckpointingOutputTxt::save_timemarks_txt.\n");

@@ -45,6 +45,12 @@ CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//TimeMarks* marks
         create_timemarks();//marks
     };
 
+    max_checkpoints_ = OptGetDbl("Checkpointing", "Max_checkpoints", "1");
+    /**restriction for max 10 saved checkpoints*/
+    if (max_checkpoints_ > 10){
+        max_checkpoints_ = 10;
+    };
+    checkpoint_ = 1;
 }
 
 CheckpointingManager::~CheckpointingManager() {
@@ -99,8 +105,16 @@ void CheckpointingManager::save_state(){
         TimeMark::Type checkpointing_mark;
         checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();//|it->obj->mark_type();
 //        if(marks_->is_current(it->registered_class->time(), checkpointing_mark)){
-            it->registered_class->save_state();
+            it->registered_class->save_state();//checkpoint_
 //        }
     }
 
+};
+
+int CheckpointingManager::checkpoint(){
+    return checkpoint_;
+};
+
+void CheckpointingManager::next_checkpoint(){
+    checkpoint_++;
 };

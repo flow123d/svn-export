@@ -69,7 +69,7 @@
 
 
 ConvectionTransport::ConvectionTransport(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database)
-: CheckpointingBase(marks, init_mesh, material_database, "ConvectionTransport")
+: EquationBase(marks, init_mesh, material_database)
 {
     F_ENTRY;
 
@@ -1389,26 +1389,26 @@ int *ConvectionTransport::get_el_4_loc(){
 int ConvectionTransport::get_n_substances() {
 	return n_substances;
 }
-void ConvectionTransport::save_state(){
+void ConvectionTransport::save_state(CheckpointingOutput* output){
     xprintf(Msg, "Saving state of ConvectionTransport\n");
     double xx;
     xx=5678.1234567897789;
 //    std::string name;
-    get_output()->save_data(*vsources_density, "vsources_density");
-    get_output()->save_data(*vsources_sigma, "vsources_sigma");
-    get_output()->save_data(*vsources_conc, "vsources_conc");
-    get_output()->save_data(*vsources_corr, "vsources_corr");
-    get_output()->save_data(*vcumulative_corr, "vcumulative_corr");
+    output->save_data(*vsources_density, "vsources_density");
+    output->save_data(*vsources_sigma, "vsources_sigma");
+    output->save_data(*vsources_conc, "vsources_conc");
+    output->save_data(*vsources_corr, "vsources_corr");
+    output->save_data(*vcumulative_corr, "vcumulative_corr");
 
 }
 
-void ConvectionTransport::restore_state(){
+void ConvectionTransport::restore_state(CheckpointingOutput* output){
     xprintf(Msg, "Restoring state of ConvectionTransport\n");
 
-    get_output()->load_data(*vsources_density, "vsources_density");
-    get_output()->load_data(*vsources_sigma, "vsources_sigma");
-    get_output()->load_data(*vsources_conc, "vsources_conc");
-    get_output()->load_data(*vsources_corr, "vsources_corr");
-    get_output()->load_data(*vcumulative_corr, "vcumulative_corr");
+    output->load_data(*vsources_density, "vsources_density");
+    output->load_data(*vsources_sigma, "vsources_sigma");
+    output->load_data(*vsources_conc, "vsources_conc");
+    output->load_data(*vsources_corr, "vsources_corr");
+    output->load_data(*vcumulative_corr, "vcumulative_corr");
 
 }

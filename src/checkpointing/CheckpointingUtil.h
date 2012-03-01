@@ -17,6 +17,12 @@
         CH_OUTPUT_JSON = 3,/*!< output file format is JSON */
     } CheckpointingOutFileFormat;
 
+    /** \typedef Output file formats */
+    typedef enum {
+        CH_FIXED = 1,/*!< Checkpoints are in fixed times, based on Stop_time, Save_step and Number_of_checkpoints.*/
+        CH_DYNAMIC = 2,/*!< Checkpoints are generated in real time intervals, based on Checkpoint_interval. */
+    } CheckpointsType;
+
 
 class CheckpointingUtil {
 public:

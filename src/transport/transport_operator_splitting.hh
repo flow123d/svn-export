@@ -6,7 +6,7 @@
 #include "semchem/semchem_interface.hh"
 #include <limits>
 #include "io/output.h"
-#include "checkpointing/CheckpointingBase.h"
+//#include "checkpointing/CheckpointingBase.h"
 
 /// external types:
 //class LinSys;
@@ -23,10 +23,10 @@ class MaterialDatabase;
  * Here one has to specify methods for setting or getting data particular to
  * transport equations.
  */
-class TransportBase : public CheckpointingBase{
+class TransportBase : public EquationBase{
 public:
-    TransportBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base, std::string class_name)
-    : CheckpointingBase(marks, mesh, mat_base, class_name)
+    TransportBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)//, std::string class_name
+    : EquationBase(marks, mesh, mat_base)
     {}
 
     /**
@@ -47,7 +47,7 @@ public:
 class TransportNothing : public TransportBase {
 public:
     TransportNothing(TimeMarks &marks, Mesh &mesh_in, MaterialDatabase &mat_base_in)
-    : TransportBase(marks, mesh_in, mat_base_in, "TransportNothing")
+    : TransportBase(marks, mesh_in, mat_base_in)
     {
         // make module solved for ever
         time_=new TimeGovernor();
@@ -88,8 +88,8 @@ public:
     virtual void get_solution_vector(double* &vector, unsigned int &size);
     void compute_until_save_time();
 
-    void save_state();
-    void restore_state();
+    void save_state(CheckpointingOutput* output);
+    void restore_state(CheckpointingOutput* output);
 protected:
 
 private:

@@ -30,17 +30,22 @@
 #ifndef CHECKPOINTINGMANAGER_H_
 #define CHECKPOINTINGMANAGER_H_
 
+#include "equation.hh"
 #include <time.h>
 //#include <time_marks.hh>
-//#include "CheckpointingUtil.h"
-#include "CheckpointingBase.h"
+#include "CheckpointingUtil.h"
+#include "CheckpointingOutput.h"
+#include "CheckpointingOutputTxt.h"
+#include "CheckpointingOutputBin.h"
 
 /**\brief Definition of registered class structure */
 typedef struct RegisteredClass{
     /** pointer to registered class */
-    CheckpointingBase*  registered_class;
+    EquationBase*         registered_class;
+    /** pointer to output class */
+    CheckpointingOutput*  output;
     /**name of registered class*/
-    std::string         registered_class_name;
+    std::string           registered_class_name;
 }_RegisteredClass;
 
 /**\brief Definition of registered classes vector */
@@ -53,29 +58,39 @@ public:
     CheckpointingManager(TimeMarks* marks);//TimeMarks* marks
     ~CheckpointingManager();
 
-    void register_class(CheckpointingBase* ch, std::string class_name);
+    void register_class(EquationBase* ch, std::string class_name);
 
     void save_state();
 
     //    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
 
-    /**\ brief creates checkpointing marks for all registered classes
-     * it has to be called after all classes are registered
-     */
-    void create_timemarks();//TimeMarks* marks
+    /**\ brief creates FIXED checkpointing marks for all registered classes
+     * it has to be called after all classes are registered    */
+    void create_fixed_timemarks();//TimeMarks* marks
+
+    /**\ brief creates DYNAMIC checkpointing mark for all registered classes
+     * this mark is based on start_time_, last_checkpointing_time_, Checkpoints_interval and current time*/
+    void create_dynamic_timemark();
 
     /**\brief public getter to checkpoint_ value*/
     int checkpoint();
 
+    /******************************************************************************************************/
+    /*** CheckpointingBase  *******************************************************************************/
+
+    /** \brief public getter for CheckpointingOn */
+    bool is_checkpointing_on();
+
+
 private:
     RegisteredClasses *registered_classes_;
-    bool static_timemarks;
+//    bool static_timemarks;
 
     /**\brief pointer to main_time_marks for internal use*/
     TimeMarks* marks_;
 
     /** \brief time when simulation started (CheckpointingManager was constructed)
-     * it's used for computing dynamic TimeMarks
+     * it's used for computing DYNAMIC TimeMarks
      * it's in seconds since January 1, 1970!
      */
     time_t start_time_;
@@ -84,16 +99,55 @@ private:
      * it is used for computing dynamic TimeMarks   */
     time_t last_checkpointing_time_;
 
-    /**\brief max number of stored checkpointing states
+    /**\brief max number of stored checkpointing states, when DYNAMIC checkpoints are selected
      * @default value = 1
      * can be setup in flow.ini*/
     int max_checkpoints_;
+
+    /**\brief Time interval for Checkpoints. How often is checkpoint stored.[seconds]
+     * @default value = 3600
+     * can be setup in flow.ini*/
+    int checkpoints_interval_;
+
 
     /**\brief next checkpointing state
      * value is used in each file name, where values are saved, regardless of data type (txt, bin, ...)*/
     int checkpoint_;
 
     void next_checkpoint();
+
+    /******************************************************************************************************/
+    /*** CheckpointingBase  *******************************************************************************/
+    CheckpointingOutput* output_;
+
+
+    /** \brief Parse values from .ini file to OutFielFormat\n
+     * parameters are stored in section-[CheckpointingBase], key-Output_format
+     * \param ini value TXT --> CH_OUTPUT_TXT
+     * \param ini value BIN --> CH_OUTPUT_BIN
+     * \param ini value JSON --> CH_OUTPUT_JSON  */
+    CheckpointingOutFileFormat parse_output_format(char* format_name);
+
+    /** \brief Parse values from .ini file to CheckpointsType\n
+     * parameters are stored in section-[Checkpointing], key-Checkpoints_type
+     * \param ini value FIXED --> CH_FIXED
+     * \param ini value DYNAMIC --> CH_DYNAMIC*/
+    CheckpointsType parse_checkpoints_type(char* format_name);
+
+    /** \brief Initialize output object via outFileFormat\n
+     * CH_OUTPUT_TXT --> CheckpointingOutputTxt()
+     * CH_OUTPUT_BIN --> CheckpointingOutputBin()
+     * \param CheckpointingOutput* output - output object to be initialized */
+    CheckpointingOutput* set_output(std::string class_name);
+
+    /** \brief Current output file format*/
+    CheckpointingOutFileFormat out_file_format_;
+
+    /** \brief Type of checkpoints*/
+    CheckpointsType checkpoints_type_;
+
+    /** \brief CheckpointingBase enabled/disabled */
+    bool checkpointing_on_;
 
 };
 

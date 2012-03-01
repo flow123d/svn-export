@@ -94,7 +94,8 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
-    checkpointing_manager->create_timemarks();
+    /**cannot be in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
+    checkpointing_manager->create_fixed_timemarks();
 }
 
 /**
@@ -185,13 +186,6 @@ void HC_ExplicitSequential::run_simulation()
 
         xprintf(Msg,"water TG\n");
 
-//        TimeMarks marks;
-//        marks = water->time().marks();
-//        cout << water->time().marks() << endl;
-//        for(vector<TimeMark>::const_iterator it =water->time().marks().get_marks().begin(); it != water->time().marks().get_marks().end(); ++it)
-//            cout << *it << endl;
-//        xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().is_current(transport_reaction->time().end_time()));
-
         xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().end_time());
         xprintf(Msg,"estimate_time:%f, begin:%f, end :%f\n", transport_reaction->time().estimate_time(), transport_reaction->time().marks().get_marks().begin(), water->time().marks().get_marks().end());
 
@@ -208,18 +202,8 @@ void HC_ExplicitSequential::run_simulation()
         }else{
             xprintf(Msg,"NEJe cjheckpointing current\n");
         }
-        /**tak se to přidává*/
-//        time_->marks().add(TimeMark(target_time, target_mark_type));
 
-//        for(vector<TimeMark>::const_iterator it =marks.marks_.begin(); it != marks.marks_.end(); ++it);
-//                cout << *it << endl;
-
-
-//        xprintf(Msg,"dělá se jen todle\n");
-
-//        delete marks;
-
-
+        checkpointing_manager->create_dynamic_timemark();
 
         checkpointing_manager->save_state();
     }

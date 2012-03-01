@@ -42,7 +42,6 @@ $(OBJS)/flow/darcy_flow_mh.o\
 $(OBJS)/flow/darcy_flow_mh_output.o\
 \
 $(OBJS)/checkpointing/CheckpointingUtil.o\
-$(OBJS)/checkpointing/CheckpointingBase.o\
 $(OBJS)/checkpointing/CheckpointingOutput.o\
 $(OBJS)/checkpointing/CheckpointingOutputTxt.o\
 $(OBJS)/checkpointing/CheckpointingOutputBin.o\

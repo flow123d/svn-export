@@ -40,4 +40,9 @@ EquationBase::EquationBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_b
 {}
 
 
+/*******************************************************************************************************/
+/**** Checkpointing methods  ***************************************************************************/
 
+void EquationBase::save_state(CheckpointingOutput* output){};
+
+void EquationBase::restore_state(CheckpointingOutput* output){};

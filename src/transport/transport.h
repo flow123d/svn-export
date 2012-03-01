@@ -31,8 +31,8 @@
 #define TRANSPORT_H_
 
 #include <petscmat.h>
-//#include "equation.hh"
-#include "checkpointing/CheckpointingBase.h"
+#include "equation.hh"
+//#include "checkpointing/CheckpointingBase.h"
 
 //#include "system/par_distribution.hh"
 //#include "mesh/mesh.h"
@@ -66,7 +66,7 @@ class MaterialDatabase;
  */
 
 
-class ConvectionTransport : public CheckpointingBase {
+class ConvectionTransport : public EquationBase {
 public:
     /**
      * Constructor.
@@ -125,10 +125,10 @@ public:
     char    **get_substance_names();
 
     /**\brief method for saving state of ConvectionTransport for checkpointing */
-    void save_state();
+    void save_state(CheckpointingOutput* output);
 
     /**\brief method for restoring state of ConvectionTransport for checkpointing */
-    void restore_state();
+    void restore_state(CheckpointingOutput* output);
 
 private:
 

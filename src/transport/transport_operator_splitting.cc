@@ -20,7 +20,7 @@
 
 
 TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database )
-: TransportBase(marks, init_mesh, material_database, "TransportOperatorSplitting")
+: TransportBase(marks, init_mesh, material_database)
 {
 	Distribution *el_distribution;
 	int *el_4_loc;
@@ -151,7 +151,7 @@ void TransportOperatorSplitting::get_solution_vector(double * &x, unsigned int &
 };
 
 
-void TransportOperatorSplitting::save_state(){
+void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
     xprintf(Msg, "Saving state of TransportOperatorSplitting");
     TimeMark::Type mark_type;
     mark_type = this->mark_type()|time_->marks().type_checkpointing();
@@ -161,17 +161,17 @@ void TransportOperatorSplitting::save_state(){
     };
     double xx;
     xx=1234.5678;
-    get_output()->save_data(time_marks);
-    get_output()->save_data(time_);
+    output->save_data(time_marks);
+    output->save_data(time_);
 //    get_output()->save_data(xx);
-    convection->save_state();
+    convection->save_state(output);
 
 //    ConvectionTransport *convection;
 //    Linear_reaction *decayRad; ???
 //    Semchem_interface *Semchem_reactions
 }
 
-void TransportOperatorSplitting::restore_state(){
+void TransportOperatorSplitting::restore_state(CheckpointingOutput* output){
     xprintf(Msg, "Restoring state of TransportOperatorSplitting");
     TimeMark::Type mark_type;
     mark_type = this->mark_type()|time_->marks().type_checkpointing();
@@ -181,9 +181,9 @@ void TransportOperatorSplitting::restore_state(){
     };
     double xx;
     xx=1234.5678;
-    get_output()->load_data(xx);
+    output->load_data(xx);
 //    get_output()->save_data(xx);
-    convection->restore_state();
+    convection->restore_state(output);
 
 //    ConvectionTransport *convection;
 //    Linear_reaction *decayRad; ???

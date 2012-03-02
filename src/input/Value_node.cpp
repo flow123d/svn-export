@@ -144,7 +144,6 @@ string Value_node::get_string_check(int & err_code) {
         return Generic_node::get_string_check(err_code);
 }
 
-Value_node::~Value_node() {
-}
+Value_node::~Value_node() { }
 
 }

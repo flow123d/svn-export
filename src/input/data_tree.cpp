@@ -9,192 +9,128 @@
 
 namespace flow {
 
+void Data_tree::filter_stm( const char in_char, std::string & out_string, bool reset_state = false )
+{
+    typedef enum {GO, GO_BSL, IN_QUOTE, IN_QUOTE_BSL, IN_COMMENT, IN_COMMENT_BSL} states;
+    static states state;
+    states next_state;
+
+    if ( reset_state )
+    {
+        state = GO;
+        return;
+    }
+
+    switch (state) {
+    case GO:
+        switch (in_char) {
+        case '#':
+            next_state = IN_COMMENT;
+            break;
+        case '\\':
+            next_state = GO_BSL;
+            break;
+        case '"':
+            out_string.push_back(in_char);
+            next_state = IN_QUOTE;
+            break;
+        default:
+            out_string.push_back(in_char);
+            next_state = GO;
+            break;
+        }
+        break;
+    case GO_BSL:
+        out_string.push_back('\\');
+        out_string.push_back(in_char);
+        next_state = GO;
+        break;
+    case IN_QUOTE:
+        switch (in_char) {
+        case '"':
+            out_string.push_back(in_char);
+            next_state = GO;
+            break;
+        case '\\':
+            next_state = IN_QUOTE_BSL;
+            break;
+        default:
+            out_string.push_back(in_char);
+            next_state = IN_QUOTE;
+            break;
+        }
+        break;
+    case IN_QUOTE_BSL:
+        out_string.push_back('\\');
+        out_string.push_back(in_char);
+        next_state = IN_QUOTE;
+        break;
+    case IN_COMMENT:
+        switch (in_char) {
+        case '\n':
+            next_state = GO;
+            break;
+        case '\r':
+            next_state = GO;
+            break;
+        case '\\':
+            next_state = IN_COMMENT_BSL;
+            break;
+        default:
+            next_state = IN_COMMENT;
+            break;
+        }
+        break;
+    case IN_COMMENT_BSL:
+        switch (in_char) {
+        case '\n':
+        case '\r':
+            next_state = IN_COMMENT_BSL;
+            break;
+        default:
+            next_state = IN_COMMENT;
+            break;
+        }
+        break;
+    default:
+        cout << "WTF??? jsem jako prisel z neznameho stavu?" << endl; //TODO: lepsi vypis chyby
+        exit(1);
+    }
+
+    state = next_state;
+}
+
+
 string Data_tree::flow_json_filter( std::istream& is )
 {
     string ret_s;
-    typedef enum {GO, GO_BSL, IN_QUOTE, IN_QUOTE_BSL, IN_COMMENT, IN_COMMENT_BSL} states;
-    states state;
-    states next_state;
-    char c;
-    int pos = 0;
 
-    next_state = state = GO;
+    filter_stm( '0', ret_s, true );
+
     while ( is.good() )
     {
+        char c;
         c = is.get();
-
-        switch (state) {
-        case GO:
-            switch (c) {
-            case '#':
-                next_state = IN_COMMENT;
-                break;
-            case '\\':
-                next_state = GO_BSL;
-                break;
-            case '"':
-                next_state = IN_QUOTE;
-                ret_s.push_back(c);
-                break;
-            default:
-                ret_s.push_back(c);
-                break;
-            }
-            break;
-        case GO_BSL:
-            ret_s.push_back('\\');
-            ret_s.push_back(c);
-            next_state = GO;
-            break;
-        case IN_QUOTE:
-            switch (c) {
-            case '"':
-                next_state = GO;
-                ret_s.push_back(c);
-                break;
-            case '\\':
-                next_state = IN_QUOTE_BSL;
-                break;
-            default:
-                ret_s.push_back(c);
-                break;
-            }
-            break;
-        case IN_QUOTE_BSL:
-            ret_s.push_back('\\');
-            ret_s.push_back(c);
-            next_state = IN_QUOTE;
-            break;
-        case IN_COMMENT:
-            switch (c) {
-            case '\n':
-                next_state = GO;
-                break;
-            case '\r':
-                next_state = GO;
-                break;
-            case '\\':
-                next_state = IN_COMMENT_BSL;
-                break;
-            default:
-                break;
-            }
-            break;
-        case IN_COMMENT_BSL:
-            switch (c) {
-            case '\n':
-            case '\r':
-                next_state = IN_COMMENT_BSL;
-                break;
-            default:
-                next_state = IN_COMMENT;
-                break;
-            }
-            break;
-        default:
-            cout << "WTF???" << endl; //TODO: lepsi vypis chyby
-            exit(1);
-        }
-
-        state = next_state;
-        ++pos;
+        filter_stm( c, ret_s );
     }
 
     return ret_s;
 }
 
-
 string Data_tree::flow_json_filter( const std::string& s )
 {
     string ret_s;
-    typedef enum {GO, GO_BSL, IN_QUOTE, IN_QUOTE_BSL, IN_COMMENT, IN_COMMENT_BSL} states;
-    states state;
-    states next_state;
-    char c;
     int pos = 0;
     int size;
 
+    filter_stm( '0', ret_s, true );
+
     size = s.size();
-    next_state = state = GO;
     while ( pos < size )
     {
-        c = s.at(pos);
-
-        switch (state) {
-        case GO:
-            switch (c) {
-            case '#':
-                next_state = IN_COMMENT;
-                break;
-            case '\\':
-                next_state = GO_BSL;
-                break;
-            case '"':
-                next_state = IN_QUOTE;
-                ret_s.push_back(c);
-                break;
-            default:
-                ret_s.push_back(c);
-                break;
-            }
-            break;
-        case GO_BSL:
-            ret_s.push_back('\\');
-            ret_s.push_back(c);
-            next_state = GO;
-            break;
-        case IN_QUOTE:
-            switch (c) {
-            case '"':
-                next_state = GO;
-                ret_s.push_back(c);
-                break;
-            case '\\':
-                next_state = IN_QUOTE_BSL;
-                break;
-            default:
-                ret_s.push_back(c);
-                break;
-            }
-            break;
-        case IN_QUOTE_BSL:
-            ret_s.push_back('\\');
-            ret_s.push_back(c);
-            next_state = IN_QUOTE;
-            break;
-        case IN_COMMENT:
-            switch (c) {
-            case '\n':
-                next_state = GO;
-                break;
-            case '\r':
-                next_state = GO;
-                break;
-            case '\\':
-                next_state = IN_COMMENT_BSL;
-                break;
-            default:
-                break;
-            }
-            break;
-        case IN_COMMENT_BSL:
-            switch (c) {
-            case '\n':
-            case '\r':
-                next_state = IN_COMMENT_BSL;
-                break;
-            default:
-                next_state = IN_COMMENT;
-                break;
-            }
-            break;
-        default:
-            cout << "WTF???" << endl; //TODO: lepsi vypis chyby
-            exit(1);
-        }
-
-        state = next_state;
-        ++pos;
+        char c;
+        c = s.at(pos++);
+        filter_stm( c, ret_s );
     }
 
     return ret_s;
@@ -238,47 +174,47 @@ Data_tree::Data_tree( std::istream& is )
     }
 }
 
-Generic_node * Data_tree::new_node( const json_spirit::mValue json_node )
+Generic_node * Data_tree::new_node( const json_spirit::mValue json_node, Generic_node & prev_node )
 {
     Generic_node * gnp = NULL;
 
-    //TODO: Procistit debug vypisy, nebo parametrizovat.
+    //TODO: Procistit debug vypisy, nebo debug vypis na vyzadani.
 
     switch (json_node.type()) {
     case json_spirit::obj_type: {
         //cout << "TYPE: record" << endl;
-        gnp = new Record_node();
+        gnp = new Record_node(prev_node);
     }
         break;
     case json_spirit::array_type: {
         //cout << "TYPE: array" << endl;
-        gnp = new Vector_node();
+        gnp = new Vector_node(prev_node);
     }
         break;
     case json_spirit::str_type: {
         //cout << "TYPE: string: " << json_node.get_str() << endl;
         string s = json_node.get_str();
-        gnp = new Value_node(s);
+        gnp = new Value_node(prev_node, s);
     }
         break;
     case json_spirit::bool_type: {
         //cout << "TYPE: bool: " << json_node.get_bool() << endl;
-        gnp = new Value_node(json_node.get_bool());
+        gnp = new Value_node(prev_node, json_node.get_bool());
     }
         break;
     case json_spirit::int_type: {
         //cout << "TYPE: int: " << json_node.get_int() << endl;
-        gnp = new Value_node(json_node.get_int());
+        gnp = new Value_node(prev_node, json_node.get_int());
     }
         break;
     case json_spirit::real_type: {
         //cout << "TYPE: real: " << json_node.get_real() << endl;
-        gnp = new Value_node(json_node.get_real());
+        gnp = new Value_node(prev_node, json_node.get_real());
     }
         break;
     case json_spirit::null_type: {
         //cout << "TYPE: null" << endl;
-        gnp = new Value_node();
+        gnp = new Value_node(prev_node);
     }
         break;
     default: {
@@ -291,17 +227,17 @@ Generic_node * Data_tree::new_node( const json_spirit::mValue json_node )
     return gnp;
 }
 
-bool Data_tree::tree_build_recurse( json_spirit::mValue json_root, Generic_node & node )
+bool Data_tree::tree_build_recurse( json_spirit::mValue json_root, Generic_node & prev_node )
 {
     switch ( json_root.type() ) {
     case json_spirit::obj_type:
         {
             json_spirit::mObject::iterator it;
-            Record_node & o_node = node.as_record();
+            Record_node & o_node = prev_node.as_record();
 
             for( it = json_root.get_obj().begin(); it != json_root.get_obj().end(); ++it )
             {
-                Generic_node * gnp = new_node(it->second);
+                Generic_node * gnp = new_node(it->second, prev_node);
                 o_node.insert_key( it->first, *gnp );
 
                 switch (it->second.type()) {
@@ -338,10 +274,10 @@ bool Data_tree::tree_build_recurse( json_spirit::mValue json_root, Generic_node 
         break;
     case json_spirit::array_type:
         {
-            Vector_node & v_node = node.as_vector();
+            Vector_node & v_node = prev_node.as_vector();
             for( unsigned int i = 0; i < json_root.get_array().size(); ++i )
             {
-                Generic_node * gnp = new_node(json_root.get_array().at(i));
+                Generic_node * gnp = new_node(json_root.get_array().at(i), prev_node);
                 v_node.insert_item( i, *gnp );
 
                 switch (json_root.get_array().at(i).type()) {

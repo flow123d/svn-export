@@ -15,16 +15,19 @@ class Value_node : public Generic_node {
     bool                value_bool_;
 
 public:
-    //null value
-    Value_node()             { value_type_ = type_null; }
-    //bool value
-    Value_node( bool b )     { value_type_ = type_bool;   value_bool_ = b;}
-    //number value
-    Value_node( int i )      { value_type_ = type_number; value_number_ = i; }
-    Value_node( double lf )  { value_type_ = type_number; value_number_ = lf; }
-    //string value
-    Value_node(char * str)   { value_type_ = type_string; value_string_ = str; }
-    Value_node(string & str) { value_type_ = type_string; value_string_ = str; }
+    Value_node():Generic_node(type_null)                 {}
+    Value_node( bool b ):Generic_node(type_bool)         { value_bool_ = b;}
+    Value_node( int i ):Generic_node(type_number)        { value_number_ = i; }
+    Value_node( double lf ):Generic_node(type_number)    { value_number_ = lf; }
+    Value_node( char * str ):Generic_node(type_string)   { value_string_ = str; }
+    Value_node( string & str ):Generic_node(type_string) { value_string_ = str; }
+
+    Value_node( Generic_node & prev_node ):Generic_node(type_null, prev_node)                 {}
+    Value_node( Generic_node & prev_node, bool b ):Generic_node(type_bool, prev_node)         { value_bool_ = b;}
+    Value_node( Generic_node & prev_node, int i ):Generic_node(type_number, prev_node)        { value_number_ = i; }
+    Value_node( Generic_node & prev_node, double lf ):Generic_node(type_number, prev_node)    { value_number_ = lf; }
+    Value_node( Generic_node & prev_node, char * str ):Generic_node(type_string, prev_node)   { value_string_ = str; }
+    Value_node( Generic_node & prev_node, string & str ):Generic_node(type_string, prev_node) { value_string_ = str; }
 
     virtual Generic_node & get_item( const int id ) {
         //pristup jako do vektoru, ale jsme ve skalaru => vzdy vrati prazdnou instanci

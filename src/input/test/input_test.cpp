@@ -191,5 +191,5 @@ bool minitest_string( const string & fname )
     retval = tree->err_status;
 
     delete tree;
-    return retval;;
+    return retval;
 }

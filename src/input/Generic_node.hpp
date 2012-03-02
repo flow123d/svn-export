@@ -75,20 +75,29 @@ string & Value_type_to_str( const Value_type vt );
  * @brief Generic node - represents any JSON construct
  */
 class Generic_node {
+private:
+    static string  value_type_to_string[10];    //pro preklad enum Value_type na string.
+                                                //Lazy inicializace = pri prvnim cteni.
+    static bool    value_type_to_string_filled; //Uz je inicializovano?
 protected:
     Value_type            value_type_;
+    Generic_node &        prev_node_;
+
     //class data
     static Generic_node * empty_node_generic_; //prazdna instance
     static Record_node  * empty_node_record_;  //prazdna instance
     static Vector_node  * empty_node_vector_;  //prazdna instance
     static Value_node   * empty_node_value_;   //prazdna instance
-    static string         value_type_to_string[10]; //pro preklad enum Value_type na string.
-                                                    //Lazy inicializace = pri prvnim cteni.
-    static bool value_type_to_string_filled;        //Uz je inicializovano?
+
+    //constructor s urcenim datoveho typu - pristupny pouze z potomku
+    // parametry z constructoru se samy priradi promennym objektu, az na tu referenci (nevim proc)
+    Generic_node( Value_type value_type_ ):prev_node_( *this ) {};
+    Generic_node( Value_type value_type_, Generic_node & prev_node ):prev_node_(prev_node) {};
 
 public:
-    Generic_node():value_type_(type_generic) {}
-    //Generic_node( Generic_node const & n ); //copy constructor - staci implicitni...
+    Generic_node():value_type_(type_generic),prev_node_(*this) {}
+    Generic_node( Generic_node & prev_node ):value_type_(type_generic),prev_node_(prev_node) {}
+    //Generic_node( Generic_node const & to_copy ); //copy constructor - staci implicitni...
 
     Value_type get_type( void ) const { return value_type_; } //ziska typ nodu. To by mel umet kazdy
     const string & get_type_str( void ) const;                //ziska typ nodu jako string popis
@@ -139,5 +148,5 @@ public:
 };
 
 
-}
+} //namespace
 #endif /* GENERIC_NODE_HPP_ */

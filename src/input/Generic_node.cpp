@@ -192,7 +192,8 @@ string Generic_node::get_string_check(int & err_code) {
 }
 
 Generic_node::~Generic_node() {
-    //Tady nic. Neobsahuje zadna data apod.
+    //Tady nic.
+    //Dynamicka data jsou spolecna pro tridu, nesmi se dealokovat.
 }
 
 }

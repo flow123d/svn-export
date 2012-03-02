@@ -195,7 +195,7 @@ namespace json_spirit
                 case real_type:  output( value.get_real() );  break;
                 case int_type:   output_int( value );         break;
                 case null_type:  os_ << "null";               break;
-                default: assert( false );
+                default: assert( false );                     break;
             }
         }
 

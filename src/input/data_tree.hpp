@@ -31,11 +31,12 @@ private:
     //      a co copy constructor? Ma byt zablokovany? Ma vytvorit deep kopii?
     //      Jestli jo, ma kopirovat oba stromy (JSON i Node), nebo jen Node?
 
-    Data_tree():err_status(false) {}; //no default constructor
-    Generic_node * new_node( const json_spirit::mValue json_node );
+    Data_tree():err_status(false) {};
+
+    Generic_node * new_node( const json_spirit::mValue json_node, Generic_node & prev_node );
     bool tree_build( const json_spirit::mValue json_root, Generic_node & head_node );
     bool tree_build_recurse( json_spirit::mValue json_root, Generic_node & node );
-
+    void filter_stm( const char in_char, string & out_string, bool reset_state );
 public:
     bool err_status;
 

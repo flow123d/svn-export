@@ -14,7 +14,8 @@ namespace flow {
 class Record_node: public Generic_node {
     map< string, Generic_node & > record_;
 public:
-    Record_node() { value_type_ = type_record; }
+    Record_node():Generic_node(type_record) {}
+    Record_node( Generic_node & prev_node ):Generic_node(type_record, prev_node) {}
 
     virtual Generic_node & get_item( const int id ) {
         //pristup jako do vektoru, ale jsme v recordu => vzdy vrati prazdnou instanci

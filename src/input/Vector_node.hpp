@@ -13,7 +13,9 @@ class Vector_node : public Generic_node {
     //vektor referenci nelze!
     vector< Generic_node * >  value_array_;
 public:
-    Vector_node () { value_type_ = type_vector; }
+    Vector_node ():Generic_node(type_vector)                                      {}
+    Vector_node ( Generic_node & prev_node ):Generic_node(type_vector, prev_node) {}
+
     //TODO: deep copy constructor?
 
     virtual Generic_node & get_item( const size_t id );

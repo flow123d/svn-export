@@ -565,5 +565,49 @@ It containes a couple of indices of substances which are taking part in first or
 \hline
 \end{initable}
 
+\begin{initable}{Checkpointing\_i}
+\key{Checkpointing\_on} & \type{Yes/No} & "No" &
+Checkpointing is enabled / disabled\br
+YES - Checkpointing is enabled\br
+NO - Checkpointing is disabled.
+\\
+\hline
+\key{Checkpoints_type} & \type{array of int} & FIXED &
+How are Checkpoints generated:
+FIXED - Checkpoints are in fixed times, based on Stop_time, Save_step and Number_of_checkpoints.
+DYNAMIC - Checkpoints are generated in real time intervals, based on Checkpoint_interval.
+\\
+\hline
+\key{Number_of_checkpoints} & \type{int} & 0 &
+How many Checkpoints is generated when FIXED Checkpoints is selected.\br 
+Maximum stored checkpoints is 10.
+\\
+\hline
+\key{Checkpoints_interval} & \type{int} & 0 &
+Time interval for Checkpoints.\br 
+How often is checkpoint stored.[seconds]
+\\
+\hline
+\key{Max_checkpoints} & \type{int} & 0 &
+How many Checkpoints is stored.\br 
+Maximum stored checkpoints is 10.
+\\
+\hline
+\key{Output_file_format} & \type{string} & TXT &
+Type of output file format.\br
+TXT - output file format is txt.\br
+BIN - output file format is binary.
+\\
+\hline
+\key{Output_file_prefix} & \type{string} & chp_ &
+File prefix for output files.
+\\
+\hline
+\key{Output_file_suffix} & \type{string} & .dat &
+File suffix for output files.
+\\
+\hline
+\end{initable}
+
 \vfill
 \pagebreak

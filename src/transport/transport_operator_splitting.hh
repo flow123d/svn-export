@@ -29,7 +29,7 @@ public:
     {}
 
     /**
-     * This method takes sequantial PETSc vector of side velocities and update
+     * This method takes sequential PETSc vector of side velocities and update
      * transport matrix. The ordering is same as ordering of sides in the mesh.
      *
      * TODO: We should pass whole velocity field object (description of base functions and dof numbering) and vector.
@@ -73,19 +73,22 @@ public:
 
 class TransportOperatorSplitting : public TransportBase {
 public:
-	TransportOperatorSplitting(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database);
+    TransportOperatorSplitting(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database);
     virtual ~TransportOperatorSplitting();
 
     virtual void set_velocity_field(Vec &velocity_vector);
-	virtual void update_solution();
-	void read_simulation_step(double sim_step);
-	//virtual void compute_one_step();
-	//virtual void compute_until();
-	void compute_internal_step();
-	void output_data();
-	 virtual void get_parallel_solution_vector(Vec &vc);
-	 virtual void get_solution_vector(double* &vector, unsigned int &size);
-	 void compute_until_save_time();
+    virtual void update_solution();
+    void read_simulation_step(double sim_step);
+    //virtual void compute_one_step();
+    //virtual void compute_until();
+    void compute_internal_step();
+    void output_data();
+    virtual void get_parallel_solution_vector(Vec &vc);
+    virtual void get_solution_vector(double* &vector, unsigned int &size);
+    void compute_until_save_time();
+
+    void save_state(CheckpointingOutput* output);
+    void restore_state(CheckpointingOutput* output);
 protected:
 
 private:

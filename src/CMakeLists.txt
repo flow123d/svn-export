@@ -37,6 +37,12 @@ set(sources_lib_flow123d
     flow/local_matrix.cc
     flow/darcy_flow_mh_output.cc
     flow/darcy_flow_mh.cc
+    
+    checkpointing/CheckpointingUtil.cpp
+	checkpointing/CheckpointingOutput.cpp
+	checkpointing/CheckpointingOutputTxt.cpp
+	checkpointing/CheckpointingOutputBin.cpp
+	checkpointing/CheckpointingManager.cpp
 
     io/read_ini.cc
     io/output.cc

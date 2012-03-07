@@ -103,6 +103,12 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
         transport_reaction = new TransportNothing(*main_time_marks, *mesh, *material_database);
     }
 
+    xprintf(Msg, "transport_reaction->mark_type():%i, water->mark_type():%i\n", transport_reaction->mark_type(), water->mark_type());
+
+    checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
+    checkpointing_manager->register_class(transport_reaction, "transport_reaction");
+    /**cannot be in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
+    checkpointing_manager->create_fixed_timemarks();
 }
 
 /**
@@ -157,7 +163,7 @@ void HC_ExplicitSequential::run_simulation()
         // which suddenly rise in time 3*w_dt. First we the planed transport time step t_dt could be quite big, but
         // in time 3*w_dt we can reconsider value of t_dt to better capture changing velocity.
         velocity_interpolation_time= theta * transport_reaction->planned_time() + (1-theta) * transport_reaction->solved_time();
-
+        xprintf(Msg,"velocity_interpolation_time: %f, water->solved_time(): %f, transport_reaction->planned_time():%f, transport_reaction->solved_time():%f, transport_reaction->time().estimate_time():%f\n", velocity_interpolation_time, water->solved_time(), transport_reaction->planned_time(), transport_reaction->solved_time(), transport_reaction->time().estimate_time());
         // if transport is off, transport should return infinity solved and planned times so that
         // only water branch takes the place
         if (water->solved_time() < velocity_interpolation_time) {
@@ -187,6 +193,28 @@ void HC_ExplicitSequential::run_simulation()
             transport_reaction->output_data();
         }
 
+        xprintf(Msg,"water TG\n");
+
+        xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().end_time());
+        xprintf(Msg,"estimate_time:%f, begin:%f, end :%f\n", transport_reaction->time().estimate_time(), transport_reaction->time().marks().get_marks().begin(), water->time().marks().get_marks().end());
+
+        for(vector<TimeMark>::const_iterator it =transport_reaction->time().marks().get_marks().begin(); it != transport_reaction->time().marks().get_marks().end(); ++it)
+                    cout << *it << endl;
+
+        if(transport_reaction->solved_time()==0.5){
+            xprintf(Msg,"Přidávám marku\n");
+            transport_reaction->time().marks().add(TimeMark(1.5, transport_reaction->time().marks().type_checkpointing()));
+        }
+
+        if( transport_reaction->time().is_current(transport_reaction->time().marks().type_checkpointing())){
+            xprintf(Msg,"Je checkpointing current\n");
+        }else{
+            xprintf(Msg,"NEJe checkpointing current\n");
+        }
+
+        checkpointing_manager->create_dynamic_timemark();
+
+        checkpointing_manager->save_state();
     }
     xprintf(Msg, "End of simulation at time: %f\n", transport_reaction->solved_time());
 }
@@ -200,6 +228,9 @@ HC_ExplicitSequential::~HC_ExplicitSequential() {
     delete water;
     delete water_output;
     delete transport_reaction;
+
+    delete checkpointing_manager;
+
 }
 
 

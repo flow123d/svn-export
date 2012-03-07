@@ -38,6 +38,7 @@
 #include <limits>
 
 #include "system/system.hh"
+#include "checkpointing/CheckpointingOutput.h"
 
 class Mesh;
 class MaterialDatabase;
@@ -158,6 +159,15 @@ public:
      * Child class have to implement getter for parallel solution vector.
      */
     virtual void get_parallel_solution_vector(Vec &vector) =0;
+
+
+    /*******************************************************************************************************/
+    /**** Checkpointing methods  ***************************************************************************/
+    /** \brief virtual method for saving objects state */
+    virtual void save_state(CheckpointingOutput* output);
+
+    /** \brief virtual method for loading/restoring objects state */
+    virtual void restore_state(CheckpointingOutput* output);
 
 protected:
 

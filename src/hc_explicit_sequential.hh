@@ -32,6 +32,7 @@
 #define HC_EXPLICIT_SEQUENTIAL_HH_
 
 #include "main.h"
+#include "checkpointing/CheckpointingManager.h"
 
 class DarcyFlowMH;
 class DarcyFlowMHOutput;
@@ -71,6 +72,7 @@ private:
     /// explicit transport with chemistry through operator splitting
     TransportBase *transport_reaction;
 
+    CheckpointingManager* checkpointing_manager;
 };
 
 #endif /* HC_EXPLICIT_SEQUENTIAL_HH_ */

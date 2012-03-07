@@ -279,6 +279,28 @@ public:
     /// Infinity time used for steady case.
     static const double inf_time;
 
+
+    /**
+     * Returns fixed_dt.
+     */
+    inline double get_fixed_dt() const
+    {return fixed_dt;}
+    /**
+     * Returns time_step_constrain.
+     */
+    inline double get_time_step_constrain() const
+    {return time_step_constrain;}
+    /**
+     * Returns max_time_step.
+     */
+    inline double get_max_time_step() const
+    {return max_time_step;}
+    /**
+     * Returns min_time_step.
+     */
+    inline double get_min_time_step() const
+    {return min_time_step;}
+
 private:
     inline double comparison_fracture() const
     {

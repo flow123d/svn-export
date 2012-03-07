@@ -46,6 +46,12 @@ $(OBJS)/flow/local_matrix.o\
 $(OBJS)/flow/darcy_flow_mh.o\
 $(OBJS)/flow/darcy_flow_mh_output.o\
 \
+$(OBJS)/checkpointing/CheckpointingUtil.o\
+$(OBJS)/checkpointing/CheckpointingOutput.o\
+$(OBJS)/checkpointing/CheckpointingOutputTxt.o\
+$(OBJS)/checkpointing/CheckpointingOutputBin.o\
+$(OBJS)/checkpointing/CheckpointingManager.o\
+\
 $(OBJS)/io/read_ini.o\
 $(OBJS)/io/output.o\
 $(OBJS)/io/output_vtk.o\

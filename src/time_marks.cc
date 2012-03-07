@@ -40,7 +40,7 @@
 
 ostream& operator<<(ostream& stream, const TimeMark &mark)
 {
-    return ( stream << mark.time()<<": 0o" << oct << mark.mark_type() << dec );
+    return ( stream << mark.time()<<": 0o" << hex << mark.mark_type() << dec );
 }
 
 //const TimeMark::Type TimeMark::strict =  0x1;
@@ -60,6 +60,8 @@ TimeMarks::TimeMarks()
     type_fixed_time_ = new_mark_type();
     type_output_ = new_mark_type();
     type_bc_change_ = new_mark_type();
+    type_checkpointing_ = new_mark_type();
+    xprintf(Msg, "type_fixed_time_:%i, type_output_:%i, type_bc_change_:%i, type_checkpointing_:%i\n",type_fixed_time_, type_output_, type_bc_change_, type_checkpointing_);
 
     // insert start and end stoppers
     marks_.push_back(TimeMark(-INFINITY, TimeMark::every_type));
@@ -68,6 +70,7 @@ TimeMarks::TimeMarks()
 
 
 TimeMark::Type TimeMarks::new_mark_type() {
+    xprintf(Msg, "new_mark_type\n");
     ASSERT(next_mark_type_ != 0, "Can not allocate new mark type. The limit is 32 mark types.\n");
     TimeMark::Type current_type = next_mark_type_;
 
@@ -145,3 +148,8 @@ ostream& operator<<(ostream& stream, const TimeMarks &marks)
         stream << *it << endl;
     return stream;
 }
+
+
+vector<TimeMark> TimeMarks::get_marks(){
+    return marks_;
+};

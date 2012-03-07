@@ -130,6 +130,12 @@ public:
     TransportSources *transportsources;
     void test_concentration_sources(ConvectionTransport&);
 
+    /**\brief method for saving state of ConvectionTransport for checkpointing */
+    void save_state(CheckpointingOutput* output);
+
+    /**\brief method for restoring state of ConvectionTransport for checkpointing */
+    void restore_state(CheckpointingOutput* output);
+
 private:
 
 

@@ -139,3 +139,43 @@ void TransportOperatorSplitting::get_solution_vector(double * &x, unsigned int &
 	convection->compute_one_step();
 };
 
+
+void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
+    xprintf(Msg, "Saving state of TransportOperatorSplitting");
+    TimeMark::Type mark_type;
+    mark_type = this->mark_type()|time_->marks().type_checkpointing();
+
+    if(time_->is_current(mark_type)){
+        xprintf(Msg, " is CURRENT\n");
+    };
+    double xx;
+    xx=1234.5678;
+    output->save_data(time_marks);
+    output->save_data(time_);
+//    get_output()->save_data(xx);
+
+    convection->save_state(output);
+
+//    ConvectionTransport *convection;
+//    Linear_reaction *decayRad; ???
+//    Semchem_interface *Semchem_reactions
+}
+
+void TransportOperatorSplitting::restore_state(CheckpointingOutput* output){
+    xprintf(Msg, "Restoring state of TransportOperatorSplitting");
+    TimeMark::Type mark_type;
+    mark_type = this->mark_type()|time_->marks().type_checkpointing();
+
+    if(time_->is_current(mark_type)){
+        xprintf(Msg, " is CURRENT\n");
+    };
+    double xx;
+    xx=1234.5678;
+    output->load_data(xx);
+//    get_output()->save_data(xx);
+    convection->restore_state(output);
+
+//    ConvectionTransport *convection;
+//    Linear_reaction *decayRad; ???
+//    Semchem_interface *Semchem_reactions
+}

@@ -6,7 +6,7 @@
 #include "system/system.hh"
 #include "materials.hh"
 #include "transport/transport.h"
-#include "system/par_distribution.hh"
+#include "la/distribution.hh"
 #include "mesh/mesh.h"
 
 

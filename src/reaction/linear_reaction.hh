@@ -11,6 +11,8 @@
 #define LINREACT
 
 #include <vector> ///< included to enable saving bifurcation
+#include "checkpointing/CheckpointingOutput.h"
+
 class Mesh;
 class Distribution;
 
@@ -58,6 +60,14 @@ class Linear_reaction
 		*	This method enables to change the timestep for computation of simple chemical reactions. Such a change is conected together with creating of a new reaction matrix necessity.
 		*/
 		void set_time_step(double new_timestep);
+
+
+		/**\brief method for saving state of ConvectionTransport for checkpointing */
+		void save_state(CheckpointingOutput* output);
+
+		/**\brief method for restoring state of ConvectionTransport for checkpointing */
+		void restore_state(CheckpointingOutput* output);
+
 	private:
 		/**
 		*	This method disables to use constructor without parameters.

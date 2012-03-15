@@ -62,6 +62,10 @@ public:
 
     void save_state();
 
+    /**\brief restores global TimeMarks from saved state*/
+    void restore_time_marks();
+
+
     //    void create_timemarks(TimeMarks* marks, double begin_time, double end_time, double number_of_marks);
 
     /**\ brief creates FIXED checkpointing marks for all registered classes
@@ -88,6 +92,15 @@ private:
 
     /**\brief pointer to main_time_marks for internal use*/
     TimeMarks* marks_;
+
+    /**\brief output for TimeMarks
+     * initialized by constructor*/
+    CheckpointingOutput*  time_marks_output_;
+
+    /**\brief saves global TimeMarks*/
+    void save_time_marks();
+
+
 
     /** \brief time when simulation started (CheckpointingManager was constructed)
      * it's used for computing DYNAMIC TimeMarks

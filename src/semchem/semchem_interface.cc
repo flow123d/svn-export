@@ -227,3 +227,26 @@ void Semchem_interface::set_fw_chem(std::string semchem_output_file) //(const ch
 	xprintf(Msg,"Output file for Semchem is %s\n",fw_chem);
 	return;
 }
+
+void Semchem_interface::save_state(CheckpointingOutput* output){
+    xprintf(Msg, "Saving state of Semchem_interface\n");
+//    double xx;
+//    xx=5678.1234567897789;
+//    std::string name;
+//    output->save_data(*vsources_density, "vsources_density");
+//    output->save_data(*vsources_sigma, "vsources_sigma");
+//    output->save_data(*vsources_conc, "vsources_conc");
+//    output->save_data(*vsources_corr, "vsources_corr");
+//    output->save_data(*vcumulative_corr, "vcumulative_corr");
+}
+
+void Semchem_interface::restore_state(CheckpointingOutput* output){
+    xprintf(Msg, "Restoring state of Semchem_interface\n");
+
+//    output->load_data(*vsources_density, "vsources_density");
+//    output->load_data(*vsources_sigma, "vsources_sigma");
+//    output->load_data(*vsources_conc, "vsources_conc");
+//    output->load_data(*vsources_corr, "vsources_corr");
+//    output->load_data(*vcumulative_corr, "vcumulative_corr");
+
+}

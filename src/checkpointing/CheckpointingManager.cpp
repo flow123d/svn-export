@@ -29,14 +29,16 @@
 
 #include "CheckpointingManager.h"
 
-CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//TimeMarks* marks
+CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
     xprintf(Msg,"CheckpointingManager constructor.\n");
+
+    this->marks_ = marks;
+
+    time_marks_output_ = set_output("TimeMarks");
 
     //default checkpointing is disabled
     checkpointing_on_ = OptGetBool("Checkpointing", "Checkpointing_on", "0");
     if (!is_checkpointing_on()) return; /**Checkpointing is not enabled - pá pá*/
-
-    this->marks_ = marks;
 
     registered_classes_ = new RegisteredClasses();
 
@@ -80,7 +82,24 @@ CheckpointingManager::~CheckpointingManager() {
         xprintf(Msg,"delete registered_classes_.\n");
         delete registered_classes_;
     }
+
+    delete time_marks_output_;
 }
+
+void CheckpointingManager::restore_time_marks(){
+    xprintf(Msg,"CheckpointingManager::restore_time_marks:\n");
+    /**works with marks_ pointer */
+    if (!is_checkpointing_on()) return;
+
+    time_marks_output_->load_data(marks_);
+}
+
+void CheckpointingManager::save_time_marks(){
+    /**works with marks_ pointer */
+    time_marks_output_->save_data(marks_);
+
+}
+
 
 void CheckpointingManager::register_class(EquationBase* ch, std::string class_name){
     xprintf(Msg, "obj:%p, name: \n", ch);
@@ -135,24 +154,24 @@ void CheckpointingManager::create_dynamic_timemark(){
             /**time since last checkpoint was saved, exceeds checkpoints_interval_ --> creating new Checkpointing TimeMark*/
         }
 
-//        double begin_time;
-//        double end_time;
-//        double number_of_marks;
-//
-//        begin_time=0;
-//
-//        /**end_time se buď dá získat z .ini, nebo je v každém TG*/
-//        end_time=OptGetDbl("Global", "Stop_time", "1.0");
-//        number_of_marks=OptGetInt("Checkpointing", "Number_of_checkpoints", "1");;
-//
-//        TimeMark::Type checkpointing_mark;
-//        checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();
-//        for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it)
-//            checkpointing_mark |= it->registered_class->mark_type();
-//        for (double t = begin_time; t < end_time; t += (end_time-begin_time)/number_of_marks) {
-//            xprintf(Msg,"Přidávám marku v:%f, typu:%i\n", t, checkpointing_mark);
-//            marks_->add(TimeMark(t, checkpointing_mark));//marks->type_checkpointing()|marks->type_fixed_time()
-//        }
+        //        double begin_time;
+        //        double end_time;
+        //        double number_of_marks;
+        //
+        //        begin_time=0;
+        //
+        //        /**end_time se buď dá získat z .ini, nebo je v každém TG*/
+        //        end_time=OptGetDbl("Global", "Stop_time", "1.0");
+        //        number_of_marks=OptGetInt("Checkpointing", "Number_of_checkpoints", "1");;
+        //
+        //        TimeMark::Type checkpointing_mark;
+        //        checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();
+        //        for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it)
+        //            checkpointing_mark |= it->registered_class->mark_type();
+        //        for (double t = begin_time; t < end_time; t += (end_time-begin_time)/number_of_marks) {
+        //            xprintf(Msg,"Přidávám marku v:%f, typu:%i\n", t, checkpointing_mark);
+        //            marks_->add(TimeMark(t, checkpointing_mark));//marks->type_checkpointing()|marks->type_fixed_time()
+        //        }
     }
 
 };
@@ -166,6 +185,7 @@ void CheckpointingManager::save_state(){
     /**
      * TODO tady by se asi měly ukládat TimeMarks - protože jsou globální pro všechny třídy
      * */
+    save_time_marks();
 
     for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it){
         xprintf(Msg, "Saving state of object: %s\n", it->registered_class_name.c_str());

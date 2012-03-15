@@ -51,6 +51,9 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     // Initialize Time Marks
     main_time_marks = new TimeMarks();
 
+    checkpointing_manager = new CheckpointingManager(main_time_marks);
+    checkpointing_manager->restore_time_marks();
+
     // Material Database
     const string& material_file_name = IONameHandler::get_instance()->get_input_file_name(OptGetStr( "Input", "Material", NULL ));
     material_database = new MaterialDatabase(material_file_name);
@@ -105,7 +108,6 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     xprintf(Msg, "transport_reaction->mark_type():%i, water->mark_type():%i\n", transport_reaction->mark_type(), water->mark_type());
 
-    checkpointing_manager = new CheckpointingManager(main_time_marks);//main_time_marks
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
     /**cannot be in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
     checkpointing_manager->create_fixed_timemarks();

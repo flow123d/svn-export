@@ -4,6 +4,7 @@
 #include "mesh/elements.h"
 #include "system/par_distribution.hh"
 #include <string.h>
+#include "checkpointing/CheckpointingOutput.h"
 
 class Distribution;
 
@@ -74,6 +75,12 @@ class Semchem_interface
 		*	It is name of an output file for semchem.
 		*/
 		char *fw_chem;
+
+		/**\brief method for saving state of ConvectionTransport for checkpointing */
+		void save_state(CheckpointingOutput* output);
+
+		/**\brief method for restoring state of ConvectionTransport for checkpointing */
+		void restore_state(CheckpointingOutput* output);
 	private:
 		/**
 		*	It holds an information about the length of time step for chemical reaction simulation.

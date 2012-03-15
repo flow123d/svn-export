@@ -150,15 +150,14 @@ void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
     };
     double xx;
     xx=1234.5678;
-    output->save_data(time_marks);
+//    output->save_data(time_marks);
     output->save_data(time_);
 //    get_output()->save_data(xx);
 
     convection->save_state(output);
+    decayRad->save_state(output);
+    Semchem_reactions->save_state(output);
 
-//    ConvectionTransport *convection;
-//    Linear_reaction *decayRad; ???
-//    Semchem_interface *Semchem_reactions
 }
 
 void TransportOperatorSplitting::restore_state(CheckpointingOutput* output){

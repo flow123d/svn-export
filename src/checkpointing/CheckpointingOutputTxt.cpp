@@ -29,6 +29,8 @@
 
 #include "CheckpointingOutputTxt.h"
 
+const char* CheckpointingOutputTxt::VALUE_DELIMITER = ":";
+
 CheckpointingOutputTxt::CheckpointingOutputTxt(string file_name):
 CheckpointingOutput(file_name){
     xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt.\n");
@@ -102,7 +104,7 @@ void CheckpointingOutputTxt::save_data(TimeMarks* time_marks){
     save_timemarks_txt(time_marks);
 };
 void CheckpointingOutputTxt::load_data(TimeMarks* time_marks){
-    //    load_timemarks_txt(time_marks);
+        load_timemarks_txt(time_marks);
 };
 void CheckpointingOutputTxt::save_data(double &data){
     xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<double>(double &data, ..) -Až to tady bude, tak to uložím :-)\n");
@@ -219,10 +221,11 @@ void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
     /**sets output precision for double to 10 digits*/
     tm_out_stream.precision(std::numeric_limits<double>::digits10);
 
-    tm_out_stream << "type_fixed_time: 0x" << hex << time_marks->type_fixed_time() << dec << endl;
-    tm_out_stream << "type_output: 0x" << hex << time_marks->type_output() << endl;
-    tm_out_stream << "type_bc_change: 0x" << hex << time_marks->type_bc_change() << endl;
-    tm_out_stream << "type_checkpointing: 0x" << hex << time_marks->type_checkpointing() << endl;
+
+//    tm_out_stream << "type_fixed_time: 0x" << hex << time_marks->type_fixed_time() << dec << endl;
+//    tm_out_stream << "type_output: 0x" << hex << time_marks->type_output() << endl;
+//    tm_out_stream << "type_bc_change: 0x" << hex << time_marks->type_bc_change() << endl;
+//    tm_out_stream << "type_checkpointing: 0x" << hex << time_marks->type_checkpointing() << endl;
     tm_out_stream << "type_next_mark_type: 0x" << hex << time_marks->type_next_mark_type() << endl;
 
     for(vector<TimeMark>::const_iterator it = time_marks->get_marks().begin(); it != time_marks->get_marks().end(); ++it){
@@ -236,7 +239,50 @@ void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
 
 //    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - constructed.\n");
 };
-void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){};
+void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){
+    xprintf(Msg,"**************************************************************************************\n");
+    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt.******************************************\n");
+    char line[LINE_SIZE];
+    char string[ LINE_SIZE ];
+    char* value;
+    TimeMark::Type typeValue;
+    TimeMark* mark;
+    int intValue;
+    double doubleValue;
+
+    ifstream tm_in_stream;
+    tm_in_stream.open(util->full_file_name("TimeMarksX").c_str());
+    INPUT_CHECK( tm_in_stream.is_open() , "Can not open output file: %s\n", util->full_file_name("TimeMarks").c_str() );
+
+    /** reading type_next_mark_type */
+    tm_in_stream.getline(line, LINE_SIZE);
+
+//    value = get_named_value(line);
+    typeValue = get_type_value(line);
+    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. type_next_mark_type: %i***********************\n", typeValue);
+
+    tm_in_stream.getline(line, LINE_SIZE);
+    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. line: %s***********************\n", line);
+
+    mark = get_time_mark_value(line);
+    xprintf(Msg,"load_timemarks_txt. \"188812863474722e-312: 0x3805f97218(240618402328)\" - %le:%li***********************\n", mark->time(), mark->mark_type());
+
+    //    tm_in_stream.r << "type_next_mark_type: 0x" << hex << time_marks->type_next_mark_type() << endl;
+
+//    for(vector<TimeMark>::const_iterator it = time_marks->get_marks().begin(); it != time_marks->get_marks().end(); ++it){
+//        save_timemark_txt(*it, tm_out_stream);//, tm_out_stream
+//    }
+
+    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt.******************************************\n");
+    xprintf(Msg,"**************************************************************************************\n");
+    if(tm_in_stream != NULL) {
+        tm_in_stream.close();
+        //        delete outStream;
+    }
+
+//    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - constructed.\n");
+
+};
 void CheckpointingOutputTxt::save_timemark_txt(const TimeMark &time_mark, ofstream& out_stream){
 //    out_stream << time_mark << endl;
     out_stream << scientific << time_mark.time();
@@ -250,4 +296,134 @@ void CheckpointingOutputTxt::save_double_txt(double& data){
 void CheckpointingOutputTxt::load_double_txt(double& data){};
 
 
+/****************************************************************************/
+/** supplementary methods ***************************************************/
+/****************************************************************************/
 
+/**\brief returns value from string. The value is stored as name: value
+ * name is name of stored value
+ * value is value
+ * e.g. type_next_mark_type: 0x80 */
+//char* CheckpointingOutputTxt::get_named_value(char line[LINE_SIZE]){
+//    char *value;
+//    char *tmp;
+//    tmp = xstrtok(line, VALUE_DELIMITER);
+////    sscanf(tmp,"%s",string);    // strip spaces
+//    tmp = xstrtok(NULL,VALUE_DELIMITER);
+//    tmp = strip_spaces(tmp);
+//    value = xstrcpy(tmp);
+//
+//    xprintf(Msg, "value%s\n", value);
+//
+//    return value;
+//};
+
+TimeMark::Type CheckpointingOutputTxt::get_type_value(char line[LINE_SIZE]){
+    TimeMark::Type type;
+    char *value;
+    char *tmp;
+    tmp = xstrtok(line, VALUE_DELIMITER);
+    //    sscanf(tmp,"%s",string);    // strip spaces
+    tmp = xstrtok(NULL,VALUE_DELIMITER);
+    tmp = strip_spaces(tmp);
+    value = xstrcpy(tmp);
+
+    if (sscanf(value,"%x",&type) == 0) {
+        /**nepovedlo se asi error */
+    };
+
+
+    return type;
+}
+
+TimeMark* CheckpointingOutputTxt::get_time_mark_value(char line[LINE_SIZE]){
+    TimeMark* mark;
+    double time;
+    TimeMark::Type type;
+
+    char *value;
+    char *tmp;
+    tmp = xstrtok(line, VALUE_DELIMITER);
+    tmp = strip_spaces(tmp);
+    value = xstrcpy(tmp);
+    xprintf(Msg,"CheckpointingOutputTxt::get_time_mark_value: %s***********************\n", value);
+
+    if (sscanf(value,"%le",&time) == 0) {
+        /**nepovedlo se asi error */
+    };
+    xprintf(Msg,"CheckpointingOutputTxt::time: %e***********************\n", time);
+
+    tmp = xstrtok(NULL,VALUE_DELIMITER);
+    tmp = strip_spaces(tmp);
+    value = xstrcpy(tmp);
+    xprintf(Msg,"CheckpointingOutputTxt::get_time_mark_value: %s***********************\n", value);
+    if (sscanf(value,"%lx",&type) == 0) {
+        /**nepovedlo se asi error */
+    };
+    xprintf(Msg,"CheckpointingOutputTxt::type: %lx***********************\n", type);
+
+    return new TimeMark(time, type);
+}
+
+double CheckpointingOutputTxt::get_double_value(const char *value){
+    double d;
+
+    if (sscanf(value,"%x",&d) == 0) {
+        /**nepovedlo se asi error */
+    };
+
+
+    return d;
+}
+
+/** \brief Strip start and end blank characters
+ * copied from read_ini.cc */
+char* CheckpointingOutputTxt::strip_spaces(char* string)
+{
+    int i;
+    while((string[0] ==' ') || (string[0] =='\t')){
+        string++;
+    }
+    i = strlen(string) - 1;
+    while((string[i] ==' ') || (string[i] =='\t') || (string[i] =='\n')  || (string[i] =='\r')){
+        string[i--] = 0;
+    }
+    return string;
+}
+
+//=============================================================================
+// GET INT VARIABLE FROM INI FILE
+//=============================================================================
+long int xxOptGetInt( const char *section,const char *key,const char *defval )
+{
+    char *str;
+    long int res;
+
+    str=OptGetStr(section,key,defval);
+    if (sscanf(str,"%ld",&res) == 0) {
+        if (defval == NULL) xprintf(UsrErr,"Can not convert to integer parameter: [%s] %s.\n",section,key);
+        xprintf(PrgErr,"Default value %s of parameter: [%s] %s is not an integer.\n",defval,section,key);
+    }
+
+    xfree( str );
+    return res;
+}
+
+//=============================================================================
+// GET DOUBLE VARIABLE FROM INI FILE
+//=============================================================================
+double xxOptGetDbl( const char *section,const  char *key,const  char *defval )
+{
+    char *str;
+    double res;
+
+    str=OptGetStr(section,key,defval);
+    if (sscanf(str,"%lg",&res) == 0) {
+        if (defval == NULL) xprintf(UsrErr,"Can not convert to double parameter: [%s] %s.\n",section,key);
+        if (sscanf(defval,"%lg",&res) == 0)
+            xprintf(PrgErr,"Default value \"%s\" of parameter: [%s] %s is not an double.\n",defval,section,key);
+    }
+
+    xfree( str );
+    return res;
+}

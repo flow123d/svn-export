@@ -496,3 +496,26 @@ void Linear_reaction::set_nr_of_FoR(void)
 	nr_of_FoR = OptGetInt("Reaction_module","Nr_of_FoR","0");
 	return;
 }
+
+void Linear_reaction::save_state(CheckpointingOutput* output){
+    xprintf(Msg, "Saving state of Linear_reaction\n");
+//    double xx;
+//    xx=5678.1234567897789;
+//    std::string name;
+//    output->save_data(*vsources_density, "vsources_density");
+//    output->save_data(*vsources_sigma, "vsources_sigma");
+//    output->save_data(*vsources_conc, "vsources_conc");
+//    output->save_data(*vsources_corr, "vsources_corr");
+//    output->save_data(*vcumulative_corr, "vcumulative_corr");
+}
+
+void Linear_reaction::restore_state(CheckpointingOutput* output){
+    xprintf(Msg, "Restoring state of Linear_reaction\n");
+
+//    output->load_data(*vsources_density, "vsources_density");
+//    output->load_data(*vsources_sigma, "vsources_sigma");
+//    output->load_data(*vsources_conc, "vsources_conc");
+//    output->load_data(*vsources_corr, "vsources_corr");
+//    output->load_data(*vcumulative_corr, "vcumulative_corr");
+
+}

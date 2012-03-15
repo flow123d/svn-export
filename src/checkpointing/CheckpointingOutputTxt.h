@@ -86,6 +86,8 @@ public:
 
 
 private:
+    static const char* VALUE_DELIMITER;
+
     void save_vec_txt(Vec vec, std::string vec_name);
     void load_vec_txt(Vec vec, std::string vec_name);
     void save_mat_txt(Mat mat, std::string mat_name);
@@ -101,6 +103,28 @@ private:
     void load_double_txt(double& data);
     void save_int_txt(int& data);
     void load_int_txt(int& data);
+
+    /**\brief returns value from string. The value is stored as name: value
+     * name is name of stored value
+     * value is value
+     * e.g. type_next_mark_type: 0x80 */
+//    char* get_named_value(char line[ LINE_SIZE ]);
+
+    /**\brief returns TimeMark::Type value from string
+     * parses value got by get_named_value*/
+    TimeMark::Type get_type_value(char line[LINE_SIZE]);
+
+    /**\brief returns TimeMark value from string.
+     * The TimeMark is stored as a pair double and TimeMark::Type
+     * e.g. 1.500000000000000e+00: 0x6b */
+    TimeMark* get_time_mark_value(char line[LINE_SIZE]);
+
+
+    /**\brief returns TimeMark::Type value from string*/
+    double get_double_value(const char *value);
+
+    /** \brief Strip start and end blank characters */
+    static char* strip_spaces(char* string);
 };
 
 #endif /* CHECKPOINTINGOUTPUTTXT_H_ */

@@ -198,6 +198,28 @@ void CheckpointingManager::save_state(){
 
 };
 
+void CheckpointingManager::restore_state(){
+    if(!is_checkpointing_on()) return;
+
+    last_checkpointing_time_ = time(NULL);
+    xprintf(Msg, "Rozdíl: %i\n", (start_time_-last_checkpointing_time_));
+
+    /**
+     * TODO tady by se asi měly ukládat TimeMarks - protože jsou globální pro všechny třídy
+     * */
+    save_time_marks();
+
+    for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it){
+        xprintf(Msg, "Saving state of object: %s\n", it->registered_class_name.c_str());
+        TimeMark::Type checkpointing_mark;
+        checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();//|it->obj->mark_type();
+        //        if(marks_->is_current(it->registered_class->time(), checkpointing_mark)){
+        it->registered_class->save_state(it->output);//checkpoint_
+        //        }
+    }
+
+};
+
 int CheckpointingManager::checkpoint(){
     return checkpoint_;
 };

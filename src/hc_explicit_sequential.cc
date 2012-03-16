@@ -92,7 +92,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
         char *transport_type = OptGetStr("Transport", "Transport_type", "explicit");
         if (strcmp(transport_type, "explicit") == 0)
         {
-            transport_reaction = new TransportOperatorSplitting(*main_time_marks, *mesh, *material_database);
+            transport_reaction = new TransportOperatorSplitting(*main_time_marks, *mesh, *material_database, checkpointing_manager);
         }
         else if (strcmp(transport_type, "implicit") == 0)
         {
@@ -111,6 +111,9 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
     /**cannot be in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
     checkpointing_manager->create_fixed_timemarks();
+
+    /**tady se musej restorovat všechny registrovaný classy*/
+    checkpointing_manager->restore_state();
 }
 
 /**

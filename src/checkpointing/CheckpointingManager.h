@@ -61,6 +61,7 @@ public:
     void register_class(EquationBase* ch, std::string class_name);
 
     void save_state();
+    void restore_state();
 
     /**\brief restores global TimeMarks from saved state*/
     void restore_time_marks();

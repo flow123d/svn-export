@@ -81,7 +81,7 @@ public:
     void load_data(int& data);
 
 
-//    void save_data(TimeMark* time_mark);
+    //    void save_data(TimeMark* time_mark);
 
 
 
@@ -108,7 +108,7 @@ private:
      * name is name of stored value
      * value is value
      * e.g. type_next_mark_type: 0x80 */
-//    char* get_named_value(char line[ LINE_SIZE ]);
+    //    char* get_named_value(char line[ LINE_SIZE ]);
 
     /**\brief returns TimeMark::Type value from string
      * parses value got by get_named_value*/
@@ -120,8 +120,14 @@ private:
     TimeMark* get_time_mark_value(char line[LINE_SIZE]);
 
 
+    /**\brief returns bool value from string*/
+    bool get_bool_value(char line[LINE_SIZE]);
+
+    /**\brief returns int value from string*/
+    int get_int_value(char line[LINE_SIZE]);
+
     /**\brief returns TimeMark::Type value from string*/
-    double get_double_value(const char *value);
+    double get_double_value(char line[LINE_SIZE]);
 
     /** \brief Strip start and end blank characters */
     static char* strip_spaces(char* string);

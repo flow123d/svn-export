@@ -32,7 +32,7 @@
 const char* CheckpointingOutputTxt::VALUE_DELIMITER = ":";
 
 CheckpointingOutputTxt::CheckpointingOutputTxt(string file_name):
-CheckpointingOutput(file_name){
+                CheckpointingOutput(file_name){
     xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt.\n");
     out_stream.open(util->full_file_name(file_name).c_str());
     INPUT_CHECK( out_stream.is_open() , "Can not open output file: %s\n", util->full_file_name(file_name).c_str() );
@@ -104,7 +104,7 @@ void CheckpointingOutputTxt::save_data(TimeMarks* time_marks){
     save_timemarks_txt(time_marks);
 };
 void CheckpointingOutputTxt::load_data(TimeMarks* time_marks){
-        load_timemarks_txt(time_marks);
+    load_timemarks_txt(time_marks);
 };
 void CheckpointingOutputTxt::save_data(double &data){
     xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<double>(double &data, ..) -Až to tady bude, tak to uložím :-)\n");
@@ -138,7 +138,7 @@ void CheckpointingOutputTxt::save_vec_txt(Vec vec, std::string vec_name){
     std::string full_name;
 
     full_name = util->full_file_name_vec_mat(vec_name);
-//    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
+    //    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
     /**ulozeni vectoru do ACSII (Txt) souboru*/
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
     VecView(vec,viewer);
@@ -164,7 +164,7 @@ void CheckpointingOutputTxt::save_mat_txt(Mat mat, std::string mat_name){
     std::string full_name;
 
     full_name = util->full_file_name_vec_mat(mat_name);
-//    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
+    //    xprintf( Msg, "xxx full_name:%s\n", full_name.c_str());
     /**ulozeni Mat do ACSII (Txt) souboru */
     PetscViewerASCIIOpen(PETSC_COMM_WORLD,full_name.c_str(),&viewer);
     MatView(mat,viewer);
@@ -186,32 +186,89 @@ void CheckpointingOutputTxt::load_mat_txt(Mat mat, std::string mat_name){
 };
 void CheckpointingOutputTxt::save_timegovernor_txt(TimeGovernor* tg){
     xprintf(Msg,"CheckpointingOutputTxt::save_timegovernor_txt.\n");
-       ofstream tg_out_stream;
-       tg_out_stream.open(util->full_file_name_vec_mat("TimeGovernor").c_str());
-       INPUT_CHECK( tg_out_stream.is_open() , "Can not open output file: %s\n", util->full_file_name_vec_mat("TimeGovernor").c_str() );
+    ofstream tg_out_stream;
+    tg_out_stream.open(util->full_file_name_vec_mat("TimeGovernor").c_str());
+    INPUT_CHECK( tg_out_stream.is_open() , "Can not open output file: %s\n", util->full_file_name_vec_mat("TimeGovernor").c_str() );
 
-       /**sets output precision for double to 10 digits*/
-       tg_out_stream.precision(std::numeric_limits<double>::digits10);
+    /**sets output precision for double to 10 digits*/
+    tg_out_stream.precision(std::numeric_limits<double>::digits10);
 
-       tg_out_stream << "time_level: " << tg->tlevel() << endl;
-       tg_out_stream << "time: " << tg->t() << endl;
-       tg_out_stream << "end_of_fixed_dt_interval: " << tg->end_of_fixed_dt() << endl;
-       tg_out_stream << "end_time_: " << tg->end_time() << endl;
-       tg_out_stream << "time_step: " << tg->dt() << endl;
-       tg_out_stream << "last_time_step: " << tg->last_dt() << endl;
-       tg_out_stream << "fixed_dt: " << tg->get_fixed_dt() << endl;
-       tg_out_stream << "dt_changed: " << tg->is_changed_dt() << endl;
-       tg_out_stream << "time_step_constrain: " << tg->get_time_step_constrain() << endl;
-       tg_out_stream << "max_time_step: " << tg->get_max_time_step() << endl;
-       tg_out_stream << "min_time_step: " << tg->get_min_time_step() << endl;
+    tg_out_stream << "time_level: " << tg->tlevel() << endl;
+    tg_out_stream << "time: " << tg->t() << endl;
+    tg_out_stream << "end_of_fixed_dt_interval: " << tg->end_of_fixed_dt() << endl;
+    tg_out_stream << "end_time_: " << tg->end_time() << endl;
+    tg_out_stream << "time_step: " << tg->dt() << endl;
+    tg_out_stream << "last_time_step: " << tg->last_dt() << endl;
+    tg_out_stream << "fixed_dt: " << tg->get_fixed_dt() << endl;
+    tg_out_stream << "dt_changed: " << tg->is_changed_dt() << endl;
+    tg_out_stream << "time_step_constrain: " << tg->get_time_step_constrain() << endl;
+    tg_out_stream << "max_time_step: " << tg->get_max_time_step() << endl;
+    tg_out_stream << "min_time_step: " << tg->get_min_time_step() << endl;
 
 
-       if(tg_out_stream != NULL) {
-           tg_out_stream.close();
-           //        delete outStream;
-       }
+    if(tg_out_stream != NULL) {
+        tg_out_stream.close();
+        //        delete outStream;
+    }
 };
-void CheckpointingOutputTxt::load_timegovernor_txt(TimeGovernor* tg){};
+void CheckpointingOutputTxt::load_timegovernor_txt(TimeGovernor* tg){
+    xprintf(Msg,"**************************************************************************************\n");
+    xprintf(Msg,"CheckpointingOutputTxt::load_timegovernor_txt.******************************************\n");
+    char line[LINE_SIZE];
+    char string[ LINE_SIZE ];
+    char* value;
+//    TimeGovernor* tg;
+    bool boolValue;
+    int intValue;
+    double doubleValue;
+
+    ifstream tg_in_stream;
+    tg_in_stream.open(util->full_file_name_vec_mat("TimeGovernorX").c_str());
+    INPUT_CHECK( tg_in_stream.is_open() , "Can not open output file: %s\n", util->full_file_name_vec_mat("TimeGovernorX").c_str() );
+
+    tg = new TimeGovernor();
+    /** reading type_next_mark_type */
+    tg_in_stream.getline(line, LINE_SIZE); /**time_level - tg->tlevel()*/
+    intValue = get_int_value(line);
+    xprintf(Msg,"Value - %i***********************\n", intValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**time - tg->t()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**end_of_fixed_dt_interval - tg->end_of_fixed_dt()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**end_time_ - tg->end_time()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**last_time_step - tg->last_dt()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**fixed_dt - tg->get_fixed_dt()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**dt_changed - tg->is_changed_dt()*/
+    boolValue = get_bool_value(line);
+    xprintf(Msg,"Value - %i***********************\n", boolValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**time_step_constrain - tg->get_time_step_constrain()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**max_time_step - tg->get_max_time_step()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+    tg_in_stream.getline(line, LINE_SIZE); /**min_time_step - tg->get_min_time_step()*/
+    doubleValue = get_double_value(line);
+    xprintf(Msg,"Value - %le***********************\n", doubleValue);
+
+
+
+    xprintf(Msg,"CheckpointingOutputTxt::load_timegovernor_txt.******************************************\n");
+    xprintf(Msg,"**************************************************************************************\n");
+    if(tg_in_stream != NULL) {
+        tg_in_stream.close();
+    }
+
+    xprintf(Msg,"CheckpointingOutputTxt::load_timegovernor_txt - naloudováno.\n");
+};
 void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
     xprintf(Msg,"CheckpointingOutputTxt::save_timemarks_txt.\n");
     ofstream tm_out_stream;
@@ -222,10 +279,10 @@ void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
     tm_out_stream.precision(std::numeric_limits<double>::digits10);
 
 
-//    tm_out_stream << "type_fixed_time: 0x" << hex << time_marks->type_fixed_time() << dec << endl;
-//    tm_out_stream << "type_output: 0x" << hex << time_marks->type_output() << endl;
-//    tm_out_stream << "type_bc_change: 0x" << hex << time_marks->type_bc_change() << endl;
-//    tm_out_stream << "type_checkpointing: 0x" << hex << time_marks->type_checkpointing() << endl;
+    //    tm_out_stream << "type_fixed_time: 0x" << hex << time_marks->type_fixed_time() << dec << endl;
+    //    tm_out_stream << "type_output: 0x" << hex << time_marks->type_output() << endl;
+    //    tm_out_stream << "type_bc_change: 0x" << hex << time_marks->type_bc_change() << endl;
+    //    tm_out_stream << "type_checkpointing: 0x" << hex << time_marks->type_checkpointing() << endl;
     tm_out_stream << "type_next_mark_type: 0x" << hex << time_marks->type_next_mark_type() << endl;
 
     for(vector<TimeMark>::const_iterator it = time_marks->get_marks().begin(); it != time_marks->get_marks().end(); ++it){
@@ -237,7 +294,7 @@ void CheckpointingOutputTxt::save_timemarks_txt(TimeMarks* time_marks){
         //        delete outStream;
     }
 
-//    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - constructed.\n");
+    //    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - constructed.\n");
 };
 void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){
     xprintf(Msg,"**************************************************************************************\n");
@@ -256,35 +313,30 @@ void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){
 
     /** reading type_next_mark_type */
     tm_in_stream.getline(line, LINE_SIZE);
-
-//    value = get_named_value(line);
     typeValue = get_type_value(line);
-    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. type_next_mark_type: %i***********************\n", typeValue);
+    //    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. type_next_mark_type: %i***********************\n", typeValue);
 
-    tm_in_stream.getline(line, LINE_SIZE);
-    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. line: %s***********************\n", line);
+    /** reading TimeMarks */
+    while(!tm_in_stream.eof()){
+        tm_in_stream.getline(line, LINE_SIZE);
+        //    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. line: %s***********************\n", line);
 
-    mark = get_time_mark_value(line);
-    xprintf(Msg,"load_timemarks_txt. \"188812863474722e-312: 0x3805f97218(240618402328)\" - %le:%li***********************\n", mark->time(), mark->mark_type());
-
-    //    tm_in_stream.r << "type_next_mark_type: 0x" << hex << time_marks->type_next_mark_type() << endl;
-
-//    for(vector<TimeMark>::const_iterator it = time_marks->get_marks().begin(); it != time_marks->get_marks().end(); ++it){
-//        save_timemark_txt(*it, tm_out_stream);//, tm_out_stream
-//    }
+        mark = get_time_mark_value(line);
+//        xprintf(Msg,"TimeMark - %le:%lx/li***********************\n", mark->time(), mark->mark_type());
+        time_marks->add(*mark);
+    }
 
     xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt.******************************************\n");
     xprintf(Msg,"**************************************************************************************\n");
     if(tm_in_stream != NULL) {
         tm_in_stream.close();
-        //        delete outStream;
     }
 
-//    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - constructed.\n");
+    xprintf(Msg,"CheckpointingOutputTxt::CheckpointingOutputTxt - naloudováno.\n");
 
 };
 void CheckpointingOutputTxt::save_timemark_txt(const TimeMark &time_mark, ofstream& out_stream){
-//    out_stream << time_mark << endl;
+    //    out_stream << time_mark << endl;
     out_stream << scientific << time_mark.time();
     out_stream << ": 0x" << hex << time_mark.mark_type() << dec << endl;
 
@@ -324,7 +376,7 @@ TimeMark::Type CheckpointingOutputTxt::get_type_value(char line[LINE_SIZE]){
     char *tmp;
     tmp = xstrtok(line, VALUE_DELIMITER);
     //    sscanf(tmp,"%s",string);    // strip spaces
-    tmp = xstrtok(NULL,VALUE_DELIMITER);
+    tmp = xstrtok(NULL, VALUE_DELIMITER);
     tmp = strip_spaces(tmp);
     value = xstrcpy(tmp);
 
@@ -346,32 +398,72 @@ TimeMark* CheckpointingOutputTxt::get_time_mark_value(char line[LINE_SIZE]){
     tmp = xstrtok(line, VALUE_DELIMITER);
     tmp = strip_spaces(tmp);
     value = xstrcpy(tmp);
-    xprintf(Msg,"CheckpointingOutputTxt::get_time_mark_value: %s***********************\n", value);
+    //    xprintf(Msg,"CheckpointingOutputTxt::get_time_mark_value: %s***********************\n", value);
 
     if (sscanf(value,"%le",&time) == 0) {
         /**nepovedlo se asi error */
     };
-    xprintf(Msg,"CheckpointingOutputTxt::time: %e***********************\n", time);
+    //    xprintf(Msg,"CheckpointingOutputTxt::time: %e***********************\n", time);
 
-    tmp = xstrtok(NULL,VALUE_DELIMITER);
+    tmp = xstrtok(NULL, VALUE_DELIMITER);
     tmp = strip_spaces(tmp);
     value = xstrcpy(tmp);
-    xprintf(Msg,"CheckpointingOutputTxt::get_time_mark_value: %s***********************\n", value);
+    //    xprintf(Msg,"CheckpointingOutputTxt::get_time_mark_value: %s***********************\n", value);
     if (sscanf(value,"%lx",&type) == 0) {
         /**nepovedlo se asi error */
     };
-    xprintf(Msg,"CheckpointingOutputTxt::type: %lx***********************\n", type);
+    //    xprintf(Msg,"CheckpointingOutputTxt::type: %lx***********************\n", type);
 
     return new TimeMark(time, type);
 }
 
-double CheckpointingOutputTxt::get_double_value(const char *value){
-    double d;
+bool CheckpointingOutputTxt::get_bool_value(char line[LINE_SIZE]){
+    bool b;
+    char *value;
+    char *tmp;
+    /**leave description of item out */
+    tmp = xstrtok(line, VALUE_DELIMITER);
+    tmp = xstrtok(NULL, VALUE_DELIMITER);
+    tmp = strip_spaces(tmp);
+    value = xstrcpy(tmp);
 
-    if (sscanf(value,"%x",&d) == 0) {
+    if (sscanf(value,"%i",&b) == 0) {
         /**nepovedlo se asi error */
     };
 
+    return b;
+}
+
+int CheckpointingOutputTxt::get_int_value(char line[LINE_SIZE]){
+    int i;
+    char *value;
+    char *tmp;
+    /**leave description of item out */
+    tmp = xstrtok(line, VALUE_DELIMITER);
+    tmp = xstrtok(NULL, VALUE_DELIMITER);
+    tmp = strip_spaces(tmp);
+    value = xstrcpy(tmp);
+
+    if (sscanf(value,"%i",&i) == 0) {
+        /**nepovedlo se asi error */
+    };
+
+    return i;
+}
+
+double CheckpointingOutputTxt::get_double_value(char line[LINE_SIZE]){
+    double d;
+    char *value;
+    char *tmp;
+    /**leave description of item out */
+    tmp = xstrtok(line, VALUE_DELIMITER);
+    tmp = xstrtok(NULL, VALUE_DELIMITER);
+    tmp = strip_spaces(tmp);
+    value = xstrcpy(tmp);
+
+    if (sscanf(value,"%le",&d) == 0) {
+        /**nepovedlo se asi error */
+    };
 
     return d;
 }

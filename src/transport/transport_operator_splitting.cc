@@ -19,7 +19,7 @@
 #include "io/output.h"
 
 
-TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database )
+TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database, CheckpointingManager* checkpointing_manager )
 : TransportBase(marks, init_mesh, material_database)
 {
 	Distribution *el_distribution;
@@ -39,8 +39,11 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 	Semchem_reactions->set_el_4_loc(el_4_loc);
 	Semchem_reactions->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
 
-
-	time_ = new TimeGovernor(0.0, problem_stop_time, *time_marks, this->mark_type());
+//	if(checkpointing_manager->is_checkpointing_on()){
+//	    output->load_data(time_);
+//	}else{
+	    time_ = new TimeGovernor(0.0, problem_stop_time, *time_marks, this->mark_type());
+//	}
 	output_mark_type = this->mark_type() | time_marks->type_fixed_time() | time_marks->type_output();
 
     time_marks->add_time_marks(0.0, OptGetDbl("Global", "Save_step", "1.0"), time_->end_time(), output_mark_type );

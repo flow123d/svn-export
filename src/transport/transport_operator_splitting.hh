@@ -6,6 +6,7 @@
 #include "semchem/semchem_interface.hh"
 #include <limits>
 #include "io/output.h"
+#include "checkpointing/CheckpointingManager.h"
 
 /// external types:
 //class LinSys;
@@ -73,7 +74,7 @@ public:
 
 class TransportOperatorSplitting : public TransportBase {
 public:
-    TransportOperatorSplitting(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database);
+    TransportOperatorSplitting(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database, CheckpointingManager* checkpointing_manager);
     virtual ~TransportOperatorSplitting();
 
     virtual void set_velocity_field(Vec &velocity_vector);

@@ -920,3 +920,38 @@ void TransportDG::read_subst_names()
 }
 
 
+void TransportDG::save_state(CheckpointingOutput* output){
+    xprintf(Msg, "Saving state of TransportDG");
+//    TimeMark::Type mark_type;
+//    mark_type = this->mark_type()|time_->marks().type_checkpointing();
+//
+//    if(time_->is_current(mark_type)){
+//        xprintf(Msg, " is CURRENT\n");
+//    };
+//
+//    output->save_data(this->mark_type(), "transport_mark_type");//this->mark_type());
+//    output->save_data(time_);
+////    get_output()->save_data(xx);
+//
+//    convection->save_state(output);
+//    decayRad->save_state(output);
+//    Semchem_reactions->save_state(output);
+
+}
+
+void TransportDG::restore_state(CheckpointingOutput* output){
+    xprintf(Msg, "Restoring state of TransportDG");
+//    TimeMark::Type mark_type;
+//    mark_type = this->mark_type()|time_->marks().type_checkpointing();
+//
+//    if(time_->is_current(mark_type)){
+//        xprintf(Msg, " is CURRENT\n");
+//    };
+////    output->load_data(xx);
+////    get_output()->save_data(xx);
+//    convection->restore_state(output);
+
+//    ConvectionTransport *convection;
+//    Linear_reaction *decayRad; ???
+//    Semchem_interface *Semchem_reactions
+}

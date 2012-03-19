@@ -22,6 +22,14 @@
 TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database, CheckpointingManager* checkpointing_manager )
 : TransportBase(marks, init_mesh, material_database)
 {
+    /**sets, that this class is under checkpointing */
+    checkpointing_registered_ = true;
+    this->class_name_ = "transport_reaction";
+
+    if(checkpointing_manager->is_checkpointing_on()){
+        checkpointing_manager->set_restore_output(class_name());
+    };
+
 	Distribution *el_distribution;
 	int *el_4_loc;
 
@@ -39,14 +47,22 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 	Semchem_reactions->set_el_4_loc(el_4_loc);
 	Semchem_reactions->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
 
-//	if(checkpointing_manager->is_checkpointing_on()){
-//	    output->load_data(time_);
-//	}else{
+	if(checkpointing_manager->is_checkpointing_on() && is_checkpointing_registered()){
+	    checkpointing_manager->get_restore_output()->load_data(equation_mark_type_, "transport_mark_type");
+	    checkpointing_manager->get_restore_output()->load_data(time_);
+	}else{
+	    equation_mark_type_ = marks.new_mark_type();
 	    time_ = new TimeGovernor(0.0, problem_stop_time, *time_marks, this->mark_type());
-//	}
+	}
+
 	output_mark_type = this->mark_type() | time_marks->type_fixed_time() | time_marks->type_output();
 
-    time_marks->add_time_marks(0.0, OptGetDbl("Global", "Save_step", "1.0"), time_->end_time(), output_mark_type );
+	if(checkpointing_manager->is_checkpointing_on() && is_checkpointing_registered()){
+	        /**time_marks are globaly restored, so they mustn't to be added*/
+//	    time_marks->add_time_marks(0.0, OptGetDbl("Global", "Save_step", "1.0"), time_->end_time(), output_mark_type );
+    }else{
+        time_marks->add_time_marks(0.0, OptGetDbl("Global", "Save_step", "1.0"), time_->end_time(), output_mark_type );
+    }
 	// TOdO: this has to be set after construction of transport matrix !!
 
 
@@ -151,11 +167,9 @@ void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
     if(time_->is_current(mark_type)){
         xprintf(Msg, " is CURRENT\n");
     };
-    double xx;
-    xx=1234.5678;
-//    output->save_data(time_marks);
+
+    output->save_data(this->mark_type(), "transport_mark_type");
     output->save_data(time_);
-//    get_output()->save_data(xx);
 
     convection->save_state(output);
     decayRad->save_state(output);
@@ -164,20 +178,13 @@ void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
 }
 
 void TransportOperatorSplitting::restore_state(CheckpointingOutput* output){
-    xprintf(Msg, "Restoring state of TransportOperatorSplitting");
-    TimeMark::Type mark_type;
-    mark_type = this->mark_type()|time_->marks().type_checkpointing();
+    xprintf(Msg, "Restoring state of TransportOperatorSplitting\n");
 
-    if(time_->is_current(mark_type)){
-        xprintf(Msg, " is CURRENT\n");
-    };
-    double xx;
-    xx=1234.5678;
-    output->load_data(xx);
-//    get_output()->save_data(xx);
-    convection->restore_state(output);
+    output->load_data(equation_mark_type_, "transport_mark_type");
+    output->load_data(time_);
 
-//    ConvectionTransport *convection;
-//    Linear_reaction *decayRad; ???
-//    Semchem_interface *Semchem_reactions
+//    convection->restore_state(output);
+//    decayRad->restore_state(output);
+//    Semchem_reactions->restore_state(output);
+
 }

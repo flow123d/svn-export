@@ -106,19 +106,27 @@ void CheckpointingOutputTxt::save_data(TimeMarks* time_marks){
 void CheckpointingOutputTxt::load_data(TimeMarks* time_marks){
     load_timemarks_txt(time_marks);
 };
-void CheckpointingOutputTxt::save_data(double &data){
+void CheckpointingOutputTxt::save_data(double &data, std::string name){
     xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<double>(double &data, ..) -Až to tady bude, tak to uložím :-)\n");
-    save_double_txt(data);
+    save_double_txt(data, name);
 };
-void CheckpointingOutputTxt::load_data(double &data){
+void CheckpointingOutputTxt::load_data(double &data, std::string name){
     xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<double>(double &data, ..) -Až to tady bude, tak to uložím :-)\n");
     //    load_double_txt(data);
 };
-void CheckpointingOutputTxt::save_data(int &data){
+void CheckpointingOutputTxt::save_data(int &data, std::string name){
     xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<int>(int &data, ..) -Až to tady bude, tak to uložím :-)\n");
     //    save_int_txt(data);
 };
-void CheckpointingOutputTxt::load_data(int &data){
+void CheckpointingOutputTxt::load_data(int &data, std::string name){
+    xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<int>(int &data, ..) -Až to tady bude, tak to uložím :-)\n");
+    //    load_int_txt(data);
+};
+void CheckpointingOutputTxt::save_data(const TimeMark::Type &data, std::string name){
+    xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<int>(int &data, ..) -Až to tady bude, tak to uložím :-)\n");
+        save_type_txt(data, name);
+};
+void CheckpointingOutputTxt::load_data(TimeMark::Type &data, std::string name){
     xprintf(Msg, "netemplejtovaná CheckpointingOutputTxt::save_data<int>(int &data, ..) -Až to tady bude, tak to uložím :-)\n");
     //    load_int_txt(data);
 };
@@ -314,16 +322,18 @@ void CheckpointingOutputTxt::load_timemarks_txt(TimeMarks* time_marks){
     /** reading type_next_mark_type */
     tm_in_stream.getline(line, LINE_SIZE);
     typeValue = get_type_value(line);
-    //    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. type_next_mark_type: %i***********************\n", typeValue);
+        xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. type_next_mark_type: %i***********************\n", typeValue);
 
     /** reading TimeMarks */
+    tm_in_stream.getline(line, LINE_SIZE);
     while(!tm_in_stream.eof()){
-        tm_in_stream.getline(line, LINE_SIZE);
-        //    xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. line: %s***********************\n", line);
+//        xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt. line: %s***********************\n", line);
 
         mark = get_time_mark_value(line);
 //        xprintf(Msg,"TimeMark - %le:%lx/li***********************\n", mark->time(), mark->mark_type());
         time_marks->add(*mark);
+
+        tm_in_stream.getline(line, LINE_SIZE);
     }
 
     xprintf(Msg,"CheckpointingOutputTxt::load_timemarks_txt.******************************************\n");
@@ -342,10 +352,15 @@ void CheckpointingOutputTxt::save_timemark_txt(const TimeMark &time_mark, ofstre
 
 };
 void CheckpointingOutputTxt::load_timemark_txt(TimeMark* time_mark, ifstream& in_stream){};
-void CheckpointingOutputTxt::save_double_txt(double& data){
+void CheckpointingOutputTxt::save_double_txt(double& data, std::string name){
     out_stream << scientific << data << endl;
 };
-void CheckpointingOutputTxt::load_double_txt(double& data){};
+void CheckpointingOutputTxt::load_double_txt(double& data, std::string name){};
+
+void CheckpointingOutputTxt::save_type_txt(const TimeMark::Type& data, std::string name){
+    out_stream << name << ": 0x" << hex << data << endl;
+};
+void CheckpointingOutputTxt::load_type_txt(TimeMark::Type& data, std::string name){};
 
 
 /****************************************************************************/

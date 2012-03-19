@@ -87,6 +87,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     water_output = new DarcyFlowMHOutput(water);
 
+//    checkpointing_manager->register_class(transport_reaction, "transport_reaction");
     // optionally setup transport objects
     if ( OptGetBool("Transport", "Transport_on", "no") ) {
         char *transport_type = OptGetStr("Transport", "Transport_type", "explicit");
@@ -108,12 +109,16 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     xprintf(Msg, "transport_reaction->mark_type():%i, water->mark_type():%i\n", transport_reaction->mark_type(), water->mark_type());
 
+//    checkpointing_manager->register_class(NULL, "transport_reaction");
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
+//    checkpointing_manager->register_class(water, "darcy_flow");
     /**cannot be in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
     checkpointing_manager->create_fixed_timemarks();
 
-    /**tady se musej restorovat všechny registrovaný classy*/
-    checkpointing_manager->restore_state();
+    /**tady se musej restorovat všechny registrovaný classy
+     * nemůže to být před tím, než se třídy registrují, protože bych neveděl, které restorovat,
+     * */
+//    checkpointing_manager->restore_state();
 }
 
 /**

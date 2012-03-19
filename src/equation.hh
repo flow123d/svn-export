@@ -163,6 +163,11 @@ public:
 
     /*******************************************************************************************************/
     /**** Checkpointing methods  ***************************************************************************/
+    /** \brief if class is registered for checkpointing */
+    bool is_checkpointing_registered();
+
+    std::string class_name();
+
     /** \brief virtual method for saving objects state */
     virtual void save_state(CheckpointingOutput* output);
 
@@ -176,6 +181,19 @@ protected:
     TimeMarks * const time_marks;
     TimeGovernor *time_;
     TimeMark::Type equation_mark_type_;
+
+    /*******************************************************************************************************/
+    /**** Checkpointing methods  ***************************************************************************/
+    /** \brief if class is registered for checkpointing */
+    bool checkpointing_registered_;
+
+    std::string class_name_;
+
+private:
+    /*******************************************************************************************************/
+    /**** Checkpointing methods  ***************************************************************************/
+
+
 };
 
 /**

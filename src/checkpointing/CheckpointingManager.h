@@ -86,6 +86,8 @@ public:
     /** \brief public getter for CheckpointingOn */
     bool is_checkpointing_on();
 
+    void set_restore_output(std::string class_name);
+    CheckpointingOutput* get_restore_output();
 
 private:
     RegisteredClasses *registered_classes_;
@@ -97,6 +99,7 @@ private:
     /**\brief output for TimeMarks
      * initialized by constructor*/
     CheckpointingOutput*  time_marks_output_;
+
 
     /**\brief saves global TimeMarks*/
     void save_time_marks();
@@ -133,6 +136,7 @@ private:
     /******************************************************************************************************/
     /*** CheckpointingBase  *******************************************************************************/
     CheckpointingOutput* output_;
+    CheckpointingOutput* restore_output_;
 
 
     /** \brief Parse values from .ini file to OutFielFormat\n

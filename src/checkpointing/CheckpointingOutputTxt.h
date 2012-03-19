@@ -74,11 +74,14 @@ public:
 
     void save_data(TimeMarks* time_marks);
     void load_data(TimeMarks* time_marks);
-    void save_data(double& data);
-    void load_data(double& data);
+    void save_data(double& data, std::string name);
+    void load_data(double& data, std::string name);
 
-    void save_data(int& data);
-    void load_data(int& data);
+    void save_data(int& data, std::string name);
+    void load_data(int& data, std::string name);
+
+    void save_data(const TimeMark::Type& data, std::string name);
+    void load_data(TimeMark::Type& data, std::string name);
 
 
     //    void save_data(TimeMark* time_mark);
@@ -99,10 +102,12 @@ private:
     void load_timemarks_txt(TimeMarks* time_marks);
     void save_timemark_txt(const TimeMark &time_mark, ofstream& out_stream);
     void load_timemark_txt(TimeMark* time_mark, ifstream& in_stream);
-    void save_double_txt(double& data);
-    void load_double_txt(double& data);
-    void save_int_txt(int& data);
-    void load_int_txt(int& data);
+    void save_double_txt(double& data, std::string name);
+    void load_double_txt(double& data, std::string name);
+    void save_int_txt(int& data, std::string name);
+    void load_int_txt(int& data, std::string name);
+    void save_type_txt(const TimeMark::Type& data, std::string name);
+    void load_type_txt(TimeMark::Type& data, std::string name);
 
     /**\brief returns value from string. The value is stored as name: value
      * name is name of stored value

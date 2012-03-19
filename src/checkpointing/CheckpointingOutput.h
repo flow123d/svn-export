@@ -92,23 +92,32 @@ public:
     /**
      * \brief General method for storing double data
      * \param double - pointer to double instance */
-    virtual void save_data(double& data);
+    virtual void save_data(double& data, std::string name);
 
     /**
      * \brief General method for loading/restoring double data
      * \param double - pointer to double instance */
-    virtual void load_data(double& data);
+    virtual void load_data(double& data, std::string name);
 
     /**
      * \brief General method for storing int data
      * \param int - pointer to int instance */
-    virtual void save_data(int& data);
+    virtual void save_data(int& data, std::string name);
 
     /**
      * \brief General method for loading/restoring int data
      * \param int - pointer to int instance */
-    virtual void load_data(int& data);
+    virtual void load_data(int& data, std::string name);
 
+    /**
+     * \brief General method for storing int data
+     * \param int - pointer to int instance */
+    virtual void save_data(const TimeMark::Type& data, std::string name);
+
+    /**
+     * \brief General method for loading/restoring int data
+     * \param int - pointer to int instance */
+    virtual void load_data(TimeMark::Type& data, std::string name);
 
 
 

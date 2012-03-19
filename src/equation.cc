@@ -42,6 +42,14 @@ EquationBase::EquationBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_b
 /*******************************************************************************************************/
 /**** Checkpointing methods  ***************************************************************************/
 
+std::string EquationBase::class_name(){
+    return this->class_name_;
+}
+
+bool EquationBase::is_checkpointing_registered(){
+    return checkpointing_registered_;
+};
+
 void EquationBase::save_state(CheckpointingOutput* output){};
 
 void EquationBase::restore_state(CheckpointingOutput* output){};

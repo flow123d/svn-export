@@ -86,6 +86,9 @@ public:
 	 */
 	~TransportDG();
 
+	void save_state(CheckpointingOutput* output);
+	void restore_state(CheckpointingOutput* output);
+
 private:
 
 	/**

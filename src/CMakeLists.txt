@@ -138,17 +138,11 @@ target_link_libraries(la_lib
     input_lib system_lib
     ${PETSC_LIBRARIES} ${Armadillo_LIBRARIES} ${Boost_LIBRARY_DIRS})
 
-# non_system_lib
-add_library(non_system_lib ${sources_lib_non_system})
-target_link_libraries(non_system_lib 
+# all remaining sources 
+add_library(flow123d_lib ${sources_lib_non_system})
+target_link_libraries(flow123d_lib 
     input_lib system_lib la_lib fparser semchem
     ${PETSC_LIBRARIES} ${Armadillo_LIBRARIES} ${Boost_LIBRARY_DIRS})
-
-
-# add target for full library libflow123d (do not add third party libs it depends)
-add_library(flow123d_lib )
-target_link_libraries(flow123d_lib 
-    non_system_lib input_lib system_lib)
 set_target_properties(flow123d_lib PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
 )

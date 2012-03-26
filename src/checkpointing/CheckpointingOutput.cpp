@@ -34,7 +34,6 @@ CheckpointingOutput::CheckpointingOutput(string file_name) {
     xprintf(Msg,"CheckpointingOutput::CheckpointingOutput.\n");
     this->file_name = file_name;
     util = new CheckpointingUtil(file_name);
-
 }
 
 CheckpointingOutput::~CheckpointingOutput() {

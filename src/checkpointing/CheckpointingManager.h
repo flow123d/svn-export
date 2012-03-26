@@ -38,6 +38,10 @@
 #include "CheckpointingOutputTxt.h"
 #include "CheckpointingOutputBin.h"
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
+
 /**\brief Definition of registered class structure */
 typedef struct RegisteredClass{
     /** pointer to registered class */
@@ -57,6 +61,22 @@ class CheckpointingManager {
 public:
     CheckpointingManager(TimeMarks* marks);//TimeMarks* marks
     ~CheckpointingManager();
+
+    friend class boost::serialization::access;
+    // When the class Archive corresponds to an output archive, the
+    // & operator is defined similar to <<.  Likewise, when the class Archive
+    // is a type of input archive the & operator is defined similar to >>.
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & max_checkpoints_;
+        ar & checkpoints_interval_;
+        ar & start_time_;
+        ar & blbost;
+        ar & marks_;
+    }
+
+    double blbost;
 
     void register_class(EquationBase* ch, std::string class_name);
 

@@ -33,13 +33,15 @@
 #ifndef TIME_MARKS_HH_
 #define TIME_MARKS_HH_
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
 /**
  * This class represents one record in the TimeMarks simple database.
  * Class members can not be modified after the item is created.
  */
 class TimeMark {
 public:
-
     /**
      *  MarkType is a bitmap where each bit represents one base type such as (strict, Output, Input, ...)
      *  This allow more complex queries through bitwise operations. Also one TimeMark can be shared by more events.
@@ -94,6 +96,15 @@ public:
 
 
 private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & mark_type_;
+        ar & time_;
+    }
+
+
     double time_;
     Type mark_type_;
 };
@@ -188,6 +199,7 @@ class TimeGovernor;
 class TimeMarks {
 
 public:
+
     /// Iterator class for iteration over time marks of particular type. This is always const_iterator.
     typedef TimeMarksIterator iterator;
 
@@ -293,6 +305,19 @@ public:
 //        vector<TimeMark> marks_;
 
 private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & type_fixed_time_;
+        ar & type_output_;
+        ar & type_bc_change_;
+        ar & type_checkpointing_;
+        ar & next_mark_type_;
+        for(vector<TimeMark>::const_iterator it = marks_.begin(); it != marks_.end(); ++it){
+            ar & *it;
+        }
+    }
 
     /// MarkType that will be used at next new_time_mark() call.
     TimeMark::Type next_mark_type_;

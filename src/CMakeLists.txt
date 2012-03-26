@@ -111,7 +111,7 @@ set(sources_lib_semchem
 
 # add tager for libflow123d
 add_library(flow123d_lib ${sources_lib_flow123d})
-target_link_libraries(flow123d_lib      ${Armadillo_LIBRARIES}     ${Boost_LIBRARY_DIRS}    ${PETSC_LIBRARIES} )
+target_link_libraries(flow123d_lib      ${Armadillo_LIBRARIES}     ${Boost_LIBRARIES}    ${PETSC_LIBRARIES} )
 set_target_properties(flow123d_lib PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
 )

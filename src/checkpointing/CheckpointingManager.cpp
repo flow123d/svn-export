@@ -32,6 +32,7 @@
 CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
     xprintf(Msg,"CheckpointingManager constructor.\n");
 
+    blbost = 256.12345678901234567890123456789;
     this->marks_ = marks;
 
     time_marks_output_ = set_output("TimeMarks");
@@ -52,6 +53,8 @@ CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
     start_time_ = time(NULL);
     xprintf(Msg,"CheckpointingManager construction time %i\n", start_time_);
 
+    max_checkpoints_ = 0;
+    checkpoints_interval_ = 0;
 
     if (checkpoints_type_ == CH_DYNAMIC){
         /**Dynamic Checkpoints are enabled */

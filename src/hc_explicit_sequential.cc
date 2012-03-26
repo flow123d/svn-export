@@ -41,6 +41,8 @@
 #include "io/output.h"
 #include "main.h"
 
+#include <fstream>
+
 /**
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR UNSTEADY SATURATED FLOW
  */
@@ -225,6 +227,17 @@ void HC_ExplicitSequential::run_simulation()
         checkpointing_manager->create_dynamic_timemark();
 
         checkpointing_manager->save_state();
+
+        CheckpointingManager* ch;
+        ch = new CheckpointingManager(main_time_marks);
+
+        std::ofstream ofs("/home/wojta/Desktop/workspace/flow_VW_check/tests/02_transport_12d/output/vwr.txt");
+        ofs.precision(std::numeric_limits<double>::digits10);
+        boost::archive::text_oarchive oa(ofs);
+        oa << ch;
+        ofs.close();
+
+        delete ch;
     }
     xprintf(Msg, "End of simulation at time: %f\n", transport_reaction->solved_time());
 }
@@ -242,6 +255,7 @@ HC_ExplicitSequential::~HC_ExplicitSequential() {
     delete checkpointing_manager;
 
 }
+
 
 
 

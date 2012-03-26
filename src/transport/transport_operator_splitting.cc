@@ -23,12 +23,12 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 : TransportBase(marks, init_mesh, material_database)
 {
     /**sets, that this class is under checkpointing */
-    checkpointing_registered_ = true;
+    checkpointing_registered_ = false;
     this->class_name_ = "transport_reaction";
 
-    if(checkpointing_manager->is_checkpointing_on()){
-        checkpointing_manager->set_restore_output(class_name());
-    };
+//    if(checkpointing_manager->is_checkpointing_on()){
+//        checkpointing_manager->set_restore_output(class_name());
+//    };
 
 	Distribution *el_distribution;
 	int *el_4_loc;

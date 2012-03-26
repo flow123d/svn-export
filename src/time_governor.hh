@@ -302,6 +302,23 @@ public:
     {return min_time_step;}
 
 private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & time_level;
+        ar & time;
+        ar & end_of_fixed_dt_interval;
+        ar & end_time_;
+        ar & time_step;
+        ar & last_time_step;
+        ar & fixed_dt;
+        ar & dt_changed;
+        ar & time_step_constrain;
+        ar & max_time_step;
+        ar & min_time_step;
+    }
+
     inline double comparison_fracture() const
     {
         if (time_level!=0 && time_step <=numeric_limits<double>::max() ) return comparison_precision * time_step;

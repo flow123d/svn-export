@@ -62,8 +62,10 @@ find_package(PARMETIS REQUIRED)
 
 # find boost or use our own
 
-find_package(Boost)
-if (NOT Boost_FOUND) 
+find_package(Boost COMPONENTS serialization)
+message(STATUS "boost found: ${Boost_LIBRARY_DIRS} ${Boost_LIBRARIES}")
+if (NOT Boost_FOUND)
+  message(STATUS "system boost not found")
   # just use our third_party directory
   set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/third_party/boost-1.42)
   find_package(Boost)

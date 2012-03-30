@@ -40,6 +40,13 @@
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/lexical_cast.hpp>
+//
+//#include <boost/archive/text_woarchive.hpp>
+//#include <boost/archive/text_wiarchive.hpp>
+
+//#include <boost/archive/xml_oarchive.hpp>
+//#include <boost/archive/xml_iarchive.hpp>
 
 
 /**\brief Definition of registered class structure */
@@ -72,6 +79,7 @@ public:
         ar & max_checkpoints_;
         ar & checkpoints_interval_;
         ar & start_time_;
+//        ar & boost::lexical_cast<std::string>(blbost);
         ar & blbost;
         ar & marks_;
     }

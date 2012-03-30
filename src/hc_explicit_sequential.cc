@@ -232,8 +232,9 @@ void HC_ExplicitSequential::run_simulation()
         ch = new CheckpointingManager(main_time_marks);
 
         std::ofstream ofs("/home/wojta/Desktop/workspace/flow_VW_check/tests/02_transport_12d/output/vwr.txt");
-        ofs.precision(std::numeric_limits<double>::digits10);
-        boost::archive::text_oarchive oa(ofs);
+//        ofs.precision(std::numeric_limits<double>::digits10);
+        boost::archive::text_oarchive oa(ofs);//xml_oarchive oa(ofs);
+
         oa << ch;
         ofs.close();
 

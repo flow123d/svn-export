@@ -50,6 +50,19 @@ bool EquationBase::is_checkpointing_registered(){
     return checkpointing_registered_;
 };
 
-void EquationBase::save_state(CheckpointingOutput* output){};
+void EquationBase::save_state(std::ofstream* out_stream){};//CheckpointingOutput* output
 
 void EquationBase::restore_state(CheckpointingOutput* output){};
+
+void EquationBase::register_vectors(){};
+
+void EquationBase::register_vector(Vec* vec, std::string vector_name){
+//    if (!is_checkpointing_on()) return ;
+
+    RegisteredVector obj;
+    obj.vec = vec;
+    obj.vector_name = vector_name;
+    //        obj.out_stream = set_out_stream(class_name);
+
+    registered_vectors_->push_back(obj);
+};

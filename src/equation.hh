@@ -44,7 +44,15 @@ class Mesh;
 class MaterialDatabase;
 class TimeGovernor;
 
+typedef struct RegisteredVector{
+    /** pointer to registered Petsc vector */
+    Vec*            vec;
+    /**name of registered vector*/
+    std::string     vector_name;
+}_RegisteredVector;
 
+/**\brief Definition of registered vectors vector */
+typedef std::vector<RegisteredVector> RegisteredVectors;
 
 /**
  * Class EquationBase is abstract base class for a general time dependent model. This class should provide general interface
@@ -169,10 +177,14 @@ public:
     std::string class_name();
 
     /** \brief virtual method for saving objects state */
-    virtual void save_state(CheckpointingOutput* output);
+    virtual void save_state(std::ofstream* out_stream);//CheckpointingOutput* output
 
     /** \brief virtual method for loading/restoring objects state */
     virtual void restore_state(CheckpointingOutput* output);
+
+    /** \brief virtual method for registering vectors */
+    virtual void register_vectors();
+
 
 protected:
 
@@ -188,6 +200,13 @@ protected:
     bool checkpointing_registered_;
 
     std::string class_name_;
+
+    /** \brief each class has its own vectors to be stored */
+    RegisteredVectors* registered_vectors_;
+
+    /** \brief registers every single vector for checkpointing*/
+    void register_vector(Vec* vec, std::string vector_name);
+
 
 private:
     /*******************************************************************************************************/

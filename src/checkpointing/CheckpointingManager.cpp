@@ -68,6 +68,8 @@ CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
         checkpoints_interval_ = OptGetInt("Checkpointing", "Checkpoints_interval", "3600");//jednou za hodinu
 
     }
+
+    out_stream_.open(" ");
 }
 
 CheckpointingManager::~CheckpointingManager() {
@@ -87,6 +89,11 @@ CheckpointingManager::~CheckpointingManager() {
     }
 
     delete time_marks_output_;
+
+    if(out_stream_ != NULL) {
+        out_stream_.close();
+        //        delete outStream;
+    }
 }
 
 void CheckpointingManager::restore_time_marks(){
@@ -121,6 +128,7 @@ void CheckpointingManager::register_class(EquationBase* ch, std::string class_na
     RegisteredClass obj;// = new RegisteredClass();
     obj.registered_class = ch;
     obj.registered_class_name = ch->class_name();
+    obj.out_stream = set_out_stream(class_name);
     obj.output = set_output(class_name);
     registered_classes_->push_back(obj);
 
@@ -192,9 +200,17 @@ void CheckpointingManager::create_dynamic_timemark(){
 void CheckpointingManager::save_state(){
     if(!is_checkpointing_on()) return;
 
+
     last_checkpointing_time_ = time(NULL);
     xprintf(Msg, "Rozdíl: %i\n", (start_time_-last_checkpointing_time_));
 
+
+//    char id [2];
+//    itoa(checkpoint_, id, 10);
+
+//    string str=to_string(checkpoint_);
+    std::string id = boost::lexical_cast<string>(checkpoint_);
+    std::string file_name;
     /**
      * TODO tady by se asi měly ukládat TimeMarks - protože jsou globální pro všechny třídy
      * */
@@ -205,9 +221,23 @@ void CheckpointingManager::save_state(){
         TimeMark::Type checkpointing_mark;
         checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();//|it->obj->mark_type();
         //        if(marks_->is_current(it->registered_class->time(), checkpointing_mark)){
-        it->registered_class->save_state(it->output);//checkpoint_
+        file_name = util->full_file_name_id(it->registered_class->class_name(), id);
+            it->out_stream->open(file_name.c_str());
+            boost::archive::text_oarchive oa(*(it->out_stream));//xml_oarchive oa(ofs);
+            oa << it->registered_class;
+            if(it->out_stream!=NULL){
+                it->out_stream->close();
+            }
+
+//            it->registered_class->save_state();
+
         //        }
     }
+
+    /**
+     * TODO checkpoints management
+     */
+    checkpoint_++;
 
 };
 
@@ -256,6 +286,36 @@ CheckpointingOutput* CheckpointingManager::set_output(std::string class_name){
     }
 
     return output;
+};
+
+std::ofstream* CheckpointingManager::set_out_stream(std::string class_name){
+    xprintf(Msg,"CheckpointingBase::set_output - %s.\n", class_name.c_str());
+
+    util = new CheckpointingUtil();
+    std::ofstream* out_stream;
+    std::string out_stream_path;
+    out_stream_path = util->full_file_name(class_name);
+    out_stream->open(out_stream_path.c_str());
+
+//    switch (out_file_format_) {
+//    case CH_OUTPUT_TXT: {
+//        xprintf(Msg,"Output TXT.\n");
+//        out_stream = new CheckpointingOutputTxt(class_name);
+//    }
+//    break;
+//    case CH_OUTPUT_BIN: {
+//        xprintf(Msg,"Output BIN.\n");
+//        out_stream = new CheckpointingOutputBin(class_name);
+//    }
+//    break;
+//    //    case CH_OUTPUT_JSON: output = new CheckpointingOutputJSON(fileName);
+//    //    break;
+//    default: out_stream = new CheckpointingOutputTxt(class_name);
+//    break;
+//    }
+
+    delete util;
+    return out_stream;
 };
 
 bool CheckpointingManager::is_checkpointing_on(){

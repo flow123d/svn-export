@@ -42,7 +42,7 @@ public:
     /** \brief Returns file name with prefix and suffix
      * \param  string name - base name of the file*/
     std::string full_file_name(std::string name);
-
+    std::string full_file_name_id(std::string name, std::string id);
     /** \brief Returns file name with prefix and suffix
      * \param  string name - name of the file*/
     std::string full_file_name_vec_mat(std::string name);

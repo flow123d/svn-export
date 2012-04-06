@@ -61,7 +61,17 @@ std::string CheckpointingUtil::full_file_name(std::string name){
 
     return full_name_path;
 }
+std::string CheckpointingUtil::full_file_name_id(std::string name, std::string id){
+    std::string time_mark;
+    std::string full_name;
+    std::string full_name_path;
 
+    time_mark = time_for_file_name();
+    full_name = file_prefix_ + name + "_" + id + file_suffix_; // + "_" + timeMark
+    full_name_path = file_name_path(full_name);
+
+    return full_name_path;
+}
 std::string CheckpointingUtil::full_file_name_vec_mat(std::string name){
     std::string time_mark;
     std::string full_name;

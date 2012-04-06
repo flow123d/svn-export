@@ -38,6 +38,7 @@
 #include "CheckpointingOutputTxt.h"
 #include "CheckpointingOutputBin.h"
 
+
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/lexical_cast.hpp>
@@ -54,7 +55,9 @@ typedef struct RegisteredClass{
     /** pointer to registered class */
     EquationBase*         registered_class;
     /** pointer to output class */
-    CheckpointingOutput*  output;
+    CheckpointingOutput* output;
+
+    std::ofstream*  out_stream;
     /**name of registered class*/
     std::string           registered_class_name;
 }_RegisteredClass;
@@ -82,6 +85,7 @@ public:
 //        ar & boost::lexical_cast<std::string>(blbost);
         ar & blbost;
         ar & marks_;
+//        ar & vec;
     }
 
     double blbost;
@@ -118,6 +122,9 @@ public:
     CheckpointingOutput* get_restore_output();
 
 private:
+    Vec* vec;
+    CheckpointingUtil* util;
+
     RegisteredClasses *registered_classes_;
 //    bool static_timemarks;
 
@@ -194,6 +201,10 @@ private:
 
     /** \brief CheckpointingBase enabled/disabled */
     bool checkpointing_on_;
+
+    std::ofstream out_stream_;
+
+    std::ofstream* set_out_stream(std::string class_name);
 
 };
 

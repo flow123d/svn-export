@@ -88,7 +88,7 @@ public:
     virtual void get_solution_vector(double* &vector, unsigned int &size);
     void compute_until_save_time();
 
-    void save_state(CheckpointingOutput* output);
+    void save_state(std::ofstream* out_stream);//CheckpointingOutput* output
     void restore_state(CheckpointingOutput* output);
 protected:
 

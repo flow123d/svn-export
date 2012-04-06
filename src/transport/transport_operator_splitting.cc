@@ -159,7 +159,25 @@ void TransportOperatorSplitting::get_solution_vector(double * &x, unsigned int &
 };
 
 
-void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
+//void TransportOperatorSplitting::save_state(CheckpointingOutput* output){//CheckpointingOutput* output
+//    xprintf(Msg, "Saving state of TransportOperatorSplitting");
+//    TimeMark::Type mark_type;
+//    mark_type = this->mark_type()|time_->marks().type_checkpointing();
+//
+//    if(time_->is_current(mark_type)){
+//        xprintf(Msg, " is CURRENT\n");
+//    };
+//
+//    output->save_data(this->mark_type(), "transport_mark_type");
+//    output->save_data(time_);
+//
+//    convection->save_state(output);
+//    decayRad->save_state(output);
+//    Semchem_reactions->save_state(output);
+//
+//}
+
+void TransportOperatorSplitting::save_state(std::ofstream* out_stream){//CheckpointingOutput* output
     xprintf(Msg, "Saving state of TransportOperatorSplitting");
     TimeMark::Type mark_type;
     mark_type = this->mark_type()|time_->marks().type_checkpointing();
@@ -167,13 +185,13 @@ void TransportOperatorSplitting::save_state(CheckpointingOutput* output){
     if(time_->is_current(mark_type)){
         xprintf(Msg, " is CURRENT\n");
     };
-
-    output->save_data(this->mark_type(), "transport_mark_type");
-    output->save_data(time_);
-
-    convection->save_state(output);
-    decayRad->save_state(output);
-    Semchem_reactions->save_state(output);
+//
+//    output->save_data(this->mark_type(), "transport_mark_type");
+//    output->save_data(time_);
+//
+//    convection->save_state(output);
+//    decayRad->save_state(output);
+//    Semchem_reactions->save_state(output);
 
 }
 

@@ -213,7 +213,7 @@ protected:
     RegisteredVectors* registered_vectors_;
 
     /** \brief registers every single vector for checkpointing*/
-    void register_vector(Vec* vec, std::string vector_name);
+    virtual void register_vector(Vec* vec, std::string vector_name);
 
 
 private:

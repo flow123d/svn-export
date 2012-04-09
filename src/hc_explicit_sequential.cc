@@ -113,7 +113,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 //    checkpointing_manager->register_class(NULL, "transport_reaction");
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
 //    checkpointing_manager->register_class(water, "darcy_flow");
-    /**cannot be in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
+    /**cannot remain in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
     checkpointing_manager->create_fixed_timemarks();
 
     /**tady se musej restorovat všechny registrovaný classy
@@ -227,18 +227,6 @@ void HC_ExplicitSequential::run_simulation()
 
         checkpointing_manager->save_state();
 
-//        CheckpointingManager* ch;
-//        ch = new CheckpointingManager(main_time_marks);
-//
-////        std::ofstream ofs("/home/wojta/Desktop/workspace/flow_VW_check/tests/02_transport_12d/output/vwr.txt");
-//        std::ofstream ofs("/home/wojta/Pracovní plocha/workspace/flow_1.7_check/tests/02_transport_12d/output/vwr.txt");
-////        ofs.precision(std::numeric_limits<double>::digits10);
-//        boost::archive::text_oarchive oa(ofs);//xml_oarchive oa(ofs);
-//
-//        oa << ch;
-//        ofs.close();
-//
-//        delete ch;
     }
     xprintf(Msg, "End of simulation at time: %f\n", transport_reaction->solved_time());
 }

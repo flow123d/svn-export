@@ -45,6 +45,10 @@ public:
      */
     virtual void set_velocity_field(Vec &velocity_vector) =0;
     virtual void output_data() =0;
+
+protected:
+    /** \brief registers every single vector for checkpointing*/
+//    void register_vector(Vec* vec, std::string vector_name);
 };
 
 
@@ -80,6 +84,9 @@ public:
     virtual void set_velocity_field(Vec &velocity_field) {};
 
     virtual void output_data() {};
+private:
+    /** \brief registers every single vector for checkpointing*/
+//    void register_vector(Vec* vec, std::string vector_name);
 };
 
 
@@ -100,6 +107,9 @@ public:
     {
         ar & boost::serialization::base_object<TransportBase>(*this);
         ar & output_mark_type;
+//        ar & convection;
+        ar & decayRad;
+//        ar & Semchem_reactions;
     }
 
     virtual void set_velocity_field(Vec &velocity_vector);
@@ -115,6 +125,7 @@ public:
 
     void save_state(std::ofstream* out_stream);//CheckpointingOutput* output
     void restore_state(CheckpointingOutput* output);
+
 protected:
 
 private:
@@ -126,6 +137,10 @@ private:
     OutputTime *field_output;
 
     TimeMark::Type output_mark_type;
+
+    /** \brief registers every single vector for checkpointing*/
+//    void register_vector(Vec* vec, std::string vector_name);
+
 };
 
 #endif // TRANSPORT_OPERATOR_SPLITTING_HH_

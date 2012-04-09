@@ -12,6 +12,9 @@
 
 using namespace std;
 
+Linear_reaction::Linear_reaction()
+    : half_lives(NULL), substance_ids(NULL), reaction_matrix(NULL), bifurcation_on(false), dual_porosity_on(false), prev_conc(NULL)
+{};
 Linear_reaction::Linear_reaction(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity) //(double timestep, int nrOfElements, double ***ConvectionMatrix)
 	: half_lives(NULL), substance_ids(NULL), reaction_matrix(NULL), bifurcation_on(false), dual_porosity_on(false), prev_conc(NULL)
 {
@@ -497,25 +500,11 @@ void Linear_reaction::set_nr_of_FoR(void)
 	return;
 }
 
-void Linear_reaction::save_state(CheckpointingOutput* output){
-    xprintf(Msg, "Saving state of Linear_reaction\n");
-//    double xx;
-//    xx=5678.1234567897789;
-//    std::string name;
-//    output->save_data(*vsources_density, "vsources_density");
-//    output->save_data(*vsources_sigma, "vsources_sigma");
-//    output->save_data(*vsources_conc, "vsources_conc");
-//    output->save_data(*vsources_corr, "vsources_corr");
-//    output->save_data(*vcumulative_corr, "vcumulative_corr");
-}
-
-void Linear_reaction::restore_state(CheckpointingOutput* output){
-    xprintf(Msg, "Restoring state of Linear_reaction\n");
-
-//    output->load_data(*vsources_density, "vsources_density");
-//    output->load_data(*vsources_sigma, "vsources_sigma");
-//    output->load_data(*vsources_conc, "vsources_conc");
-//    output->load_data(*vsources_corr, "vsources_corr");
-//    output->load_data(*vcumulative_corr, "vcumulative_corr");
-
-}
+//void Linear_reaction::save_state(CheckpointingOutput* output){
+//    xprintf(Msg, "Saving state of Linear_reaction\n");
+//}
+//
+//void Linear_reaction::restore_state(CheckpointingOutput* output){
+//    xprintf(Msg, "Restoring state of Linear_reaction\n");
+//
+//}

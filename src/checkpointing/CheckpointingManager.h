@@ -73,9 +73,6 @@ public:
     ~CheckpointingManager();
 
     friend class boost::serialization::access;
-    // When the class Archive corresponds to an output archive, the
-    // & operator is defined similar to <<.  Likewise, when the class Archive
-    // is a type of input archive the & operator is defined similar to >>.
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
@@ -137,8 +134,8 @@ private:
 
 
     /**\brief saves global TimeMarks*/
-    void save_time_marks();
-
+    void save_time_marks(std::string id);
+//    void save_time_marks(std::ofstream out_stream);
 
 
     /** \brief time when simulation started (CheckpointingManager was constructed)
@@ -204,7 +201,8 @@ private:
 
 //    std::ofstream out_stream_;
 
-    std::ofstream* set_out_stream(std::string class_name);
+    /** \brief returns output stream*/
+    std::ofstream* set_out_stream(std::string class_name, std::string checkpoint_number);
 
 };
 

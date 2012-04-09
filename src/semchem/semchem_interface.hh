@@ -15,6 +15,21 @@ class Semchem_interface
 		*	Semchem interface is the tool to call a simulation of chemical reactions as a part of transport model. timeStep defines the length of time step for simulation of chemical reactions. nrOfSpecies is the number of transported species. dualPorosity defines type of porosity in examinated soil.
 		*/
 		Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity); //(int nrOfElements, double ***ConcentrationMatrix, Mesh *mesh);
+
+		friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int version)
+		{
+		    ar & semchem_on;
+		    ar & dual_porosity_on;
+            ar & nr_of_elements;
+            ar & concentration_matrix;
+            ar & fw_chem;
+            ar & time_step;
+            ar & el_4_loc;
+
+            ar & distribution;
+		}
 		/**
 		*	This method has been prepared to enable simulation of chemical reactions via Semchem. porTyp defines type of porosity. ppelm is a pointer to element we want to simulate chemistry in. poradi is ID of such element. conc is a pointer to threedimensional array full of doubles.
 		*/

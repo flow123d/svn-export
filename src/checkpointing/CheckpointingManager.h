@@ -202,7 +202,7 @@ private:
     /** \brief CheckpointingBase enabled/disabled */
     bool checkpointing_on_;
 
-    std::ofstream out_stream_;
+//    std::ofstream out_stream_;
 
     std::ofstream* set_out_stream(std::string class_name);
 

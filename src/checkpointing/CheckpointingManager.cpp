@@ -28,9 +28,20 @@
  */
 
 #include "CheckpointingManager.h"
+#include "transport/transport_operator_splitting.hh"
+
+#include <boost/serialization/export.hpp>
+
+BOOST_CLASS_EXPORT_GUID(EquationBase, "EquationBase")
+BOOST_CLASS_EXPORT_GUID(TransportBase, "TransportBase")
+BOOST_CLASS_EXPORT_GUID(TransportNothing, "TransportNothing")
+BOOST_CLASS_EXPORT_GUID(TransportOperatorSplitting, "TransportOperatorSplitting")
+
 
 CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
     xprintf(Msg,"CheckpointingManager constructor.\n");
+
+    util = new CheckpointingUtil();
 
     blbost = 256.12345678901234567890123456789;
     this->marks_ = marks;
@@ -56,6 +67,7 @@ CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
     max_checkpoints_ = 0;
     checkpoints_interval_ = 0;
 
+    checkpoint_ = 0;
     if (checkpoints_type_ == CH_DYNAMIC){
         /**Dynamic Checkpoints are enabled */
         max_checkpoints_ = OptGetDbl("Checkpointing", "Max_checkpoints", "1");
@@ -69,7 +81,7 @@ CheckpointingManager::CheckpointingManager(TimeMarks* marks) {//
 
     }
 
-    out_stream_.open(" ");
+    //    out_stream_.open(" ");
 }
 
 CheckpointingManager::~CheckpointingManager() {
@@ -79,7 +91,10 @@ CheckpointingManager::~CheckpointingManager() {
     /**delete of all references to outputs */
     for(RegisteredClasses::iterator it = registered_classes_->begin(); it != registered_classes_->end(); ++it){
         xprintf(Msg, "Deleting output of %s class.\n", it->registered_class_name.c_str());
-        delete it->output;
+        //        delete it->output;
+        //        if(it->out_stream != NULL) {
+        //            it->out_stream->close();
+        //        }
     }
 
     /**delete of all references to registered classes */
@@ -90,26 +105,27 @@ CheckpointingManager::~CheckpointingManager() {
 
     delete time_marks_output_;
 
-    if(out_stream_ != NULL) {
-        out_stream_.close();
-        //        delete outStream;
-    }
+    //    if(out_stream_ != NULL) {
+    //        out_stream_.close();
+    //    }
+
+    delete util;
 }
 
 void CheckpointingManager::restore_time_marks(){
     xprintf(Msg,"CheckpointingManager::restore_time_marks:\n");
     /**works with marks_ pointer */
     if (!is_checkpointing_on()) return;
-//    time_marks_output_ = set_output("TimeMarks");
+    //    time_marks_output_ = set_output("TimeMarks");
     time_marks_output_->load_data(marks_);
-//    delete time_marks_output_;
+    //    delete time_marks_output_;
 }
 
 void CheckpointingManager::save_time_marks(){
     /**works with marks_ pointer */
-//    time_marks_output_ = set_output("TimeMarks");
+    //    time_marks_output_ = set_output("TimeMarks");
     time_marks_output_->save_data(marks_);
-//    delete time_marks_output_;
+    //    delete time_marks_output_;
 
 }
 
@@ -122,14 +138,15 @@ CheckpointingOutput* CheckpointingManager::get_restore_output(){
 };
 
 void CheckpointingManager::register_class(EquationBase* ch, std::string class_name){
-    xprintf(Msg, "obj:%p, name: \n", ch, class_name.c_str());
+    xprintf(Msg, "CheckpointingManager obj:%p, name:%s \n", ch, class_name.c_str());
     if (!is_checkpointing_on()) return ;
+    xprintf(Msg, "CheckpointingManager is_checkpointing_on \n");
 
     RegisteredClass obj;// = new RegisteredClass();
     obj.registered_class = ch;
     obj.registered_class_name = ch->class_name();
-    obj.out_stream = set_out_stream(class_name);
-    obj.output = set_output(class_name);
+    //    obj.out_stream = set_out_stream(class_name);
+    //    obj.output = set_output(class_name);
     registered_classes_->push_back(obj);
 
 }
@@ -200,17 +217,22 @@ void CheckpointingManager::create_dynamic_timemark(){
 void CheckpointingManager::save_state(){
     if(!is_checkpointing_on()) return;
 
-
     last_checkpointing_time_ = time(NULL);
     xprintf(Msg, "Rozdíl: %i\n", (start_time_-last_checkpointing_time_));
 
 
-//    char id [2];
-//    itoa(checkpoint_, id, 10);
+    //    char id [2];
+    //    itoa(checkpoint_, id, 10);
 
-//    string str=to_string(checkpoint_);
+    //    string str=to_string(checkpoint_);
     std::string id = boost::lexical_cast<string>(checkpoint_);
+    //    std::string id = "01";
     std::string file_name;
+
+    std::ofstream  out_stream;
+
+    //    file_name = util->full_file_name_id("xxx", id);
+    xprintf(Msg, "Názvy souborů: %s, %s\n", id.c_str(), file_name.c_str());
     /**
      * TODO tady by se asi měly ukládat TimeMarks - protože jsou globální pro všechny třídy
      * */
@@ -220,16 +242,29 @@ void CheckpointingManager::save_state(){
         xprintf(Msg, "Saving state of object: %s\n", it->registered_class_name.c_str());
         TimeMark::Type checkpointing_mark;
         checkpointing_mark = marks_->type_checkpointing()|marks_->type_fixed_time();//|it->obj->mark_type();
-        //        if(marks_->is_current(it->registered_class->time(), checkpointing_mark)){
+        //        //        if(marks_->is_current(it->registered_class->time(), checkpointing_mark)){
         file_name = util->full_file_name_id(it->registered_class->class_name(), id);
-            it->out_stream->open(file_name.c_str());
-            boost::archive::text_oarchive oa(*(it->out_stream));//xml_oarchive oa(ofs);
-            oa << it->registered_class;
-            if(it->out_stream!=NULL){
-                it->out_stream->close();
-            }
+        //        file_name = util->full_file_name(it->registered_class->class_name());
+        xprintf(Msg, "Názvy souborů: %s, %s\n", id.c_str(), file_name.c_str());
 
-//            it->registered_class->save_state();
+        //        it->out_stream->open(file_name.c_str());
+        out_stream.open(file_name.c_str());
+
+        INPUT_CHECK(out_stream.is_open() , "Can not open output file: %s\n", file_name.c_str() );
+
+//        boost::archive::text_oarchive oa(*(it->out_stream));//xml_oarchive oa(ofs);
+        boost::archive::text_oarchive oa((out_stream));//xml_oarchive oa(ofs);
+        oa << it->registered_class;
+        if(out_stream!=NULL){
+            out_stream.close();
+        }
+
+        //        if(it->out_stream!=NULL){
+        //            it->out_stream->close();
+        //        }
+
+
+        //            it->registered_class->save_state();
 
         //        }
     }
@@ -289,30 +324,14 @@ CheckpointingOutput* CheckpointingManager::set_output(std::string class_name){
 };
 
 std::ofstream* CheckpointingManager::set_out_stream(std::string class_name){
-    xprintf(Msg,"CheckpointingBase::set_output - %s.\n", class_name.c_str());
+    xprintf(Msg,"CheckpointingManager::set_out_stream - %s.\n", class_name.c_str());
 
     util = new CheckpointingUtil();
     std::ofstream* out_stream;
     std::string out_stream_path;
     out_stream_path = util->full_file_name(class_name);
     out_stream->open(out_stream_path.c_str());
-
-//    switch (out_file_format_) {
-//    case CH_OUTPUT_TXT: {
-//        xprintf(Msg,"Output TXT.\n");
-//        out_stream = new CheckpointingOutputTxt(class_name);
-//    }
-//    break;
-//    case CH_OUTPUT_BIN: {
-//        xprintf(Msg,"Output BIN.\n");
-//        out_stream = new CheckpointingOutputBin(class_name);
-//    }
-//    break;
-//    //    case CH_OUTPUT_JSON: output = new CheckpointingOutputJSON(fileName);
-//    //    break;
-//    default: out_stream = new CheckpointingOutputTxt(class_name);
-//    break;
-//    }
+    INPUT_CHECK(out_stream->is_open() , "Can not open output file: %s\n", out_stream_path.c_str() );
 
     delete util;
     return out_stream;

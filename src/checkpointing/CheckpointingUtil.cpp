@@ -11,18 +11,18 @@ const std::string CheckpointingUtil::tg_file_name = "tg";
 
 CheckpointingUtil::CheckpointingUtil() {
     //default prefix is empty
-       file_prefix_ = OptGetStr("Checkpointing", "Output_file_prefix", "");
-       //default suffix is .dat
-       file_suffix_ = OptGetStr("Checkpointing", "Output_file_suffix", ".dat");
+    file_prefix_ = OptGetStr("Checkpointing", "Output_file_prefix", "");
+    //default suffix is .dat
+    file_suffix_ = OptGetStr("Checkpointing", "Output_file_suffix", ".dat");
 
 }
 CheckpointingUtil::CheckpointingUtil(std::string file_name) {
     //default prefix is empty
-       file_prefix_ = OptGetStr("Checkpointing", "Output_file_prefix", "");
-       //default suffix is .dat
-       file_suffix_ = OptGetStr("Checkpointing", "Output_file_suffix", ".dat");
+    file_prefix_ = OptGetStr("Checkpointing", "Output_file_prefix", "");
+    //default suffix is .dat
+    file_suffix_ = OptGetStr("Checkpointing", "Output_file_suffix", ".dat");
 
-       this->file_name_ = file_name;
+    this->file_name_ = file_name;
 }
 
 CheckpointingUtil::~CheckpointingUtil() {
@@ -62,13 +62,16 @@ std::string CheckpointingUtil::full_file_name(std::string name){
     return full_name_path;
 }
 std::string CheckpointingUtil::full_file_name_id(std::string name, std::string id){
+    xprintf(Msg, "CheckpointingUtil::full_file_name_id: %s, %s\n", name.c_str(), id.c_str());
     std::string time_mark;
     std::string full_name;
     std::string full_name_path;
 
-    time_mark = time_for_file_name();
+    //    time_mark = time_for_file_name();
     full_name = file_prefix_ + name + "_" + id + file_suffix_; // + "_" + timeMark
+//    xprintf(Msg, "CheckpointingUtil::full_file_name_id-full_name: %s\n", full_name.c_str());
     full_name_path = file_name_path(full_name);
+//    xprintf(Msg, "CheckpointingUtil::full_file_name_id-full_name_path: %s\n", full_name_path.c_str());
 
     return full_name_path;
 }

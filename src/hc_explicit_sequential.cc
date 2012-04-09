@@ -54,7 +54,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     main_time_marks = new TimeMarks();
 
     checkpointing_manager = new CheckpointingManager(main_time_marks);
-    checkpointing_manager->restore_time_marks();
+//    checkpointing_manager->restore_time_marks();
 
     // Material Database
     const string& material_file_name = IONameHandler::get_instance()->get_input_file_name(OptGetStr( "Input", "Material", NULL ));
@@ -89,7 +89,6 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     water_output = new DarcyFlowMHOutput(water);
 
-//    checkpointing_manager->register_class(transport_reaction, "transport_reaction");
     // optionally setup transport objects
     if ( OptGetBool("Transport", "Transport_on", "no") ) {
         char *transport_type = OptGetStr("Transport", "Transport_type", "explicit");
@@ -207,38 +206,39 @@ void HC_ExplicitSequential::run_simulation()
 
         xprintf(Msg,"water TG\n");
 
-        xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().end_time());
-        xprintf(Msg,"estimate_time:%f, begin:%f, end :%f\n", transport_reaction->time().estimate_time(), transport_reaction->time().marks().get_marks().begin(), water->time().marks().get_marks().end());
+//        xprintf(Msg,"is_current:%i, end_time: %f\n", transport_reaction->time().is_current(transport_reaction->mark_type()), transport_reaction->time().end_time());
+//        xprintf(Msg,"estimate_time:%f, begin:%f, end :%f\n", transport_reaction->time().estimate_time(), transport_reaction->time().marks().get_marks().begin(), water->time().marks().get_marks().end());
+//
+//        for(vector<TimeMark>::const_iterator it =transport_reaction->time().marks().get_marks().begin(); it != transport_reaction->time().marks().get_marks().end(); ++it)
+//                    cout << *it << endl;
+//
+//        if(transport_reaction->solved_time()==0.5){
+//            xprintf(Msg,"Přidávám marku\n");
+//            transport_reaction->time().marks().add(TimeMark(1.5, transport_reaction->time().marks().type_checkpointing()));
+//        }
+//
+//        if( transport_reaction->time().is_current(transport_reaction->time().marks().type_checkpointing())){
+//            xprintf(Msg,"Je checkpointing current\n");
+//        }else{
+//            xprintf(Msg,"NEJe checkpointing current\n");
+//        }
 
-        for(vector<TimeMark>::const_iterator it =transport_reaction->time().marks().get_marks().begin(); it != transport_reaction->time().marks().get_marks().end(); ++it)
-                    cout << *it << endl;
-
-        if(transport_reaction->solved_time()==0.5){
-            xprintf(Msg,"Přidávám marku\n");
-            transport_reaction->time().marks().add(TimeMark(1.5, transport_reaction->time().marks().type_checkpointing()));
-        }
-
-        if( transport_reaction->time().is_current(transport_reaction->time().marks().type_checkpointing())){
-            xprintf(Msg,"Je checkpointing current\n");
-        }else{
-            xprintf(Msg,"NEJe checkpointing current\n");
-        }
-
-        checkpointing_manager->create_dynamic_timemark();
+//        checkpointing_manager->create_dynamic_timemark();
 
         checkpointing_manager->save_state();
 
-        CheckpointingManager* ch;
-        ch = new CheckpointingManager(main_time_marks);
-
-        std::ofstream ofs("/home/wojta/Desktop/workspace/flow_VW_check/tests/02_transport_12d/output/vwr.txt");
-//        ofs.precision(std::numeric_limits<double>::digits10);
-        boost::archive::text_oarchive oa(ofs);//xml_oarchive oa(ofs);
-
-        oa << ch;
-        ofs.close();
-
-        delete ch;
+//        CheckpointingManager* ch;
+//        ch = new CheckpointingManager(main_time_marks);
+//
+////        std::ofstream ofs("/home/wojta/Desktop/workspace/flow_VW_check/tests/02_transport_12d/output/vwr.txt");
+//        std::ofstream ofs("/home/wojta/Pracovní plocha/workspace/flow_1.7_check/tests/02_transport_12d/output/vwr.txt");
+////        ofs.precision(std::numeric_limits<double>::digits10);
+//        boost::archive::text_oarchive oa(ofs);//xml_oarchive oa(ofs);
+//
+//        oa << ch;
+//        ofs.close();
+//
+//        delete ch;
     }
     xprintf(Msg, "End of simulation at time: %f\n", transport_reaction->solved_time());
 }

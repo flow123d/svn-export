@@ -29,7 +29,13 @@
  */
 
 #include "equation.hh"
-
+EquationBase::EquationBase()
+: time_marks(NULL),
+  mesh_(NULL),
+  mat_base(NULL),
+  time_(NULL),
+  equation_mark_type_(time_marks->new_mark_type())
+{};
 EquationBase::EquationBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_base)
 : time_marks(&marks),
   mesh_(&mesh),
@@ -57,7 +63,7 @@ void EquationBase::restore_state(CheckpointingOutput* output){};
 void EquationBase::register_vectors(){};
 
 void EquationBase::register_vector(Vec* vec, std::string vector_name){
-//    if (!is_checkpointing_on()) return ;
+    //    if (!is_checkpointing_on()) return ;
 
     RegisteredVector obj;
     obj.vec = vec;

@@ -18,7 +18,7 @@
 #include "system/par_distribution.hh"
 #include "io/output.h"
 
-
+TransportOperatorSplitting::TransportOperatorSplitting(){};
 TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database, CheckpointingManager* checkpointing_manager )
 : TransportBase(marks, init_mesh, material_database)
 {

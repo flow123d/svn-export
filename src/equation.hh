@@ -74,6 +74,7 @@ typedef std::vector<RegisteredVector> RegisteredVectors;
  */
 class EquationBase {
 public:
+    EquationBase();
     /**
      * Common initialization constructor.
      */
@@ -83,6 +84,13 @@ public:
      * Require virtual destructor also for child classes.
      */
     virtual ~EquationBase() {};
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & equation_mark_type_;
+    }
 
     /**
      *  Child class have to implement computation of solution in actual time.
@@ -96,10 +104,10 @@ public:
      *  Computation of one time step is split into update_solution() and choose_next_time() in order to allow dependency of the next time step
      *  on other coupled models.
      */
-//    virtual void compute_one_step() {
-//        update_solution();
-//        choose_next_time();
-//    }
+    //    virtual void compute_one_step() {
+    //        update_solution();
+    //        choose_next_time();
+    //    }
 
     /**
      * Fix the next discrete time for computation.
@@ -108,13 +116,13 @@ public:
      *
      */
     virtual void choose_next_time()
-        {time_->fix_dt_until_mark();}
+    {time_->fix_dt_until_mark();}
 
     /**
      * Set external constrain for time governor of the equation.
      */
     virtual void set_time_step_constrain(double dt)
-        {time_->set_constrain(dt);}
+    {time_->set_constrain(dt);}
 
     /**
      * Basic getter method returns constant TimeGovernor reference which provides full read access to the time information.
@@ -129,13 +137,13 @@ public:
      * Most actual planned time for solution.
      */
     inline double planned_time()
-        { return time_->estimate_time(); }
+    { return time_->estimate_time(); }
 
     /**
      * Time of actual solution returned by get_solution_vector().
      */
     inline double solved_time()
-        { return time_->t(); }
+    { return time_->t(); }
 
     /**
      * This getter method provides the computational mesh currently used by the model.
@@ -150,13 +158,13 @@ public:
      * TODO: Maybe it is better to have a database outside and use it to produce input fields.
      */
     inline  MaterialDatabase &material_base()
-        {return *mat_base;}
+    {return *mat_base;}
 
     /**
      * Getter for equation time mark type.
      */
     inline TimeMark::Type mark_type()
-        {return equation_mark_type_;}
+    {return equation_mark_type_;}
 
     /**
      * Child class have to implement getter for sequential solution vector.

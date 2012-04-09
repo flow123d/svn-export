@@ -74,6 +74,8 @@ class ConvectionTransport;
 class ConvectionTransport : public EquationBase {
 	friend class TransportSources;
 public:
+	ConvectionTransport()
+	:EquationBase(){};
     /**
      * Constructor.
      */
@@ -89,81 +91,81 @@ public:
 	void serialize(Archive & ar, const unsigned int version)
 	{
 	    ar & boost::serialization::base_object<EquationBase>(*this);
-	    ar & transportsources;
-	    ar & bc_mark_type_;
-	    ar & bc_time_level;         ///< Index into bc_times vector.
-
-	    ar & target_mark_type;    ///< TimeMark type for time marks denoting end of every time interval where transport matrix remains constant.
-	    ar & cfl_max_step;
-	            // only local part
-	    ar & conc;
-	    ar & pconc;
-	    ar & cumulative_corr;
-
-	            // global
-
-	    ar & dens_step;            //
-	    ar & update_dens_time;
-
-	    ar & out_conc;
-	    ar & n_substances;    // # substances transported by water
-	    ar & substance_name;   // Names of substances
-
-	            //Density
-	    ar & density;           // Density Yes/NO
-	    ar & prev_conc;
-	    ar & scalar_it;
-	    ar & substance_density_scale;
-
-	    ar & max_dens_it;    // maximum number of iterations in the variable-density iteration cycle
-	    ar & dens_implicit; // use iterations for the variable density (implicit) YES/NO
-	    ar & dens_eps;      // stopping criterium for density iterations - pressure
-	    ar & write_iterations; // write results during iterations to transport POS file YES/NO
-
-	            // Transport
-	    ar & sorption;     // Include sorption  YES/NO
-	    ar & dual_porosity;   // Include dual porosity YES/NO
-	    ar & reaction_on;     // Include reaction  YES/NO
-
-	            // Other
-	           // struct Problem* problem;
-	    ar & sub_problem;    // 0-only transport,1-transport+dual porosity,
-	                                // 2-transport+sorption
-	                                // 3-transport+dual porosity+sorption
-	    //PEPA
-	    ar & pepa; // It enables Pepa Chudoba's  crazy functions
-	    ar & type; // Type of crazy function
-
-
-	    // NEW TRANSPORT
-
-//	            VecScatter vconc_out_scatter;
-//	            Mat tm; // PETSc transport matrix
-//	            Mat bcm; // PETSc boundary condition matrix
-//	            Vec *bcv; // boundary condition vector
-//	            Vec *bcvcorr; // boundary condition correction vector
+////	    ar & transportsources;
+////	    ar & bc_mark_type_;
+//	    ar & bc_time_level;         ///< Index into bc_times vector.
 //
-//	            Vec *vconc; // concentration vector
-//	            Vec *vpconc; // previous concentration vector
-//	            Vec *vsources_density;
-//	            Vec *vsources_sigma;
-//	            Vec *vsources_conc;
-//	            Vec *vsources_corr;
-//	            Vec *vcumulative_corr;
+//	    ar & target_mark_type;    ///< TimeMark type for time marks denoting end of every time interval where transport matrix remains constant.
+//	    ar & cfl_max_step;
+//	            // only local part
+////	    ar & conc;
+////	    ar & pconc;
+////	    ar & cumulative_corr;
+//
+//	            // global
+//
+//	    ar & dens_step;            //
+//	    ar & update_dens_time;
+//
+////	    ar & out_conc;
+//	    ar & n_substances;    // # substances transported by water
+////	    ar & substance_name;   // Names of substances
+//
+//	            //Density
+//	    ar & density;           // Density Yes/NO
+////	    ar & prev_conc;
+////	    ar & scalar_it;
+////	    ar & substance_density_scale;
+//
+//	    ar & max_dens_it;    // maximum number of iterations in the variable-density iteration cycle
+//	    ar & dens_implicit; // use iterations for the variable density (implicit) YES/NO
+//	    ar & dens_eps;      // stopping criterium for density iterations - pressure
+//	    ar & write_iterations; // write results during iterations to transport POS file YES/NO
+//
+//	            // Transport
+//	    ar & sorption;     // Include sorption  YES/NO
+//	    ar & dual_porosity;   // Include dual porosity YES/NO
+//	    ar & reaction_on;     // Include reaction  YES/NO
+//
+//	            // Other
+//	           // struct Problem* problem;
+//	    ar & sub_problem;    // 0-only transport,1-transport+dual porosity,
+//	                                // 2-transport+sorption
+//	                                // 3-transport+dual porosity+sorption
+//	    //PEPA
+//	    ar & pepa; // It enables Pepa Chudoba's  crazy functions
+//	    ar & type; // Type of crazy function
 //
 //
-//	            Vec *vconc_out; // concentration vector output (gathered)
-
-	            ar & d_row;  // diagonal row entries number in tm
-	            ar & od_row; // off-diagonal row entries number in tm
-	            ar & db_row; // diagonal column entries number in bcm
-	            ar & odb_row; // off-diagonal column entries number in bcm
-	            ar & l_row; // number of local rows in tm and bcm
-	            ar & lb_col; // number of local columns in bcm
-
-	            ar & row_4_el;
-	            ar & el_4_loc;
-	            ar & el_ds;
+//	    // NEW TRANSPORT
+//
+////	            VecScatter vconc_out_scatter;
+////	            Mat tm; // PETSc transport matrix
+////	            Mat bcm; // PETSc boundary condition matrix
+////	            Vec *bcv; // boundary condition vector
+////	            Vec *bcvcorr; // boundary condition correction vector
+////
+////	            Vec *vconc; // concentration vector
+////	            Vec *vpconc; // previous concentration vector
+////	            Vec *vsources_density;
+////	            Vec *vsources_sigma;
+////	            Vec *vsources_conc;
+////	            Vec *vsources_corr;
+////	            Vec *vcumulative_corr;
+////
+////
+////	            Vec *vconc_out; // concentration vector output (gathered)
+//
+////	            ar & d_row;  // diagonal row entries number in tm
+////	            ar & od_row; // off-diagonal row entries number in tm
+////	            ar & db_row; // diagonal column entries number in bcm
+////	            ar & odb_row; // off-diagonal column entries number in bcm
+////	            ar & l_row; // number of local rows in tm and bcm
+////	            ar & lb_col; // number of local columns in bcm
+////
+////	            ar & row_4_el;
+////	            ar & el_4_loc;
+////	            ar & el_ds;
 	}
 
 	/**

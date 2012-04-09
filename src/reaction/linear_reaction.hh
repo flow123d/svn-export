@@ -15,6 +15,8 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+#include "system/system.hh"
+
 class Mesh;
 class Distribution;
 
@@ -40,18 +42,27 @@ public:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-        ////		    ar & boost::serialization::base_object<EquationBase>(*this);
         /**TODO reaction_matrix */
         //		    ar & reaction_matrix; //double **
+        if((nr_of_decays > 0) || (nr_of_FoR > 0)){
+            for(int i = 0; i<nr_of_species; i++){
+                for(int j = 0; j<nr_of_species; j++){
+                    xprintf(Msg, "reaction_matrix: %f\n", reaction_matrix[i][j]);
+                    ar & reaction_matrix[i][j];
+                }
+            }
+        }
         //		    ar & half_lives;
         for(int i = 0; i<nr_of_decays; i++){
             ar & half_lives[i];
         }
         /**TODO substance_ids */
         //            ar & *substance_ids;
-//        for(int i = 0; i<nr_of_isotopes; i++){
-//            ar & substance_ids[i];
-//        }
+        if(substance_ids != NULL){
+            for(int i = 0; i<nr_of_isotopes; i++){
+                ar & substance_ids[i];
+            }
+        }
         ar & nr_of_species;
         ar & nr_of_isotopes;
         ar & nr_of_decays;
@@ -74,18 +85,24 @@ public:
         ar & bifurcation_on;
         ar & time_step;
         ar & nr_of_elements;
+
+        /**TODO concentration_matrix */
         ////            ar & concentration_matrix; //double ***
         ////            ar & mesh;
+
         /**TODO distribution */
-//        ar & *distribution;
-//        ar & *prev_conc;
+        //        ar & *distribution;
+//        if(distribution != NULL){
+//            ar & *distribution;
+//        }
+        //        ar & *prev_conc;
         for(int i = 0; i<nr_of_species; i++){
             ar & prev_conc[i];
         }
     }
 
     /**
-     *   For simulation of chemical raection in just one element either inside of MOBILE or IMMOBILE pores.
+     *   For simulation of chemical reaction in just one element either inside of MOBILE or IMMOBILE pores.
      */
     double **compute_reaction(double **concentrations, int loc_el);
     /**

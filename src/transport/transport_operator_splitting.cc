@@ -18,6 +18,12 @@
 #include "system/par_distribution.hh"
 #include "io/output.h"
 
+#include <boost/serialization/export.hpp>
+BOOST_CLASS_EXPORT_GUID(EquationBase, "EquationBase")
+BOOST_CLASS_EXPORT_GUID(ConvectionTransport, "ConvectionTransport")
+BOOST_CLASS_EXPORT_GUID(Linear_reaction, "Linear_reaction")
+//BOOST_CLASS_EXPORT_GUID(Semchem_interface, "Semchem_interface")
+
 TransportOperatorSplitting::TransportOperatorSplitting(){};
 TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database, CheckpointingManager* checkpointing_manager )
 : TransportBase(marks, init_mesh, material_database)

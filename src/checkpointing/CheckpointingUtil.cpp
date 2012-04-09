@@ -62,7 +62,7 @@ std::string CheckpointingUtil::full_file_name(std::string name){
     return full_name_path;
 }
 std::string CheckpointingUtil::full_file_name_id(std::string name, std::string id){
-    xprintf(Msg, "CheckpointingUtil::full_file_name_id: %s, %s\n", name.c_str(), id.c_str());
+//    xprintf(Msg, "CheckpointingUtil::full_file_name_id: %s, %s\n", name.c_str(), id.c_str());
     std::string time_mark;
     std::string full_name;
     std::string full_name_path;

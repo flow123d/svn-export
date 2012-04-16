@@ -141,8 +141,6 @@ int main()
     cout << "Test optional quotes:" << endl;
     minitest("src/test/uvozovky.fjson");
 
-    in_s.open("src/test/flow_mini.json");
-
     cout << "END." << endl << flush;
     return 0;
 }

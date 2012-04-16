@@ -15,7 +15,8 @@ class Vector_node;
 class Value_node;
 
 /*
- * TODO: PRELOZIT, DOKUMENTACE
+ * TODO: Finish translation & documentation
+
 Kam to smeruje:
 
   Record         = cca MAP,        "klic"= record R , vektor V nebo skalar S

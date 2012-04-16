@@ -16,7 +16,7 @@ public:
     Vector_node ():Generic_node(type_vector)                                      {}
     Vector_node ( Generic_node & prev_node ):Generic_node(type_vector, prev_node) {}
 
-    //TODO: deep copy constructor - because of JSON REF
+    //TODO: deep copy constructor - because of JSON REF={}
 
     virtual Generic_node & get_item( const size_t id );
     virtual Generic_node & get_item( const size_t id, Generic_node & default_tree );

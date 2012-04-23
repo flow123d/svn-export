@@ -97,6 +97,10 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
     convection->output_vector_gather();
     field_output->write_data(time_->t());
 
+    registered_vectors_ = new RegisteredVectors();
+
+    //    register_vector(vsources_corr, "vsources_corr");
+
 }
 
 TransportOperatorSplitting::~TransportOperatorSplitting()
@@ -184,7 +188,7 @@ void TransportOperatorSplitting::get_solution_vector(double * &x, unsigned int &
 //
 //}
 
-void TransportOperatorSplitting::save_state(std::ofstream* out_stream){//CheckpointingOutput* output
+void TransportOperatorSplitting::save_state(){//std::ofstream* out_stream //CheckpointingOutput* output
     xprintf(Msg, "Saving state of TransportOperatorSplitting");
     TimeMark::Type mark_type;
     mark_type = this->mark_type()|time_->marks().type_checkpointing();
@@ -200,6 +204,9 @@ void TransportOperatorSplitting::save_state(std::ofstream* out_stream){//Checkpo
 //    decayRad->save_state(output);
 //    Semchem_reactions->save_state(output);
 
+    convection->save_vectors();
+//    decayRad->save_vectors();
+//    Semchem_reactions->save_vectors();
 }
 
 void TransportOperatorSplitting::restore_state(CheckpointingOutput* output){

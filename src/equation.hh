@@ -83,7 +83,7 @@ public:
     /**
      * Require virtual destructor also for child classes.
      */
-    virtual ~EquationBase() {};
+    virtual ~EquationBase();
 
     friend class boost::serialization::access;
     template<class Archive>
@@ -185,14 +185,19 @@ public:
     std::string class_name();
 
     /** \brief virtual method for saving objects state */
-    virtual void save_state(std::ofstream* out_stream);//CheckpointingOutput* output
+    virtual void save_state();//std::ofstream* out_stream //CheckpointingOutput* output
 
     /** \brief virtual method for loading/restoring objects state */
     virtual void restore_state(CheckpointingOutput* output);
 
     /** \brief virtual method for registering vectors */
-    virtual void register_vectors();
+//    virtual void register_vectors();
 
+    /** \brief saves all registered vectors*/
+    void save_vectors();
+
+    /** \brief restores all registered vectors*/
+    void restore_vectors();
 
 protected:
 
@@ -213,7 +218,8 @@ protected:
     RegisteredVectors* registered_vectors_;
 
     /** \brief registers every single vector for checkpointing*/
-    virtual void register_vector(Vec* vec, std::string vector_name);
+    void register_vector(Vec* vec, std::string vector_name);
+
 
 
 private:

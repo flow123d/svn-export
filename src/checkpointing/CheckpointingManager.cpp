@@ -169,6 +169,7 @@ void CheckpointingManager::save_state(){
         INPUT_CHECK(out_stream.is_open() , "Can not open output file: %s\n", file_name.c_str() );
 
         boost::archive::text_oarchive oa((out_stream));//xml_oarchive oa(ofs);
+//        boost::archive::xml_oarchive oa((out_stream));//xml_oarchive oa(ofs);
         oa << it->registered_class;
         if(out_stream!=NULL){
             out_stream.close();
@@ -176,6 +177,7 @@ void CheckpointingManager::save_state(){
 
         /**Petsc vectors can not be serialized, they have its own methods for saving/restoring*/
         /**TODO serialize Petsc vectors*/
+        it->registered_class->save_state();
 
     }
 

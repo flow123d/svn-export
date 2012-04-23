@@ -162,8 +162,25 @@ ConvectionTransport::ConvectionTransport(TimeMarks &marks,  Mesh &init_mesh, Mat
 */
 
     output_vector_gather();
+
+    registered_vectors_ = new RegisteredVectors();
+
+//    register_vector(vsources_corr, "vsources_corr");
+//    register_vector(vcumulative_corr, "vcumulative_corr");
+    register_vector(vconc_out, "vconc_out");
+    register_vector(bcv, "bcv");
+
 }
 
+
+ConvectionTransport::~ConvectionTransport()
+{
+    // TODO
+    if (registered_vectors_ != NULL){
+        xprintf(Msg,"delete registered_classes_.\n");
+        delete registered_vectors_;
+    }
+}
 
 //=============================================================================
 // MAKE TRANSPORT
@@ -210,11 +227,6 @@ void ConvectionTransport::make_transport_partitioning() {
 }
 
 
-
-ConvectionTransport::~ConvectionTransport()
-{
-// TODO
-}
 
 /*
 //=============================================================================

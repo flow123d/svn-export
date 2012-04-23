@@ -44,6 +44,13 @@ EquationBase::EquationBase(TimeMarks &marks, Mesh &mesh, MaterialDatabase &mat_b
   equation_mark_type_(time_marks->new_mark_type())
 {}
 
+EquationBase::~EquationBase(){
+    /**delete of all references to registered classes */
+//       if (registered_vectors_ != NULL){
+//           xprintf(Msg,"delete registered_classes_.\n");
+//           delete registered_vectors_;
+//       }
+}
 
 /*******************************************************************************************************/
 /**** Checkpointing methods  ***************************************************************************/
@@ -56,19 +63,35 @@ bool EquationBase::is_checkpointing_registered(){
     return checkpointing_registered_;
 };
 
-void EquationBase::save_state(std::ofstream* out_stream){};//CheckpointingOutput* output
+void EquationBase::save_state(){};//std::ofstream* out_stream //CheckpointingOutput* output
 
 void EquationBase::restore_state(CheckpointingOutput* output){};
 
-void EquationBase::register_vectors(){};
+//void EquationBase::register_vectors(){};
 
 void EquationBase::register_vector(Vec* vec, std::string vector_name){
-    //    if (!is_checkpointing_on()) return ;
+//    if (!is_checkpointing_on()) return ;
+
+    xprintf(Msg, "register_vector: %s\n", vector_name.c_str());
 
     RegisteredVector obj;
     obj.vec = vec;
     obj.vector_name = vector_name;
-    //        obj.out_stream = set_out_stream(class_name);
 
     registered_vectors_->push_back(obj);
+};
+
+/** \brief saves all registered vectors*/
+void EquationBase::save_vectors(){
+    for(RegisteredVectors::iterator it = registered_vectors_->begin(); it != registered_vectors_->end(); ++it){
+        xprintf(Msg, "Saving vector: %s\n", it->vector_name.c_str());
+    }
+
+};
+
+/** \brief restores all registered vectors*/
+void EquationBase::restore_vectors(){
+    for(RegisteredVectors::iterator it = registered_vectors_->begin(); it != registered_vectors_->end(); ++it){
+        xprintf(Msg, "Restoring vector: %s\n", it->vector_name.c_str());
+    }
 };

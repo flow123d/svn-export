@@ -38,8 +38,8 @@
 //#include "mesh/mesh.h"
 //#include "reaction.h"
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+//#include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/text_iarchive.hpp>
 
 struct BTC;
 class OutputTime;
@@ -74,8 +74,8 @@ class ConvectionTransport;
 class ConvectionTransport : public EquationBase {
 	friend class TransportSources;
 public:
-	ConvectionTransport()
-	:EquationBase(){};
+	ConvectionTransport();
+//	:EquationBase(){};
     /**
      * Constructor.
      */
@@ -93,10 +93,10 @@ public:
 	    ar & boost::serialization::base_object<EquationBase>(*this);
 ////	    ar & transportsources;
 ////	    ar & bc_mark_type_;
-//	    ar & bc_time_level;         ///< Index into bc_times vector.
+	    ar & bc_time_level;         ///< Index into bc_times vector.
 //
 //	    ar & target_mark_type;    ///< TimeMark type for time marks denoting end of every time interval where transport matrix remains constant.
-//	    ar & cfl_max_step;
+	    ar & cfl_max_step;
 //	            // only local part
 ////	    ar & conc;
 ////	    ar & pconc;

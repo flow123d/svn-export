@@ -26,6 +26,12 @@ public:
 	 * Constructor
 	 */
 	TransportSources(ConvectionTransport &convection);//(ConvectionTransport &convection, int n_subst);
+
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{}
+
 	/**
 	 * Initial allocating method
 	 */

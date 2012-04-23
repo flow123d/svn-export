@@ -5,6 +5,8 @@
 #include "system/par_distribution.hh"
 #include <string.h>
 #include "checkpointing/CheckpointingOutput.h"
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 class Distribution;
 
@@ -16,6 +18,7 @@ class Semchem_interface
 		*/
 		Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity); //(int nrOfElements, double ***ConcentrationMatrix, Mesh *mesh);
 
+		Semchem_interface();
 		friend class boost::serialization::access;
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
@@ -23,12 +26,14 @@ class Semchem_interface
 		    ar & semchem_on;
 		    ar & dual_porosity_on;
             ar & nr_of_elements;
-            ar & concentration_matrix;
-            ar & fw_chem;
-            ar & time_step;
-            ar & el_4_loc;
+//            ar & concentration_matrix;
+            ar & *fw_chem;
 
-            ar & distribution;
+
+            ar & time_step;
+//            ar & el_4_loc;
+
+//            ar & distribution;
 		}
 		/**
 		*	This method has been prepared to enable simulation of chemical reactions via Semchem. porTyp defines type of porosity. ppelm is a pointer to element we want to simulate chemistry in. poradi is ID of such element. conc is a pointer to threedimensional array full of doubles.

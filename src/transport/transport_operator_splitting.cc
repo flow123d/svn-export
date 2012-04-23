@@ -19,9 +19,10 @@
 #include "io/output.h"
 
 #include <boost/serialization/export.hpp>
-BOOST_CLASS_EXPORT_GUID(EquationBase, "EquationBase")
-BOOST_CLASS_EXPORT_GUID(ConvectionTransport, "ConvectionTransport")
-BOOST_CLASS_EXPORT_GUID(Linear_reaction, "Linear_reaction")
+//BOOST_CLASS_EXPORT_GUID(EquationBase, "EquationBase")
+//BOOST_CLASS_EXPORT_GUID(ConvectionTransport, "ConvectionTransport")
+//BOOST_CLASS_EXPORT_GUID(TransportSources, "TransportSources")
+//BOOST_CLASS_EXPORT_GUID(Linear_reaction, "Linear_reaction")
 //BOOST_CLASS_EXPORT_GUID(Semchem_interface, "Semchem_interface")
 
 TransportOperatorSplitting::TransportOperatorSplitting(){};

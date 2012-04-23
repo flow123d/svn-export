@@ -40,6 +40,11 @@ Semchem_interface::Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpeci
   return;
 }
 
+/**VWR check*/
+Semchem_interface::Semchem_interface()
+    :semchem_on(false), dual_porosity_on(false), mesh_(NULL), fw_chem(NULL)
+{}
+
 /*Semchem_interface::~Semchem_interface(void)
 {
 	if(fw_chem != NULL)

@@ -29,6 +29,7 @@
 
 #include "CheckpointingManager.h"
 #include "transport/transport_operator_splitting.hh"
+#include "transport/transport.h"
 
 #include <boost/serialization/export.hpp>
 
@@ -36,7 +37,7 @@ BOOST_CLASS_EXPORT_GUID(EquationBase, "EquationBase")
 BOOST_CLASS_EXPORT_GUID(TransportBase, "TransportBase")
 BOOST_CLASS_EXPORT_GUID(TransportNothing, "TransportNothing")
 BOOST_CLASS_EXPORT_GUID(TransportOperatorSplitting, "TransportOperatorSplitting")
-//BOOST_CLASS_EXPORT_GUID(ConvectionTransport, "ConvectionTransport")
+BOOST_CLASS_EXPORT_GUID(ConvectionTransport, "ConvectionTransport")
 //BOOST_CLASS_EXPORT_GUID(Linear_reaction, "Linear_reaction")
 //BOOST_CLASS_EXPORT_GUID(Distribution, "Distribution")
 

@@ -108,9 +108,9 @@ public:
     {
         ar & boost::serialization::base_object<TransportBase>(*this);
         ar & output_mark_type;
-//        ar & convection;
+        ar & convection;
         ar & decayRad;
-//        ar & Semchem_reactions;
+        ar & Semchem_reactions;
     }
 
     virtual void set_velocity_field(Vec &velocity_vector);

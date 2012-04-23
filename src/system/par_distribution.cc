@@ -31,6 +31,11 @@
 #include "system/system.hh"
 #include "par_distribution.hh"
 
+Distribution::Distribution()
+:communicator(PETSC_COMM_WORLD),
+lsizes(NULL)
+{}
+
 /**
  * create a Distribution from local sizes (dim = np )
  * (collective context)

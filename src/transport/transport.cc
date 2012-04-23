@@ -64,6 +64,9 @@
 // TODO: move partitioning into mesh_ and remove this include
 #include "flow/darcy_flow_mh.hh"
 
+ConvectionTransport::ConvectionTransport()
+: EquationBase()
+{}
 
 ConvectionTransport::ConvectionTransport(TimeMarks &marks,  Mesh &init_mesh, MaterialDatabase &material_database)
 : EquationBase(marks, init_mesh, material_database)

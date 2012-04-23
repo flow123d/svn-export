@@ -317,8 +317,16 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
         ls->rhs_set_value(edge_row, edg->f_rhs);
     }
 
-    coupling_P0_mortar_assembly();
-    //mh_abstract_assembly_intersection();
+    mortar_sigma = OptGetDbl("Input", "mortar_sigma", "100.0");
+    string mortar_method = OptGetStr("Input", "mortar_method", "None");
+    if (mortar_method == "P0") {
+      coupling_P0_mortar_assembly();
+    } else if (mortar_method == "P1") {  
+     mh_abstract_assembly_intersection();
+    } else if (mortar_method == "None") {
+    } else {  
+      xprintf(UsrErr, "Wrong mortar_method.\n");
+    }  
 
 
 }
@@ -407,7 +415,7 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
                         right_idx[2] = row_4_edge[mesh->edge.index(isect.slave_iter()->side[2]->edge)];
                         r_size = 3;
                     }
-                    product = -100.0 * left_map * delta_i * delta_j * right_map / delta_0;
+                    product = -mortar_sigma * left_map * delta_i * delta_j * right_map / delta_0;
 
                     // Dirichlet modification
                     for(int ii=0;ii<l_size;ii++) if (l_dirich[ii]) {
@@ -419,8 +427,8 @@ void DarcyFlowMH_Steady::mh_abstract_assembly() {
                             product(ii,jj)=0.0;
                         }
 
-                    DBGMSG("(i,j): %d %d %f %f %f\n",i,j, delta_i, delta_j, delta_0);
-                    product.print("A:");
+                    //DBGMSG("(i,j): %d %d %f %f %f\n",i,j, delta_i, delta_j, delta_0);
+                    //product.print("A:");
                     schur0->mat_set_values(l_size, left_idx, r_size, right_idx, product.memptr());
                 }
             }
@@ -517,7 +525,7 @@ void DarcyFlowMH_Steady::mh_abstract_assembly_intersection() {
         arma::mat A(5, 5);
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
-                A(i, j) = -100.0 * intersec->intersection_true_size() *
+                A(i, j) = -mortar_sigma * intersec->intersection_true_size() *
                         ( difference_in_Y[i] * difference_in_Y[j]
                           + difference_in_Y[i] * difference_in_X[j]/2
                           + difference_in_X[i] * difference_in_Y[j]/2

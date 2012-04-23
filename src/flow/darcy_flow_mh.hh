@@ -187,6 +187,8 @@ protected:
 	// gather of the solution
 	Vec sol_vec;			// vector over solution array
 	VecScatter par_to_all;
+        
+        double mortar_sigma;
 };
 
 

@@ -228,6 +228,9 @@ void Mesh::read_intersections(string file_name) {
 
     using namespace boost;
 
+    string mortar_method = OptGetStr("Input", "mortar_method", "None");
+    if (mortar_method == "None") return;
+
     file_name = IONameHandler::get_instance()->get_input_file_name(file_name);
     ElementFullIter master(element), slave(element);
 

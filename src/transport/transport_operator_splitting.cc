@@ -30,7 +30,7 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 : TransportBase(marks, init_mesh, material_database)
 {
     /**sets, that this class is under checkpointing */
-    checkpointing_registered_ = false;
+    checkpointing_registered_ = true;
     this->class_name_ = "transport_reaction";
 
 //    if(checkpointing_manager->is_checkpointing_on()){
@@ -98,8 +98,6 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
     field_output->write_data(time_->t());
 
     registered_vectors_ = new RegisteredVectors();
-
-    //    register_vector(vsources_corr, "vsources_corr");
 
 }
 
@@ -188,7 +186,7 @@ void TransportOperatorSplitting::get_solution_vector(double * &x, unsigned int &
 //
 //}
 
-void TransportOperatorSplitting::save_state(){//std::ofstream* out_stream //CheckpointingOutput* output
+void TransportOperatorSplitting::save_state(CheckpointingOutput* output){//std::ofstream* out_stream //CheckpointingOutput* output
     xprintf(Msg, "Saving state of TransportOperatorSplitting");
     TimeMark::Type mark_type;
     mark_type = this->mark_type()|time_->marks().type_checkpointing();
@@ -204,7 +202,7 @@ void TransportOperatorSplitting::save_state(){//std::ofstream* out_stream //Chec
 //    decayRad->save_state(output);
 //    Semchem_reactions->save_state(output);
 
-    convection->save_vectors();
+    convection->save_vectors(output);
 //    decayRad->save_vectors();
 //    Semchem_reactions->save_vectors();
 }

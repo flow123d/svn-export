@@ -185,7 +185,7 @@ public:
     std::string class_name();
 
     /** \brief virtual method for saving objects state */
-    virtual void save_state();//std::ofstream* out_stream //CheckpointingOutput* output
+    virtual void save_state(CheckpointingOutput* output);//std::ofstream* out_stream //CheckpointingOutput* output
 
     /** \brief virtual method for loading/restoring objects state */
     virtual void restore_state(CheckpointingOutput* output);
@@ -194,7 +194,7 @@ public:
 //    virtual void register_vectors();
 
     /** \brief saves all registered vectors*/
-    void save_vectors();
+    void save_vectors(CheckpointingOutput* output);
 
     /** \brief restores all registered vectors*/
     void restore_vectors();

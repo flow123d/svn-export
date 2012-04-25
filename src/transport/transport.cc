@@ -165,10 +165,16 @@ ConvectionTransport::ConvectionTransport(TimeMarks &marks,  Mesh &init_mesh, Mat
 
     registered_vectors_ = new RegisteredVectors();
 
-//    register_vector(vsources_corr, "vsources_corr");
-//    register_vector(vcumulative_corr, "vcumulative_corr");
-    register_vector(vconc_out, "vconc_out");
     register_vector(bcv, "bcv");
+    register_vector(bcvcorr, "bcvcorr");
+    register_vector(vconc, "vconc");
+    register_vector(vpconc, "vpconc");
+//    register_vector(vsources_density, "vsources_density"); //padá
+//    register_vector(vsources_sigma, "vsources_sigma"); //padá
+//    register_vector(vsources_conc, "vsources_conc"); //padá
+//    register_vector(vsources_corr, "vsources_corr"); //padá
+    register_vector(vcumulative_corr, "vcumulative_corr");
+    register_vector(vconc_out, "vconc_out");
 
 }
 

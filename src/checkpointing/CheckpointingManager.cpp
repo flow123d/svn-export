@@ -175,9 +175,13 @@ void CheckpointingManager::save_state(){
             out_stream.close();
         }
 
+        output_ = set_output(it->registered_class_name);
+
         /**Petsc vectors can not be serialized, they have its own methods for saving/restoring*/
         /**TODO serialize Petsc vectors*/
-        it->registered_class->save_state();
+        it->registered_class->save_state(output_);
+
+        delete output_;
 
     }
 
@@ -267,6 +271,7 @@ void CheckpointingManager::create_fixed_timemarks(){
 };
 
 void CheckpointingManager::create_dynamic_timemark(){
+    if (true) return;
     if (!is_checkpointing_on()) return;
     if (checkpoints_type_ == CH_DYNAMIC){
         time_t current_time;

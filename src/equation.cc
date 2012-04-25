@@ -63,7 +63,7 @@ bool EquationBase::is_checkpointing_registered(){
     return checkpointing_registered_;
 };
 
-void EquationBase::save_state(){};//std::ofstream* out_stream //CheckpointingOutput* output
+void EquationBase::save_state(CheckpointingOutput* output){};//std::ofstream* out_stream //CheckpointingOutput* output
 
 void EquationBase::restore_state(CheckpointingOutput* output){};
 
@@ -82,9 +82,13 @@ void EquationBase::register_vector(Vec* vec, std::string vector_name){
 };
 
 /** \brief saves all registered vectors*/
-void EquationBase::save_vectors(){
+void EquationBase::save_vectors(CheckpointingOutput* output){
+//    CheckpointingOutput* output;
     for(RegisteredVectors::iterator it = registered_vectors_->begin(); it != registered_vectors_->end(); ++it){
         xprintf(Msg, "Saving vector: %s\n", it->vector_name.c_str());
+//        output = new CheckpointingOutput(it->vector_name);
+        output->save_data(*(it->vec), it->vector_name);
+//        delete output;
     }
 
 };

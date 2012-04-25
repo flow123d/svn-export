@@ -110,7 +110,6 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
     xprintf(Msg, "transport_reaction->mark_type():%i, water->mark_type():%i\n", transport_reaction->mark_type(), water->mark_type());
 
-//    checkpointing_manager->register_class(NULL, "transport_reaction");
     checkpointing_manager->register_class(transport_reaction, "transport_reaction");
 //    checkpointing_manager->register_class(water, "darcy_flow");
     /**cannot remain in constructor, because it depends on registred classes. Each class has its own TimeMark::Type*/
@@ -223,7 +222,7 @@ void HC_ExplicitSequential::run_simulation()
 //            xprintf(Msg,"NEJe checkpointing current\n");
 //        }
 
-//        checkpointing_manager->create_dynamic_timemark();
+        checkpointing_manager->create_dynamic_timemark();
 
         checkpointing_manager->save_state();
 

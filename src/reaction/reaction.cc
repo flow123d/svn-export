@@ -20,7 +20,7 @@ Reaction::Reaction(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material
 	nr_of_species = OptGetInt("Transport", "N_substances", "0");
 	nom_pol_deg = OptGetInt("Reaction_module","Nom_pol_deg","0");
 	den_pol_deg = OptGetInt("Reaction_module","Den_pol_deg","0");
-	time_step = set_time_step();
+	set_time_step();
 	set_dual_porosity();
 	set_nr_of_elements(mesh_->n_elements());
 	if(prev_conc != NULL){
@@ -42,11 +42,10 @@ Reaction::~Reaction()
 	//release_reaction_matrix();
 }
 
-/*double **Reaction::compute_reaction(double **concentrations, int loc_el) //multiplication of concentrations array by reaction matrix
+double **Reaction::compute_reaction(double **concentrations, int loc_el) //multiplication of concentrations array by reaction matrix
 {
-
-
-    int cols, rows, both;
+    cout << "double **Reaction::compute_reaction(double **concentrations, int loc_el) needs to be re-implemented in ancestors." << endl;
+	/*int cols, rows, both;
 
 	if((nr_of_decays > 0) || (nr_of_FoR > 0)){
 		for(cols = 0; cols < nr_of_species; cols++){
@@ -60,13 +59,13 @@ Reaction::~Reaction()
             }
             //xprintf(Msg,"\n%d. of %d substances concentration after reaction is %f\n", rows,nr_of_species, concentrations[rows][loc_el]); //commented to speed the computation up
         }
-	}
+	}*/
 	return concentrations;
-}*/
+}
 
-/*void Reaction::compute_one_step(void)
+void Reaction::compute_one_step(void)
 {
-    if (reaction_matrix == NULL)   return;
+    /*if (reaction_matrix == NULL)   return;
 
     START_TIMER("decay_step");
 	 //for (int loc_el = 0; loc_el < distribution->lsize(distribution->myp()); loc_el++)
@@ -78,9 +77,10 @@ Reaction::~Reaction()
 	    }
 
 	 }
-    END_TIMER("decay_step");
+    END_TIMER("decay_step");*/
+	cout << "Reaction::compute_one_step() needs to be re-implemented in ancestors." << endl;
 	 return;
-}*/
+}
 
 void Reaction::set_nr_of_species(int n_substances)
 {
@@ -101,7 +101,7 @@ void Reaction::set_concentration_matrix(double ***ConcentrationMatrix, Distribut
 	return;
 }
 
-/*void Reaction::set_time_step(double new_timestep){
+void Reaction::set_time_step(double new_timestep){
 	time_step = new_timestep;
 	/*if((nr_of_decays > 0) || (nr_of_FoR > 0)){
 		release_reaction_matrix();
@@ -116,9 +116,9 @@ void Reaction::set_concentration_matrix(double ***ConcentrationMatrix, Distribut
 
 void Reaction::set_time_step(void)
 {
-	time_step = OptGetDbl("Global","Save_step","1");
+	time_step = OptGetDbl("Global","Save_step","1.0");
 	return;
-}*/
+}
 
 //void Reaction::set_mesh_(Mesh *mesh_in){mesh = mesh_in; return;}
 

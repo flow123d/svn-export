@@ -13,7 +13,7 @@
 #include "petscksp.h"
 #include "reaction/linear_reaction.hh"
 
-class Pade_approximant: Linear_reaction
+class Pade_approximant: public Linear_reaction
 {
 	public:
         /**
@@ -29,19 +29,19 @@ class Pade_approximant: Linear_reaction
 		/**
 		*
 		*/
-		void Pade_approximant::modify_reaction_matrix(void);
+		void modify_reaction_matrix(void);
 		/**
 		*
 		*/
-		double **Pade_approximant::modify_reaction_matrix(int dec_nr);
+		double **modify_reaction_matrix(int dec_nr);
 		/**
 		*	Evaluates Pade approximant from Reaction_matrix.
 		*/
-		double **Pade_approximant::modify_reaction_matrix_repeatedly(void);
+		double **modify_reaction_matrix_repeatedly(void);
 		/**
 		* It enables to evaluate matrix nominator and denominator present in Pade approximant.
 		*/
-		void Pade_approximant::evaluate_matrix_polynomial(Mat *Polynomial, Mat Reaction_matrix, PetscScalar *coef);
+		void evaluate_matrix_polynomial(Mat *Polynomial, Mat Reaction_matrix, PetscScalar *coef);
 		/**
 		* PETSC format of a matrix describing linear chemical reaction.
 		*/

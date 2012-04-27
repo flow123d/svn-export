@@ -12,14 +12,13 @@
 
 using namespace std;
 
-void Pade_approximant::Pade_approximant(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database) //(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity) //(double timestep, int nrOfElements, double ***ConvectionMatrix)
+Pade_approximant::Pade_approximant(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database) //(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity) //(double timestep, int nrOfElements, double ***ConvectionMatrix)
 			:Linear_reaction(marks, init_mesh, material_database)
 {
 	cout << "Pade_approximant constructor is running." << endl;
 }
 
-void Pade_approximant::~Pade_approximant(void)
-		:~Linear_reaction(void)
+Pade_approximant::~Pade_approximant()
 {
 	cout << "Pade approximant destructor is running."  << endl;
 }
@@ -130,11 +129,11 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 			bifurcation_on = OptGetBool(dec_name,"Bifurcation_on","no");
 			if(bifurcation_on == true){
 				set_bifurcation(dec_name, dec_nr);
-				modify_reaction_matrix(&Reaction_matrix, dec_nr);
+				modify_reaction_matrix(dec_nr);
 			}else{
 				if(&Reaction_matrix != NULL)
 				{
-					modify_reaction_matrix(&Reaction_matrix);
+					modify_reaction_matrix();
 					xprintf(Msg,"Reaction matrix R is has been allocated. The addres is %d.\n", Reaction_matrix);
 				}else{
 					xprintf(Msg,"Reaction matrix R is has not been allocated.\n"); //cout << "Reaction matrix R is has not been allocated." << endl;
@@ -158,7 +157,7 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 			set_kinetic_constants(dec_name, dec_nr);//instead of this line, here should be palced computation of halflives using kinetic constants
 			print_indeces(nr_of_isotopes); //just a control
 			print_half_lives(2); //just a control
-			modify_reaction_matrix(&Reaction_matrix, 2);
+			modify_reaction_matrix(2);
 			dec_name_nr++;
 		}
 	}

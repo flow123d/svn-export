@@ -29,7 +29,15 @@ class Pade_approximant: public Linear_reaction
 		/**
 		*
 		*/
+		void set_time_step(double new_timestep);
+		/**
+		*
+		*/
 		void modify_reaction_matrix(void);
+		/**
+		*
+		*/
+		double **allocate_reaction_matrix(void);
 		/**
 		*
 		*/
@@ -41,11 +49,11 @@ class Pade_approximant: public Linear_reaction
 		/**
 		* It enables to evaluate matrix nominator and denominator present in Pade approximant.
 		*/
-		void evaluate_matrix_polynomial(Mat *Polynomial, Mat Reaction_matrix, PetscScalar *coef);
+		void evaluate_matrix_polynomial(Mat *Polynomial, Mat *Reaction_matrix, PetscScalar *coef);
 		/**
 		* PETSC format of a matrix describing linear chemical reaction.
 		*/
-		Mat Reaction_matrix;
+		Mat *Reaction_matrix;
 };
 
 #endif /* PADE_APPROXIMANT_H_ */

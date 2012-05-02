@@ -49,7 +49,7 @@ double **Linear_reaction::allocate_reaction_matrix(void) //reaction matrix initi
 	for(rows = 0; rows < nr_of_species;rows++){
 	 for(cols = 0; cols < nr_of_species; cols++){
 		 if(rows == cols){
-			 ;//if((nom_pol_deg + den_pol_deg) == 0) reaction_matrix[rows][cols] = 1.0;
+			 if((nom_pol_deg + den_pol_deg) == 0) reaction_matrix[rows][cols] = 1.0;
 		 }else{
 			reaction_matrix[rows][cols] = 0.0;
 		 }

@@ -14,6 +14,12 @@
 //class Mesh;
 class Distribution;
 
+/*const int Linear_react = 0;
+const int Linear_react_Pade = 1;
+const int General_react_Semch = 2;*/
+
+enum Reaction_type {No_reaction, Linear_react, Linear_react_Pade, General_react_Semch};
+
 class Reaction: public EquationBase
 {
 	public:
@@ -143,6 +149,10 @@ class Reaction: public EquationBase
 		*	Integer which informs about the order of a polynomial term in denominator of Pade approximant rational term.
 		*/
 		int den_pol_deg;
+		/**
+		* Number of further species in Semchem, which can never be exhausted.
+		*/
+		int nr_of_further_species;
 };
 
 #endif

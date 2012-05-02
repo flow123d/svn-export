@@ -13,17 +13,19 @@
 #include "equation.hh"
 #include "transport/transport.h"
 #include "mesh/mesh.h"
-#include "reaction/linear_reaction.hh"
+#include "reaction/pade_approximant.hh"
 #include "semchem/semchem_interface.hh"
 #include "system/par_distribution.hh"
 #include "io/output.h"
 
 
 TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database )
-: TransportBase(marks, init_mesh, material_database)
+: TransportBase(marks, init_mesh, material_database), reaction(NULL)
 {
 	Distribution *el_distribution;
 	int *el_4_loc;
+	Reaction_type type_of_reaction = No_reaction;
+	bool decide_reaction_type = false;
 
     double problem_save_step = OptGetDbl("Global", "Save_step", "1.0");
     double problem_stop_time = OptGetDbl("Global", "Stop_time", "1.0");
@@ -32,11 +34,26 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 	convection->test_concentration_sources(*convection);
 
 	// Chemistry initialization
-	//decayRad = new Linear_reaction(0.0, mesh_, convection->get_n_substances(), convection->get_dual_porosity());
-	decayRad = new Linear_reaction(marks, *mesh_, *mat_base);
-	convection->get_par_info(el_4_loc, el_distribution);
-	decayRad->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
+	decide_reaction_type = OptGetBool("Reaction_module","Compute_decay","No");
+	if(decide_reaction_type == true) type_of_reaction = Linear_react;
+	decide_reaction_type = OptGetBool("Reaction_module","Matrix_exp_on","No");
+	if(decide_reaction_type == true) type_of_reaction = Linear_react_Pade;
+	switch (type_of_reaction)
+	{
+		case Linear_react: reaction = new Linear_reaction(marks, *mesh_, *mat_base); break;
+		case Linear_react_Pade: reaction = new Pade_approximant(marks, *mesh_, *mat_base); break;
+		case General_react_Semch: ; break;
+		default: reaction = NULL;
+	}
+	//decayRad = new Linear_reaction(marks, *mesh_, *mat_base);
+	if(reaction != NULL)
+	{
+		convection->get_par_info(el_4_loc, el_distribution);
+		reaction->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
+	}
+
 	Semchem_reactions = new Semchem_interface(0.0, mesh_, convection->get_n_substances(), convection->get_dual_porosity()); //(mesh->n_elements(),convection->get_concentration_matrix(), mesh);
+	//Semchem_reactions = new Semchem_interface(marks, *mesh_, *mat_base);
 	Semchem_reactions->set_el_4_loc(el_4_loc);
 	Semchem_reactions->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
 
@@ -78,7 +95,7 @@ TransportOperatorSplitting::~TransportOperatorSplitting()
 {
     delete field_output;
     delete convection;
-    delete decayRad;
+    delete reaction;
     delete Semchem_reactions;
     delete time_;
 }
@@ -102,7 +119,7 @@ void TransportOperatorSplitting::update_solution() {
     time_->next_time();
 	convection->set_target_time(time_->t());
 
-	decayRad->set_time_step(convection->time().estimate_dt());
+	reaction->set_time_step(convection->time().estimate_dt());
 	//cout << "recent time step value is " << decayRad->get_time_step() << endl;
 	// TODO: update Semchem time step here!!
 	Semchem_reactions->set_timestep(convection->time().estimate_dt());
@@ -117,7 +134,7 @@ void TransportOperatorSplitting::update_solution() {
 	    //xprintf( Msg, "Time : %f\n", convection->time().t() );
 	    convection->compute_one_step();
 	    // Calling linear reactions and Semchem
-	    decayRad->compute_one_step();
+	    reaction->compute_one_step();
 	    Semchem_reactions->compute_one_step();
 	}
     END_TIMER("transport_steps");

@@ -42,7 +42,7 @@ double **Linear_reaction::allocate_reaction_matrix(void) //reaction matrix initi
 	char dec_name[30];
 
 	cout << "We are going to allocate reaction matrix" << endl;
-	reaction_matrix = (double **)xmalloc(nr_of_species * sizeof(double*));//allocation section
+	if(reaction_matrix == NULL)reaction_matrix = (double **)xmalloc(nr_of_species * sizeof(double*));//allocation section
 	for(rows = 0; rows < nr_of_species; rows++){
 		reaction_matrix[rows] = (double *)xmalloc(nr_of_species * sizeof(double));
 	}
@@ -82,7 +82,7 @@ double **Linear_reaction::modify_reaction_matrix(void) //prepare the matrix, whi
 			prev_index = index;
 		}
 	}
-	print_reaction_matrix();//just for control print
+	//print_reaction_matrix();//just for control print
 	return reaction_matrix;
 }
 
@@ -414,12 +414,16 @@ void Linear_reaction::compute_one_step(void)
 void Linear_reaction::release_reaction_matrix(void)
 {
 	int i;
-	if(reaction_matrix != NULL)
+	if(reaction_matrix == NULL)
 	{
+		; //Do nothing!
+	}else{
 		for(i = 0; i < nr_of_isotopes; i++)
 		{
-			if(reaction_matrix[i] != NULL)
+			if(reaction_matrix[i] == NULL)
 			{
+				; //Do nothing!
+			}else{
 				free(reaction_matrix[i]);
 				reaction_matrix[i] = NULL;
 			}

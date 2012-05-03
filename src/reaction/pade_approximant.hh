@@ -53,7 +53,7 @@ class Pade_approximant: public Linear_reaction
 		/**
 		* PETSC format of a matrix describing linear chemical reaction.
 		*/
-		Mat *Reaction_matrix;
+		Mat Reaction_matrix;
 };
 
 #endif /* PADE_APPROXIMANT_H_ */

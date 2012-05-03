@@ -12,23 +12,37 @@
 
 using namespace std;
 
-void Pade_approximant::set_time_step(double new_timestep){
-	time_step = new_timestep;
-	release_reaction_matrix();
-	allocate_reaction_matrix();
-	modify_reaction_matrix_repeatedly();
-	return;
-}
-
 Pade_approximant::Pade_approximant(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database) //(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity) //(double timestep, int nrOfElements, double ***ConvectionMatrix)
-			:Linear_reaction(marks, init_mesh, material_database), Reaction_matrix(NULL)
+			:Linear_reaction(marks, init_mesh, material_database)//, Reaction_matrix(NULL)
 {
 	cout << "Pade_approximant constructor is running." << endl;
 }
 
 Pade_approximant::~Pade_approximant()
 {
+	int i, rows, n_subst;
+
+	if(half_lives != NULL){
+		free(half_lives);
+		half_lives = NULL;
+	}
+
+	if(substance_ids != NULL){
+		free(substance_ids);
+		substance_ids = NULL;
+	}
+
+	release_reaction_matrix();
+
 	cout << "Pade approximant destructor is running."  << endl;
+}
+
+void Pade_approximant::set_time_step(double new_timestep){
+	time_step = new_timestep;
+	release_reaction_matrix();
+	this->allocate_reaction_matrix();
+	this->modify_reaction_matrix_repeatedly();
+	return;
 }
 
 double **Pade_approximant::allocate_reaction_matrix(void) //reaction matrix initialization
@@ -37,15 +51,15 @@ double **Pade_approximant::allocate_reaction_matrix(void) //reaction matrix init
 	char dec_name[30];
 
 	cout << "We are going to allocate reaction matrix" << endl;
-	reaction_matrix = (double **)xmalloc(nr_of_species * sizeof(double*));//allocation section
+	if(reaction_matrix == NULL)reaction_matrix = (double **)xmalloc(nr_of_species * sizeof(double*));//allocation section
 	for(rows = 0; rows < nr_of_species; rows++){
 		reaction_matrix[rows] = (double *)xmalloc(nr_of_species * sizeof(double));
 	}
 	for(rows = 0; rows < nr_of_species;rows++){
 	 for(cols = 0; cols < nr_of_species; cols++){
-		 if(rows == cols){
+		 /*if(rows == cols){
 			 ;//if((nom_pol_deg + den_pol_deg) == 0) reaction_matrix[rows][cols] = 1.0; //this row is different in comparison to the case of Linear_reaction
-		 }else{
+		 }else*/{
 			reaction_matrix[rows][cols] = 0.0;
 		 }
 	 }
@@ -69,8 +83,8 @@ void Pade_approximant::modify_reaction_matrix(void) //prepare the matrix, which 
 			index = substance_ids[cols] - 1; // because indecees in input file run from one whereas indeces in C++ run from ZERO
 			if(cols > 0){
 				Hlp_kin = (PetscScalar) time_step*log(2)/half_lives[cols-1];
-				MatSetValue(*Reaction_matrix, prev_index, prev_index, ((-1.0) * Hlp_kin), INSERT_VALUES);
-				MatSetValue(*Reaction_matrix, index, prev_index, Hlp_kin, INSERT_VALUES);
+				MatSetValue(Reaction_matrix, prev_index, prev_index, ((-1.0) * Hlp_kin), INSERT_VALUES);
+				MatSetValue(Reaction_matrix, index, prev_index, Hlp_kin, INSERT_VALUES);
 			}
 			prev_index = index;
 		}
@@ -91,14 +105,14 @@ double **Pade_approximant::modify_reaction_matrix(int dec_nr) //prepare the matr
 
 	first_index = substance_ids[0]-1;
 	Hlp_kin = time_step*log(2)/half_lives[0];
-	MatSetValue(*Reaction_matrix,first_index,first_index,Hlp_kin,ADD_VALUES);
+	MatSetValue(Reaction_matrix,first_index,first_index,Hlp_kin,ADD_VALUES);
 	for(cols = 0; cols < nr_of_isotopes; cols++){
 		index = substance_ids[cols] - 1; // because indecees in input file run from one whereas indeces in C++ run from ZERO
 		if(cols > 0)
 		{
 			bif_id = cols -1;
 			Hlp_kin = time_step*log(2)/half_lives[cols-1] * bifurcation[dec_nr][bif_id];
-			MatSetValue(*Reaction_matrix, index, first_index, Hlp_kin, INSERT_VALUES);
+			MatSetValue(Reaction_matrix, index, first_index, Hlp_kin, INSERT_VALUES);
 		}
 	}
 	return reaction_matrix;
@@ -125,20 +139,20 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 	int rows, cols, dec_nr, dec_name_nr = 1, index, prev_index, i, j;
 
 	//create the matrix Reaction_matrix
-	MatCreate(PETSC_COMM_SELF, Reaction_matrix);
-	MatSetSizes(*Reaction_matrix, PETSC_DECIDE, PETSC_DECIDE, nr_of_species, nr_of_species); //should be probably multiplied by 2 (which is the value of m)
-	MatSetType(*Reaction_matrix, MATAIJ);
-	MatAssemblyBegin(*Reaction_matrix, MAT_FINAL_ASSEMBLY);
-	MatAssemblyEnd(*Reaction_matrix, MAT_FINAL_ASSEMBLY);
+	MatCreate(PETSC_COMM_SELF, &Reaction_matrix);
+	MatSetSizes(Reaction_matrix, PETSC_DECIDE, PETSC_DECIDE, nr_of_species, nr_of_species); //should be probably multiplied by 2 (which is the value of m)
+	MatSetType(Reaction_matrix, MATAIJ);
+	MatAssemblyBegin(Reaction_matrix, MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(Reaction_matrix, MAT_FINAL_ASSEMBLY);
 
 	//create the matrix N
-	MatDuplicate(*Reaction_matrix, MAT_COPY_VALUES, &Nominator);
+	MatDuplicate(Reaction_matrix, MAT_COPY_VALUES, &Nominator);
 
 	//create the matrix D
-	MatDuplicate(*Reaction_matrix, MAT_COPY_VALUES, &Denominator);
+	MatDuplicate(Reaction_matrix, MAT_COPY_VALUES, &Denominator);
 
 	//create the matrix pade
-	MatDuplicate(*Reaction_matrix, MAT_COPY_VALUES, &Pade_approximant);
+	MatDuplicate(Reaction_matrix, MAT_COPY_VALUES, &Pade_approximant);
 	MatAssemblyBegin(Pade_approximant, MAT_FINAL_ASSEMBLY);
 	MatAssemblyEnd(Pade_approximant, MAT_FINAL_ASSEMBLY);
 
@@ -162,10 +176,10 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 				set_bifurcation(dec_name, dec_nr);
 				modify_reaction_matrix(dec_nr);
 			}else{
-				if(Reaction_matrix != NULL)
+				if(&Reaction_matrix != NULL)
 				{
 					modify_reaction_matrix();
-					xprintf(Msg,"Reaction matrix R is has been allocated. The addres is %d.\n", Reaction_matrix);
+					xprintf(Msg,"Reaction matrix R is has been allocated. The addres is %d.\n", &Reaction_matrix);
 				}else{
 					xprintf(Msg,"Reaction matrix R is has not been allocated.\n"); //cout << "Reaction matrix R is has not been allocated." << endl;
 				}
@@ -192,9 +206,9 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 			dec_name_nr++;
 		}
 	}
-	MatAssemblyBegin(*Reaction_matrix, MAT_FINAL_ASSEMBLY);
-	MatAssemblyEnd(*Reaction_matrix, MAT_FINAL_ASSEMBLY);
-	MatView(*Reaction_matrix,PETSC_VIEWER_STDOUT_SELF);
+	MatAssemblyBegin(Reaction_matrix, MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(Reaction_matrix, MAT_FINAL_ASSEMBLY);
+	MatView(Reaction_matrix,PETSC_VIEWER_STDOUT_SELF);
 
 	//Computation of nominator in pade approximant follows
 	MatZeroEntries(Nominator);
@@ -204,7 +218,7 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 	{
 		nominator_coef[j] = (PetscScalar) (faktorial(nom_pol_deg + den_pol_deg - j) * faktorial(nom_pol_deg)) / (faktorial(nom_pol_deg + den_pol_deg) * faktorial(j) * faktorial(nom_pol_deg - j));
 	}
-	evaluate_matrix_polynomial(&Nominator, Reaction_matrix, nominator_coef);
+	evaluate_matrix_polynomial(&Nominator, &Reaction_matrix, nominator_coef);
 	MatView(Nominator,PETSC_VIEWER_STDOUT_WORLD);
 
 	//Computation of denominator in pade approximant follows
@@ -215,7 +229,7 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 	{
 		denominator_coef[i] = (PetscScalar) pow(-1.0,i) * faktorial(nom_pol_deg + den_pol_deg - i) * faktorial(den_pol_deg) / (faktorial(nom_pol_deg + den_pol_deg) * faktorial(i) * faktorial(den_pol_deg - i));
 	}
-	evaluate_matrix_polynomial(&Denominator, Reaction_matrix, denominator_coef);
+	evaluate_matrix_polynomial(&Denominator, &Reaction_matrix, denominator_coef);
 	MatView(Denominator, PETSC_VIEWER_STDOUT_WORLD);
 
 	PCCreate(PETSC_COMM_WORLD, &Precond);
@@ -256,7 +270,7 @@ double **Pade_approximant::modify_reaction_matrix_repeatedly(void)
 	}
 
 	/*PetscPrintf(PETSC_COMM_SELF,"pade matrix looks as follows:\n");
-	MatView(Pade_approximant,PETSC_VIEWER_STDOUT_WORLD);
+	MatView(Pade_approximant,PETSC_VIEWER_STDOUT_WORLD);*/
 
 	print_reaction_matrix(); //for visual control of equality of reaction_matrix in comparison with pade aproximant*/
 

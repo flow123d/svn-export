@@ -110,7 +110,7 @@ double **Linear_reaction::modify_reaction_matrix(int dec_nr) //prepare the matri
 		}
 		prev_rel_step = rel_step;
 	}
-	print_reaction_matrix();//just for control print
+	//print_reaction_matrix();//just for control print
 	return reaction_matrix;
 }
 
@@ -386,7 +386,7 @@ void Linear_reaction::set_time_step(double new_timestep){
 
 void Linear_reaction::set_time_step(void)
 {
-	time_step = OptGetDbl("Global","Save_step","1");
+	time_step = OptGetDbl("Global","Save_step","1.0");
 	release_reaction_matrix();
 	allocate_reaction_matrix();
 	modify_reaction_matrix_repeatedly();

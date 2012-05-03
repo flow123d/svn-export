@@ -45,15 +45,14 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 		case General_react_Semch: ; break;
 		default: reaction = NULL;
 	}
-	//decayRad = new Linear_reaction(marks, *mesh_, *mat_base);
+	convection->get_par_info(el_4_loc, el_distribution);
 	if(reaction != NULL)
 	{
-		convection->get_par_info(el_4_loc, el_distribution);
 		reaction->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
 	}
 
-	Semchem_reactions = new Semchem_interface(0.0, mesh_, convection->get_n_substances(), convection->get_dual_porosity()); //(mesh->n_elements(),convection->get_concentration_matrix(), mesh);
-	//Semchem_reactions = new Semchem_interface(marks, *mesh_, *mat_base);
+	//Semchem_reactions = new Semchem_interface(0.0, mesh_, convection->get_n_substances(), convection->get_dual_porosity()); //(mesh->n_elements(),convection->get_concentration_matrix(), mesh);
+	Semchem_reactions = new Semchem_interface(marks, *mesh_, *mat_base);
 	Semchem_reactions->set_el_4_loc(el_4_loc);
 	Semchem_reactions->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
 
@@ -123,6 +122,7 @@ void TransportOperatorSplitting::update_solution() {
 	//cout << "recent time step value is " << decayRad->get_time_step() << endl;
 	// TODO: update Semchem time step here!!
 	Semchem_reactions->set_timestep(convection->time().estimate_dt());
+	//Semchem_reactions->set_time_step();
 
     xprintf( Msg, "t: %f (TOS)                  cfl_dt: %f ", convection->time().t(), convection->time().estimate_dt() );
     START_TIMER("transport_steps");

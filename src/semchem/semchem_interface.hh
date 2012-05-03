@@ -3,17 +3,18 @@
 
 #include "mesh/elements.h"
 #include "system/par_distribution.hh"
+#include "reaction/reaction.hh"
 #include <string.h>
 
 class Distribution;
 
-class Semchem_interface
+class Semchem_interface: public Reaction
 {
 	public:
 		/**
 		*	Semchem interface is the tool to call a simulation of chemical reactions as a part of transport model. timeStep defines the length of time step for simulation of chemical reactions. nrOfSpecies is the number of transported species. dualPorosity defines type of porosity in examinated soil.
 		*/
-		Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity); //(int nrOfElements, double ***ConcentrationMatrix, Mesh *mesh);
+		Semchem_interface(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database);
 		/**
 		*	This method has been prepared to enable simulation of chemical reactions via Semchem. porTyp defines type of porosity. ppelm is a pointer to element we want to simulate chemistry in. poradi is ID of such element. conc is a pointer to threedimensional array full of doubles.
 		*/
@@ -30,6 +31,10 @@ class Semchem_interface
 		*	This method enables to change the length of time step for simulation of chemical reactions.
 		*/
 		void set_timestep(double new_timestep);
+		/**
+		*
+		*/
+		void set_timestep(void);
 		/**
 		*	This method reads from ini-file an information if dual porosity is considered in examinated soil.
 		*/
@@ -61,24 +66,24 @@ class Semchem_interface
 		/**
 		*	It containes an information if the dual porosity is switched on.
 		*/
-		bool dual_porosity_on;
+		//bool dual_porosity_on;
 		/**
 		*	It containes an information about how many elements are contained in mesh.
 		*/
-		int nr_of_elements;
+		//int nr_of_elements;
 		/**
 		*	It is a pointer on three dimensional matrix full of doubles.
 		*/
-		double ***concentration_matrix;
+		//double ***concentration_matrix;
 		/**
 		*	It is name of an output file for semchem.
 		*/
 		char *fw_chem;
-	private:
+	protected:
 		/**
 		*	It holds an information about the length of time step for chemical reaction simulation.
 		*/
-		double time_step;
+		//double time_step;
 		/**
 		*	It is a pointer on mesh.
 		*/
@@ -86,7 +91,7 @@ class Semchem_interface
 		/**
 		*	It describes partitioning of elements between processors.
 		*/
-		Distribution *distribution;
+		//Distribution *distribution;
 		/**
 		*	It enables to change local IDs of elements in mesh into global IDs.
 		*/

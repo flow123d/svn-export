@@ -16,8 +16,9 @@ struct TS_lat 	*P_lat;
 struct TS_che	*P_che;
 
 //---------------------------------------------------------------------------
-Semchem_interface::Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity)
-	:semchem_on(false), dual_porosity_on(false), mesh_(NULL), fw_chem(NULL)
+//Semchem_interface::Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity)
+Semchem_interface::Semchem_interface(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database)
+	: Reaction(marks, init_mesh, material_database), semchem_on(false), mesh_(NULL), fw_chem(NULL)
 {
 
   //temporary semchem output file name
@@ -35,7 +36,7 @@ Semchem_interface::Semchem_interface(double timeStep, Mesh * mesh, int nrOfSpeci
   this->set_chemistry_computation();
   if(semchem_on == true) ctiich();
   set_dual_porosity();
-  set_mesh_(mesh);
+  set_mesh_(&init_mesh);
   set_nr_of_elements(mesh_->n_elements());
   return;
 }
@@ -179,6 +180,12 @@ void Semchem_interface::compute_reaction(bool porTyp, ElementIter ppelm, int por
 void Semchem_interface::set_timestep(double new_timestep)
 {
 	this->time_step = new_timestep;
+	return;
+}
+
+void Semchem_interface::set_timestep(void)
+{
+	this->time_step = OptGetDbl("Global","Save_step","1.0");
 	return;
 }
 

@@ -51,7 +51,13 @@ double **Pade_approximant::allocate_reaction_matrix(void) //reaction matrix init
 	char dec_name[30];
 
 	cout << "We are going to allocate reaction matrix" << endl;
-	if(reaction_matrix == NULL)reaction_matrix = (double **)xmalloc(nr_of_species * sizeof(double*));//allocation section
+	if(reaction_matrix == NULL)
+	{
+		; //Do nothing!!!
+	}else{
+		release_reaction_matrix();
+	}
+	reaction_matrix = (double **)xmalloc(nr_of_species * sizeof(double*));//allocation section
 	for(rows = 0; rows < nr_of_species; rows++){
 		reaction_matrix[rows] = (double *)xmalloc(nr_of_species * sizeof(double));
 	}

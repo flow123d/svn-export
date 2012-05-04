@@ -15,6 +15,7 @@ using namespace std;
 Linear_reaction::Linear_reaction(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database) //(double timeStep, Mesh * mesh, int nrOfSpecies, bool dualPorosity) //(double timestep, int nrOfElements, double ***ConvectionMatrix)
 	: Reaction(marks, init_mesh, material_database), half_lives(NULL), substance_ids(NULL), reaction_matrix(NULL), bifurcation_on(false)
 {
+	//nr_of_isotopes = OptGetInt("Reaction_module","Nr_of_isotopes","0");
 	allocate_reaction_matrix();
 }
 
@@ -418,7 +419,7 @@ void Linear_reaction::release_reaction_matrix(void)
 	{
 		; //Do nothing!
 	}else{
-		for(i = 0; i < nr_of_isotopes; i++)
+		for(i = 0; i < nr_of_species; i++) //here was nr_of_isotopes which did not make sense to me
 		{
 			if(reaction_matrix[i] == NULL)
 			{

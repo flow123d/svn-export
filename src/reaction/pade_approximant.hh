@@ -25,11 +25,11 @@ class Pade_approximant: public Linear_reaction
 		*	Destructor.
 		*/
 		~Pade_approximant(void);
-	protected:
 		/**
 		*
 		*/
 		void set_time_step(double new_timestep);
+	protected:
 		/**
 		*
 		*/

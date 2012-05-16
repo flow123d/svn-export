@@ -1,10 +1,12 @@
 //---------------------------------------------------------------------------
 
 #include "system/system.hh"
-#include "semchem/che_semchem.h"
-#include "semchem/semchem_interface.hh"
+#include "system/par_distribution.hh"
+#include "materials.hh"
 #include "transport/transport.h"
 #include "mesh/mesh.h"
+#include "semchem/che_semchem.h"
+#include "semchem/semchem_interface.hh"
 
 using namespace std;
 
@@ -41,15 +43,17 @@ Semchem_interface::Semchem_interface(TimeMarks &marks, Mesh &init_mesh, Material
   return;
 }
 
-/*Semchem_interface::~Semchem_interface(void)
+Semchem_interface::~Semchem_interface(void)
 {
-	if(fw_chem != NULL)
+	if(fw_chem == NULL)
 	{
+		;
+	}else{
 		free(fw_chem);
 		fw_chem = NULL;
 	}
-	return;
-}*/
+	//return;*/
+}
 
 void Semchem_interface::compute_one_step(void)
 {
@@ -57,9 +61,9 @@ void Semchem_interface::compute_one_step(void)
 	{
 		for (int loc_el = 0; loc_el < distribution->lsize(); loc_el++)
 		{
-			START_TIMER("semchem_step");
+		   //START_TIMER("semchem_step");
 	   	   this->compute_reaction(dual_porosity_on, mesh_->element(el_4_loc[loc_el]), loc_el, concentration_matrix);
-	   	   END_TIMER("semchem_step");
+	   	   //END_TIMER("semchem_step");
 		}
 	}
 }
@@ -177,13 +181,13 @@ void Semchem_interface::compute_reaction(bool porTyp, ElementIter ppelm, int por
     }
 }
 
-void Semchem_interface::set_timestep(double new_timestep)
+void Semchem_interface::set_time_step(double new_timestep)
 {
 	this->time_step = new_timestep;
 	return;
 }
 
-void Semchem_interface::set_timestep(void)
+void Semchem_interface::set_time_step(void)
 {
 	this->time_step = OptGetDbl("Global","Save_step","1.0");
 	return;
@@ -197,6 +201,7 @@ void Semchem_interface::set_chemistry_computation(void)
 
 void Semchem_interface::set_dual_porosity()
 {
+	//cout << "Semchem_interface::set_dual_porosity(void) is running." << endl;
 	this->dual_porosity_on = OptGetBool("Transport", "Dual_porosity", "no");
 	return;
 }
@@ -204,6 +209,7 @@ void Semchem_interface::set_dual_porosity()
 void Semchem_interface::set_nr_of_elements(int nrOfElements)
 {
 	this->nr_of_elements = nrOfElements;
+	//cout << "number of elements considered by Semchem_interface is" << nr_of_elements << "."; //It runs without any problem.
 	return;
 }
 
@@ -211,17 +217,20 @@ void Semchem_interface::set_concentration_matrix(double ***ConcentrationMatrix, 
 {
 	concentration_matrix = ConcentrationMatrix;
 	distribution = conc_distr;
+	//cout << "Semchem_interface::set_concentration_matrix(double ***ConcentrationMatrix, Distribution *conc_distr, int *el_4_loc) runs until the end." << endl; //It runs without any problem.
 	return;
 }
 
 void Semchem_interface::set_el_4_loc(int *el_for_loc)
 {
 	el_4_loc = el_for_loc;
+	//cout << "Semchem_interface::set_el_4_loc(int *el_for_loc) does not fail." << endl; // This function is funtional. :-P
 	return;
 }
 
 void Semchem_interface::set_mesh_(Mesh *mesh)
 {
+	//cout << "Semchem_interface::set_mesh_(Mesh *mesh) is running." << endl; //It runs without any problem.
 	mesh_ = mesh;
 	return;
 }
@@ -233,4 +242,9 @@ void Semchem_interface::set_fw_chem(std::string semchem_output_file) //(const ch
 	strcpy(fw_chem,semchem_output_file.c_str());
 	xprintf(Msg,"Output file for Semchem is %s\n",fw_chem);
 	return;
+}
+
+double Semchem_interface::get_time_step()
+{
+	return this->time_step;
 }

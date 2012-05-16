@@ -20,7 +20,7 @@ Reaction::Reaction(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material
 	nr_of_species = OptGetInt("Transport", "N_substances", "0");
 	nom_pol_deg = OptGetInt("Reaction_module","Nom_pol_deg","0");
 	den_pol_deg = OptGetInt("Reaction_module","Den_pol_deg","0");
-	set_time_step();
+	//set_time_step(); //temporary solution, it reads Global Save_step
 	set_dual_porosity();
 	set_nr_of_elements(mesh_->n_elements());
 	if(prev_conc != NULL){
@@ -28,7 +28,7 @@ Reaction::Reaction(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material
 		prev_conc = NULL;
 	}
 	prev_conc = (double *)xmalloc(nr_of_species * sizeof(double));
-	//if(timeStep > 1e-12) this->set_time_step(timeStep); else this->set_time_step(0.5); // temporary solution
+	//if(timeStep < 1e-12) this->set_time_step(timeStep); else this->set_time_step(0.5); // temporary solution
 }
 
 Reaction::~Reaction()

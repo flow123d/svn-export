@@ -13,11 +13,10 @@
 #include "equation.hh"
 #include "transport/transport.h"
 #include "mesh/mesh.h"
-#include "reaction/pade_approximant.hh"
-#include "semchem/semchem_interface.hh"
 #include "system/par_distribution.hh"
 #include "io/output.h"
-
+#include "reaction/pade_approximant.hh"
+#include "semchem/semchem_interface.hh"
 
 TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database )
 : TransportBase(marks, init_mesh, material_database), reaction(NULL)
@@ -41,9 +40,9 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 	switch (type_of_reaction)
 	{
 		case Linear_react: reaction = new Linear_reaction(marks, *mesh_, *mat_base); break;
-		case Linear_react_Pade: reaction = new Pade_approximant(marks, *mesh_, *mat_base); break;
+		//case Linear_react_Pade: reaction = new Pade_approximant(marks, *mesh_, *mat_base); break;
 		case General_react_Semch: ; break;
-		default: reaction = NULL;
+		default: reaction = new Pade_approximant(marks, *mesh_, *mat_base); //
 	}
 	convection->get_par_info(el_4_loc, el_distribution);
 	if(reaction != NULL)
@@ -53,9 +52,10 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 
 	//Semchem_reactions = new Semchem_interface(0.0, mesh_, convection->get_n_substances(), convection->get_dual_porosity()); //(mesh->n_elements(),convection->get_concentration_matrix(), mesh);
 	Semchem_reactions = new Semchem_interface(marks, *mesh_, *mat_base);
+	//Semchem_reactions->set_time_step(0.5);
+	//cout << "pointer to Semchem_interface has the value " << Semchem_reactions << "." << endl;
 	Semchem_reactions->set_el_4_loc(el_4_loc);
 	Semchem_reactions->set_concentration_matrix(convection->get_prev_concentration_matrix(), el_distribution, el_4_loc);
-
 
 	time_ = new TimeGovernor(0.0, problem_stop_time, *time_marks, this->mark_type());
 	output_mark_type = this->mark_type() | time_marks->type_fixed_time() | time_marks->type_output();
@@ -121,8 +121,11 @@ void TransportOperatorSplitting::update_solution() {
 	reaction->set_time_step(convection->time().estimate_dt());
 	//cout << "recent time step value is " << decayRad->get_time_step() << endl;
 	// TODO: update Semchem time step here!!
-	Semchem_reactions->set_timestep(convection->time().estimate_dt());
+	Semchem_reactions->set_time_step(convection->time().estimate_dt());
 	//Semchem_reactions->set_time_step();
+	//cout << "pointer to Semchem_interface has the value %d " << Semchem_interface << "." << endl;
+	//cout << "Time step used by semchem has the value " << Semchem_reactions->get_time_step() << endl; //Preceeding row generates an error
+	//Semchem_reactions->set_time_step(0.5);
 
     xprintf( Msg, "t: %f (TOS)                  cfl_dt: %f ", convection->time().t(), convection->time().estimate_dt() );
     START_TIMER("transport_steps");
@@ -135,6 +138,7 @@ void TransportOperatorSplitting::update_solution() {
 	    convection->compute_one_step();
 	    // Calling linear reactions and Semchem
 	    reaction->compute_one_step();
+	    //if(Semchem_reactions != NULL)
 	    Semchem_reactions->compute_one_step();
 	}
     END_TIMER("transport_steps");

@@ -2,7 +2,6 @@
 	#define interfaceH
 
 #include "mesh/elements.h"
-#include "system/par_distribution.hh"
 #include "reaction/reaction.hh"
 #include <string.h>
 
@@ -15,6 +14,10 @@ class Semchem_interface: public Reaction
 		*	Semchem interface is the tool to call a simulation of chemical reactions as a part of transport model. timeStep defines the length of time step for simulation of chemical reactions. nrOfSpecies is the number of transported species. dualPorosity defines type of porosity in examinated soil.
 		*/
 		Semchem_interface(TimeMarks &marks, Mesh &init_mesh, MaterialDatabase &material_database);
+		/**
+		*  Semchem interface destructor.
+		*/
+		~Semchem_interface(void);
 		/**
 		*	This method has been prepared to enable simulation of chemical reactions via Semchem. porTyp defines type of porosity. ppelm is a pointer to element we want to simulate chemistry in. poradi is ID of such element. conc is a pointer to threedimensional array full of doubles.
 		*/
@@ -30,11 +33,11 @@ class Semchem_interface: public Reaction
 		/**
 		*	This method enables to change the length of time step for simulation of chemical reactions.
 		*/
-		void set_timestep(double new_timestep);
+		void set_time_step(double new_timestep);
 		/**
 		*
 		*/
-		void set_timestep(void);
+		void set_time_step(void);
 		/**
 		*	This method reads from ini-file an information if dual porosity is considered in examinated soil.
 		*/
@@ -60,6 +63,10 @@ class Semchem_interface: public Reaction
 		*/
 		void set_fw_chem(std::string semchem_output_file); //(const char* semchem_output_file);
 		/**
+		*
+		*/
+		double get_time_step();
+		/**
 		*	It containes an information if the simulation of chemical reactions is switched on.
 		*/
 		bool semchem_on;
@@ -83,11 +90,15 @@ class Semchem_interface: public Reaction
 		/**
 		*	It holds an information about the length of time step for chemical reaction simulation.
 		*/
-		//double time_step;
+		double time_step;
 		/**
 		*	It is a pointer on mesh.
 		*/
 		Mesh *mesh_;
+		/**
+		*	Contains number of transported chemical species.
+		*/
+		//int nr_of_species;
 		/**
 		*	It describes partitioning of elements between processors.
 		*/

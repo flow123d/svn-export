@@ -106,14 +106,14 @@ void TransportOperatorSplitting::update_solution() {
 	// TODO: update Semchem time step here!!
 	Semchem_reactions->set_timestep(convection->time().estimate_dt());
 
-    xprintf( Msg, "t: %f (TOS)                  cfl_dt: %f ", convection->time().t(), convection->time().estimate_dt() );
+    xprintf( Msg, "t: %f (TOS)                  cfl_dt: %g ", convection->time().t(), convection->time().estimate_dt() );
     START_TIMER("transport_steps");
     int steps=0;
     while ( convection->time().lt(time_->t()) )
     {
         steps++;
 	    // one internal step
-	    //xprintf( Msg, "Time : %f\n", convection->time().t() );
+	    //xprintf( Msg, "Time : %f dt: %f\n", convection->time().t(), convection->time().dt() );
 	    convection->compute_one_step();
 	    // Calling linear reactions and Semchem
 	    decayRad->compute_one_step();

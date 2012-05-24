@@ -4,7 +4,7 @@
 NAME = prog
 
 CCC = g++
-CFLAGS = -Wall -g -O3
+CFLAGS = -Wall -g -O3 -I.
 CLAPACK = ../CLAPACK-3.2.1
 INCCLAPACK = -I$(CLAPACK)/INCLUDE
 F2CDIR  = $(CLAPACK)/F2CLIBS

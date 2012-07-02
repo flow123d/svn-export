@@ -1,35 +1,21 @@
-//
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
-//                 Computational Structural Mechanics Lab
-//                         University of Cambridge
-//
-// This software is copyrighted and all rights are retained by the CSMLab. All
-// use, disclosure, and/or reproduction of any part not expressly authorized by
-// F Cirak is prohibited. (C) 2010.
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 //! @author Jakub Sistek, Thomas Rueberg
 //! @date   6/2011
 
-#ifndef corlib_triplet_h
-#define corlib_triplet_h
+#ifndef la_triplet_h
+#define la_triplet_h
 
 #define ALLOWED_MEM_OVERHEAD 2.e+6 // entries, this corresponds to 32 MB of 
                                    //  overhead in <int, int, double> triplet
 //------------------------------------------------------------------------------
-#include <map>
-#include <set>
 #include <vector>
 #include <cassert>
 #include <cmath>
 #include <algorithm>
 #include <iomanip>
 #include <numeric>
-#include <corlib/verify.hpp>
 
 //------------------------------------------------------------------------------
-namespace corlib{
+namespace la{
     template< typename INDT, typename VALT >
     class Triplet;
 }
@@ -69,7 +55,7 @@ namespace corlib{
  *  around insert().
  */
 template< typename INDT, typename VALT >
-class corlib::Triplet
+class la::Triplet
 {
 public:
     typedef INDT         IndexType;
@@ -441,9 +427,7 @@ public:
             val = 0.0;
         }
         ValueType maxVal = val;
-        IndexType maxPos = 0;
         ValueType minVal = val;
-        IndexType minPos = 0;
         IndexType row, col;
         for ( IndexType i = 1; i < static_cast<IndexType>( tripletVec_.size() ); i++ ) {
 
@@ -456,13 +440,11 @@ public:
                 // update maximum
                 if ( val > maxVal ) {
                     maxVal = val;
-                    maxPos = i;
                 }
 
                 // update minimum
                 if ( val < minVal ) {
                     minVal = val;
-                    minPos = i;
                 }
             }
         }

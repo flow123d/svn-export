@@ -41,7 +41,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 
-namespace corlib{
+namespace la{
     class SystemSolveBddc; 
 };
 
@@ -97,7 +97,7 @@ private:
 
     std::vector<int>                  isngn_;
 
-    typedef corlib::SystemSolveBddc   Solver_;
+    typedef la::SystemSolveBddc       Solver_;
     Solver_ *                         solver_;         //!< OpenFTL solver
 
 };

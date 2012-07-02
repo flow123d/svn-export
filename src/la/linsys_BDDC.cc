@@ -32,7 +32,7 @@
 #include <mpi.h>
 
 // need OpenFTL BDDC wrapper
-#include "corlib/SystemSolveBddc.hpp"
+#include "la/SystemSolveBddc.hpp"
 
 #include "la/linsys_BDDC.hh"
 
@@ -53,19 +53,19 @@ LinSys_BDDC::LinSys_BDDC( const unsigned lsize,
 
     numDofs_ = static_cast<unsigned>( numDofsInt );
 
-    corlib::SystemSolveBddc::MatrixType matrixType;
+    la::SystemSolveBddc::MatrixType matrixType;
     switch ( matrixTypeInt ) {
         case 0:
-            matrixType = corlib::SystemSolveBddc::GENERAL;
+            matrixType = la::SystemSolveBddc::GENERAL;
             break;
         case 1:
-            matrixType = corlib::SystemSolveBddc::SPD;
+            matrixType = la::SystemSolveBddc::SPD;
             break;
         case 2:
-            matrixType = corlib::SystemSolveBddc::SYMMETRICGENERAL;
+            matrixType = la::SystemSolveBddc::SYMMETRICGENERAL;
             break;
         case 3:
-            matrixType = corlib::SystemSolveBddc::SPD_VIA_SYMMETRICGENERAL;
+            matrixType = la::SystemSolveBddc::SPD_VIA_SYMMETRICGENERAL;
             break;
         default:
             ASSERT( true, "Unknown matrix type %d", matrixTypeInt );
@@ -160,7 +160,7 @@ int LinSys_BDDC::solve( )
     double              tol            = 1.e-7; //!< tolerance on relative residual ||res||/||rhs||
     int                 numLevels      = 2;     //!< number of levels
     std::vector<int> *  numSubAtLevels = NULL;  //!< number of subdomains at levels
-    int                 verboseLevel   = 0;     //!< level of verbosity of BDDCML library 
+    int                 verboseLevel   = 1;     //!< level of verbosity of BDDCML library 
                                                 //!< ( 0 - only fatal errors reported, 
                                                 //!<   1 - mild output, 
                                                 //!<   2 - detailed output )
@@ -286,6 +286,9 @@ void LinSys_BDDC::loadFlowMesh_( )
     //std::cout << "ISNGN: \n";
     //std::copy( isngn_.begin(), isngn_.end(), std::ostream_iterator<int>( std::cout, " " ) );
     //std::cout << std::endl << std::flush;
+    //std::cout << "ISEGN: \n";
+    //std::copy( isegn.begin(), isegn.end(), std::ostream_iterator<int>( std::cout, " " ) );
+    //std::cout << std::endl << std::flush;
     //MPI_Barrier( PETSC_COMM_WORLD );
 
     // renumber nodes in the inet array to locals
@@ -309,7 +312,7 @@ void LinSys_BDDC::loadFlowMesh_( )
     int numNodes    = numDofs_;
     int numDofsInt  = numDofs_;
     int spaceDim = 3; // TODO: what is the proper value here?
-    int meshDim  = 3; // TODO: what is the proper value here?
+    int meshDim  = 1; // TODO: what is the proper value here?
 
     solver_ -> loadRawMesh( spaceDim, numNodes, numDofsInt, inet, nnet, nndf, isegn, isngn_, isngn_, xyz, meshDim );
 }
@@ -321,7 +324,7 @@ void LinSys_BDDC::gatherSolution_( )
     
     // download local solution
     std::vector<double> locSolution( isngn_.size() );
-    solver_ -> giveDofSolution( isngn_.begin(), isngn_.end(), locSolution.begin() ); 
+    solver_ -> giveSolution( isngn_, locSolution ); 
     int ierr;
 
     // merge solution on root

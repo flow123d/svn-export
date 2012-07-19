@@ -270,8 +270,14 @@ void  DarcyFlowMH_Steady::get_solution_vector(double * &vec, unsigned int &vec_s
     //    solution_changed_for_scatter=false;
     //}
 
+    std::vector<double> sol_disordered(this->size);
+    schur0 -> get_whole_solution( sol_disordered );
+
+    // reorder solution to application ordering
     if ( solution_.empty() ) solution_.resize( this->size, 0. );
-    schur0 -> get_whole_solution( solution_ );
+    for ( int i = 0; i < this->size; i++ ) {
+        solution_[i] = sol_disordered[solver_indices_[i]];
+    }
 
     vec=&(solution_[0]);
     vec_size = solution_.size();
@@ -469,16 +475,140 @@ void DarcyFlowMH_Steady::make_schur0() {
             schur0 = new LinSys_BDDC( lsize, global_row_4_sub_row.size(), MPI_COMM_WORLD, 3, 1 );
         }
         else if (solver->type == PETSC_SOLVER) {
-            schur0 = new LinSys_PETSC( lsize, NULL, PETSC_COMM_WORLD );
+            schur0 = new LinSys_PETSC( lsize, rows_ds, NULL, PETSC_COMM_WORLD );
         }
-        schur0 -> load_mesh( mesh_, edge_ds, el_ds, side_ds, rows_ds, el_4_loc, row_4_el, side_id_4_loc, 
-                             side_row_4_id, edge_4_loc, row_4_edge );
 
-        if (solver->type == PETSC_SOLVER) {
+
+        if (solver->type == BDDCML_SOLVER) {
+           // prepare mesh for BDDCML
+           // initialize arrays
+           std::map<int,arma::vec3> localDofMap;
+           std::vector<int> inet;
+           std::vector<int> nnet;
+           std::vector<int> isegn;
+           for ( int i_loc = 0; i_loc < el_ds->lsize(); i_loc++ ) {
+               // for each element, create local numbering of dofs as fluxes (sides), pressure (element centre), Lagrange multipliers (edges), compatible connections
+               Element *el = mesh_->element(el_4_loc[i_loc]);
+               int e_idx = ELEMENT_FULL_ITER( mesh_, el ).index();
+
+               isegn.push_back( e_idx );
+               int nne = 0;
+
+               FOR_ELEMENT_SIDES(el,si) {
+                   // insert local side dof
+                   int side_row = side_row_4_id[el->side[si]->id];
+                   arma::vec3 coord = (el->side[si])->centre;
+
+                   localDofMap.insert( std::make_pair( side_row, coord ) );
+                   inet.push_back( side_row );
+                   nne++;
+               }
+
+               // insert local pressure dof
+               int el_row  = row_4_el[ el_4_loc[i_loc] ];
+               arma::vec3 coord = el->centre;
+               localDofMap.insert( std::make_pair( el_row, coord ) );
+               inet.push_back( el_row );
+               nne++;
+
+               FOR_ELEMENT_SIDES(el,si) {
+                   Edge *edg=el->side[si]->edge; 
+
+                   // insert local edge dof
+                   int edge_row = row_4_edge[mesh_->edge.index(el->side[si]->edge)];
+                   arma::vec3 coord = (el->side[si])->centre;
+
+                   localDofMap.insert( std::make_pair( edge_row, coord ) );
+                   inet.push_back( edge_row );
+                   nne++;
+               }
+
+               // insert dofs related to compatible connections
+               for ( int i_neigh = 0; i_neigh < el->n_neighs_vb; i_neigh++) {
+                   int edge_row = row_4_edge[mesh_->edge.index(el->neigh_vb[i_neigh]->edge)];
+                   arma::vec3 coord = ( el->neigh_vb[i_neigh]->edge->side[0] )->centre;
+
+                   localDofMap.insert( std::make_pair( edge_row, coord ) );
+                   inet.push_back( edge_row );
+                   nne++;
+               }
+
+               nnet.push_back( nne );
+           }
+           //convert set of dofs to vectors
+           int numNodeSub = localDofMap.size();
+           std::vector<int> isngn( numNodeSub );
+           std::vector<double> xyz( numNodeSub * 3 ) ;
+           int ind = 0;
+           std::map<int,arma::vec3>::iterator itB = localDofMap.begin();
+           for ( ; itB != localDofMap.end(); ++itB ) {
+               isngn[ind] = itB -> first;
+
+               arma::vec3 coord = itB -> second;
+               for ( int j = 0; j < 3; j++ ) {
+                   xyz[ j*numNodeSub + ind ] = coord[j];
+               }
+
+               ind++;
+           }
+           localDofMap.clear();
+
+           // nndf is trivially one
+           std::vector<int> nndf( numNodeSub, 1 );
+
+           // prepare auxiliary map for renumbering nodes 
+           typedef std::map<int,int> Global2LocalMap_; //! type for storage of global to local map
+           Global2LocalMap_ global2LocalNodeMap;
+           for ( unsigned ind = 0; ind < isngn.size(); ++ind ) {
+               global2LocalNodeMap.insert( std::make_pair( static_cast<unsigned>( isngn[ind] ), ind ) );
+           }
+
+           //std::cout << "INET: \n";
+           //std::copy( inet.begin(), inet.end(), std::ostream_iterator<int>( std::cout, " " ) );
+           //std::cout << std::endl;
+           //std::cout << "ISNGN: \n";
+           //std::copy( isngn.begin(), isngn.end(), std::ostream_iterator<int>( std::cout, " " ) );
+           //std::cout << std::endl << std::flush;
+           //std::cout << "ISEGN: \n";
+           //std::copy( isegn.begin(), isegn.end(), std::ostream_iterator<int>( std::cout, " " ) );
+           //std::cout << std::endl << std::flush;
+           //MPI_Barrier( PETSC_COMM_WORLD );
+
+           // renumber nodes in the inet array to locals
+           int indInet = 0;
+           for ( int iEle = 0; iEle < isegn.size(); iEle++ ) {
+               int nne = nnet[ iEle ];
+               for ( unsigned ien = 0; ien < nne; ien++ ) {
+
+                   int indGlob = inet[indInet];
+                   // map it to local node
+                   Global2LocalMap_::iterator pos = global2LocalNodeMap.find( indGlob );
+                   ASSERT( pos != global2LocalNodeMap.end(),
+                           "Cannot remap node index %d to local indices. \n ", indGlob );
+                   int indLoc = static_cast<int> ( pos -> second );
+
+                   // store the node
+                   inet[ indInet++ ] = indLoc;
+               }
+           }
+
+           int numNodes    = size;
+           int numDofsInt  = size;
+           int spaceDim = 3; // TODO: what is the proper value here?
+           int meshDim  = 1; // TODO: what is the proper value here?
+
+           schur0 -> load_mesh( spaceDim, numNodes, numDofsInt, inet, nnet, nndf, isegn, isngn, isngn, xyz, meshDim );
+           //schur0 -> load_mesh( mesh_, edge_ds, el_ds, side_ds, rows_ds, el_4_loc, row_4_el, side_id_4_loc, 
+           //                     side_row_4_id, edge_4_loc, row_4_edge );
+        }
+        else if (solver->type == PETSC_SOLVER) {
             schur0->set_symmetric();
             schur0->start_allocation();
             assembly_steady_mh_matrix(); // preallocation
             schur0->start_add_assembly(); // finish allocation and create matrix
+        }
+        else {
+            ASSERT( false, "Unsupported solver type! %s ", solver->type );
         }
     }
 
@@ -516,6 +646,7 @@ DarcyFlowMH_Steady::~DarcyFlowMH_Steady() {
     if (solver->type == BDDCML_SOLVER) {
         global_row_4_sub_row.clear( );
     }
+    solver_indices_.clear();  
 
     delete solver;
 }
@@ -1099,6 +1230,7 @@ void DarcyFlowMH_Steady::prepare_parallel() {
     FOR_EDGES(edg)
         old_4_new[edge_row_4_id[edg->id]] = i++;
     */
+
     // prepare global_row_4_sub_row
     if (solver->type == BDDCML_SOLVER) {
         //xprintf(Msg,"Compute mapping of local subdomain rows to global rows.\n");
@@ -1150,7 +1282,25 @@ void DarcyFlowMH_Steady::prepare_parallel() {
 
         //debug print
         //std::copy( global_row_4_sub_row.begin(), global_row_4_sub_row.end(), std::ostream_iterator<int>( std::cout, " " ) );
+        
+    } // end for BDDCML solver
+
+    // common to both solvers - create renumbering of unknowns
+    solver_indices_.reserve(size);
+    FOR_ELEMENTS(mesh_, ele) {
+        FOR_ELEMENT_SIDES(ele,si) {
+            solver_indices_.push_back( side_row_4_id[ele->side[si]->id] );
+        }
     }
+    FOR_ELEMENTS(mesh_, ele) {
+        solver_indices_.push_back( row_4_el[ele.index()] );
+    }
+    FOR_EDGES(mesh_, edg) {
+        solver_indices_.push_back( row_4_edge[edg.index()] );
+    }
+    ASSERT( solver_indices_.size() == size, "Size of array does not match number of fills.\n" );
+    //std::cout << "Solve rindices:" << std::endl;
+    //std::copy( solver_indices_.begin(), solver_indices_.end(), std::ostream_iterator<int>( std::cout, " " ) );
 }
 
 void mat_count_off_proc_values(Mat m, Vec v) {

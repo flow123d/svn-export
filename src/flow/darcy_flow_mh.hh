@@ -189,9 +189,9 @@ protected:
 	//int *old_4_new;               //< aux. array should be only part of parallel LinSys
 
 	// MATIS related arrays
-        std::vector<double> solution_;                   //< sequantial scattered solution vector
-        std::vector<int> global_row_4_sub_row;           //< global dof index for subdomain index
-	ISLocalToGlobalMapping map_side_local_to_global; //< PETSC mapping form local SIDE indices of subdomain to global indices
+        std::vector<double>   solution_;                 //< sequantial scattered solution vector
+        std::vector<unsigned> solver_indices_;           //< renumbering of unknowns in the global vector
+        std::vector<int>      global_row_4_sub_row;      //< global dof index for subdomain index
 
 	// gather of the solution
 	Vec sol_vec;			                 //< vector over solution array

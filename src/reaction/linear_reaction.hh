@@ -52,7 +52,7 @@ class Linear_reaction: public Reaction
 		/**
 		*	This method enables to change the timestep for computation of simple chemical reactions. Such a change is conected together with creating of a new reaction matrix necessity.
 		*/
-		void set_time_step(double new_timestep, Input::Record in_rec);
+		//void set_time_step(double new_timestep, Input::Record in_rec);
 		/**
 		* Folowing method enabels the timestep for chemistry to have the value written in ini-file.
 		*/
@@ -62,14 +62,12 @@ class Linear_reaction: public Reaction
 		/**
 		*	This method modificates reaction matrix as described in ini-file a single section [Decay_i] or [FoReact_i]. It is used when bifurcation is switched off.
 		*/
+		virtual double **modify_reaction_matrix(void);
+	protected:
 		/**
 		*
 		*/
-		virtual double **modify_reaction_matrix(void);
-	protected:
-
         double **allocate_reaction_matrix(void);
-
 		/**
 		*	This method disables to use constructor without parameters.
 		*/

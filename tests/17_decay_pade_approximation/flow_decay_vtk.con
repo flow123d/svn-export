@@ -61,8 +61,7 @@
       },
       
       reactions = {
-        TYPE="LinearReactions",
-        matrix_exp_on = true,
+        TYPE="Approximant",
         nom_pol_deg = 3,
         den_pol_deg = 3,
         decays = [

@@ -5,14 +5,14 @@
 
 #include "reaction/reaction.hh"
 #include "reaction/linear_reaction.hh"
-#include "reaction/pade_approximant.hh"
+//#include "reaction/pade_approximant.hh"
 #include "system/system.hh"
 #include "materials.hh"
 #include "transport/transport.h"
 #include "la/distribution.hh"
 #include "mesh/mesh.h"
 
-//class Padde_approximant;
+class Padde_approximant;
 
 Input::Type::Record & Linear_reaction::get_one_decay_substep()
 {
@@ -44,8 +44,8 @@ Input::Type::Record & Linear_reaction::get_input_type()
 	    rec.derive_from( Reaction::get_input_type() );
         rec.declare_key("decays", Array( Linear_reaction::get_one_decay_substep() ), Default::obligatory(),
                 "Description of particular decay chain substeps.");
-		rec.declare_key("matrix_exp_on", Bool(), Default("false"),
-				"Enables to use Pade approximant of matrix exponential.");
+		/*rec.declare_key("matrix_exp_on", Bool(), Default("false"),
+				"Enables to use Pade approximant of matrix exponential.");*/
 		rec.finish();
 	}
 	return rec;

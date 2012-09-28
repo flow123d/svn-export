@@ -36,7 +36,7 @@ Input::Type::Record & Pade_approximant::get_one_decay_substep()
 Input::Type::Record & Pade_approximant::get_input_type()
 {
 	using namespace Input::Type;
-	static Record rec("Approximant", "Abstract record with an information about pade approximant parameters.");
+	static Record rec("Approximant", "Information about pade approximant parameters.");
 
 	if (!rec.is_finished()) {
 	    rec.derive_from( Reaction::get_input_type() );
@@ -232,4 +232,129 @@ void Pade_approximant::set_time_step(double new_timestep)
 	modify_reaction_matrix();
 	//static_cast<Pade_approximant *> (this)->modify_reaction_matrix();
 	return;
+}
+
+void Pade_approximant::prepare_inputs(Input::Record in_rec)
+{
+    unsigned int idx;
+
+	Input::Array decay_array = in_rec.val<Input::Array>("decays");
+
+	substance_ids.resize( decay_array.size() );
+	half_lives.resize( decay_array.size() );
+	bifurcation.resize( decay_array.size() );
+
+	int i_decay=0;
+	for (Input::Iterator<Input::Record> dec_it = decay_array.begin<Input::Record>(); dec_it != decay_array.end(); ++dec_it, ++i_decay)
+	{
+		//half-lives determining part
+		Input::Iterator<double> it_hl = dec_it->find<double>("half_life");
+		if (it_hl) {
+		   half_lives[i_decay] = *it_hl;
+		} else {
+		   it_hl = dec_it->find<double>("kinetic");
+		   if (it_hl) {
+			   half_lives[i_decay] = log(2)/(*it_hl);
+		   } else {
+		    xprintf(UsrErr, "Missing half-life or kinetic in the %d-th reaction.\n", i_decay);
+		  }
+		}
+
+		//indices determining part
+		string parent_name = dec_it->val<string>("parent");
+		Input::Array product_array = dec_it->val<Input::Array>("products");
+		Input::Array ratio_array = dec_it->val<Input::Array>("branch_ratios"); // has default value [ 1.0 ]
+
+		// substance_ids contains also parent id
+		if (product_array.size() > 0)   substance_ids[i_decay].resize( product_array.size()+1 );
+		else			xprintf(UsrErr,"Empty array of products in the %d-th reaction.\n", i_decay);
+
+
+		// set parent index
+		idx = find_subst_name(parent_name);
+		if (idx < n_substances())	substance_ids[i_decay][0] = idx;
+		else                		xprintf(UsrErr,"Wrong name of parent substance in the %d-th reaction.\n", i_decay);
+
+		// set products
+		unsigned int i_product = 1;
+		for(Input::Iterator<string> product_it = product_array.begin<string>(); product_it != product_array.end(); ++product_it, i_product++)
+		{
+			idx = find_subst_name(*product_it);
+			if (idx < n_substances())   substance_ids[i_decay][i_product] = idx;
+			else                    	xprintf(Msg,"Wrong name of %d-th product in the %d-th reaction.\n", i_product-1 , i_decay);
+		}
+
+		//bifurcation determining part
+        if (ratio_array.size() == product_array.size() )   ratio_array.copy_to( bifurcation[i_decay] );
+        else            xprintf(UsrErr,"Number of branches %d has to match number of products %d in the %d-th reaction.\n",
+                                       ratio_array.size(), product_array.size(), i_decay);
+
+	}
+}
+
+double **Pade_approximant::allocate_reaction_matrix(void) //reaction matrix initialization
+{
+	int rows, cols;
+
+	cout << "We are going to allocate reaction matrix" << endl;
+	if (reaction_matrix == NULL) reaction_matrix = (double **)xmalloc(n_substances() * sizeof(double*));//allocation section
+	for(rows = 0; rows < n_substances(); rows++){
+		reaction_matrix[rows] = (double *)xmalloc(n_substances() * sizeof(double));
+	}
+	for(rows = 0; rows < n_substances();rows++){
+	 for(cols = 0; cols < n_substances(); cols++){
+		 if(rows == cols)   reaction_matrix[rows][cols] = 1.0;
+		 else           	reaction_matrix[rows][cols] = 0.0;
+	 }
+	}
+	print_reaction_matrix();
+	return reaction_matrix;
+}
+
+void Pade_approximant::print_half_lives(int nr_of_substances) {
+    int i;
+
+    xprintf(Msg, "\nHalf-lives are defined as:");
+    for (i = 0; i < (nr_of_substances - 1); i++) {
+        if (i < (nr_of_substances - 2)) //cout << " " << half_lives[i] <<",";
+            xprintf(Msg, " %f", half_lives[i]);
+        if (i == (nr_of_substances - 2)) //cout << " " << half_lives[i] <<"\n";
+            xprintf(Msg, " %f\n", this->half_lives[i]);
+    }
+}
+
+void Pade_approximant::print_reaction_matrix(void)
+{
+	int cols,rows;
+
+	if(reaction_matrix != NULL){
+		xprintf(Msg,"\ntime_step %f,Reaction matrix looks as follows:\n",time_step);
+		for(rows = 0; rows < n_substances(); rows++){
+			for(cols = 0; cols < n_substances(); cols++){
+					xprintf(Msg,"%f\t",reaction_matrix[rows][cols]);
+			}
+			xprintf(Msg,"\n");
+		}
+	}else{
+		xprintf(Msg,"\nReaction matrix needs to be allocated.\n");
+	}
+	return;
+}
+
+void Pade_approximant::release_reaction_matrix(void)
+{
+	int i;
+	if(reaction_matrix != NULL)
+	{
+		for(i = 0; i < n_substances(); i++)
+		{
+			if(reaction_matrix[i] != NULL)
+			{
+				free(reaction_matrix[i]);
+				reaction_matrix[i] = NULL;
+			}
+		}
+		free(reaction_matrix);
+		reaction_matrix = NULL;
+	}
 }

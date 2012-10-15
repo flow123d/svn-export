@@ -158,7 +158,8 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 	// TODO: Add corresponding record to the in_rec
 	Input::Record output_rec = in_rec.val<Input::Record>("output");
 
-	field_output = new OutputTime(mesh_, output_rec.val<Input::Record>("output_stream"));
+	//field_output = new OutputTime(mesh_, output_rec.val<Input::Record>("output_stream"));
+	field_output = OutputStream(mesh_, output_rec.val<Input::Record>("output_stream"));
 
 
     for(int subst_id=0; subst_id < convection->get_n_substances(); subst_id++) {
@@ -175,7 +176,7 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
 
 TransportOperatorSplitting::~TransportOperatorSplitting()
 {
-    delete field_output;
+    //delete field_output;
     delete convection;
     if (decayRad) delete decayRad;
     if (Semchem_reactions) delete Semchem_reactions;

@@ -1,16 +1,16 @@
 {
   problem = {
     TYPE = "SequentialCoupling", 
-    description = "Test14 - 2D transport with time variable boundarty", 
+    description = "Test - 1D transport", 
     mesh = {
-      mesh_file = "./input/test14.msh"
+      mesh_file = "./cavity-20-u.msh"
     }, 
 
     primary_equation = {
       TYPE = "Steady_MH", 
 
       bulk_data = [
-        { rid = 100,
+        { rid = 1,
           cond_anisothropy = 0.1
         }
       ],
@@ -18,7 +18,8 @@
       bc_data = [
         {
           region = "IMPLICIT BOUNDARY",
-          flow_old_bcd_file = "./input/test14.fbc"
+          bc_type = "dirichlet",
+          bc_pressure = {TYPE="FieldFormula", value="1-x"}
         }
       ],
 
@@ -41,15 +42,17 @@
       TYPE = "AdvectionDiffusion_DG", 
 
       bulk_data = [
-        { rid = 100,
-          init_conc = { TYPE="FieldFormula", value="if(x>=0.8&x<0.9,1,0)" }
+        { rid = 1,
+          init_conc = { TYPE="FieldFormula", value=
+          #"0.5+0.1*sin(10*x)" }
+          "if(x>=0.1&x<0.5,1,0.5)" }
         }
       ],
 
       bc_data = [
         {
           region = "IMPLICIT BOUNDARY",
-          bc_conc= {TYPE="FieldFormula", value="sin(2*t)"}
+          bc_conc=0.5
         }
       ],
 
@@ -64,7 +67,7 @@
       substances = [
         "A"
       ], 
-      dg_penalty=1e2,
+      dg_penalty=1e0,
       d_m=0e-6,
       solver = {
         TYPE = "Petsc", 
@@ -80,7 +83,7 @@
   system = {
     output_streams = [
       {
-        file = "./test14.pvd", 
+        file = "./test2d.pvd", 
         format = {
           TYPE = "vtk", 
           variant = "ascii"
@@ -88,7 +91,7 @@
         name = "flow_output_stream"
       }, 
       {
-        file = "./transport-implicit.pvd", 
+        file = "./trans2d-ie-dm0e0-dt1e-1.pvd", 
         format = {
           TYPE = {
             REF = "/system/output_streams/0/format/TYPE"

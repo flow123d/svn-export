@@ -215,6 +215,30 @@ void TransportDG::set_eq_data(Field< 3, FieldValue<3>::Scalar > *cross_section)
 
 
 
+/**
+ * Development notes:
+ *
+ * The goal is to implement a robust method (minimum of tuning parameters)
+ * reliable both for pure transport (or transport dominated) regime and for
+ * diffusion dominated regime.
+ *
+ * For dominated diffusion the DG method works well.
+ *
+ * For small or no diffusion, solution suffers from spurious oscillations
+ * (Gibbs effect) which are to be suppressed. Possible ways out:
+ * - apply TVD limiter (maybe tedious to implement, reduced accuracy in regions
+ *   where the exact solution is smooth)
+ * - some upwind in the volume part of advection (SUPG?)
+ * - semi-implicit scheme (explicit discretization of advection + implicit discretization
+ *   of diffusion)
+ *
+ * Currently update_solution() provides
+ * - possibility to choose arbitrary theta-scheme for time discretization
+ *   (theta=1 for implicit Euler, 0.5 for Crank-Nicholson, 0 for explicit Euler)
+ * - simple limiter ensuring positivity of the solution
+ *
+ */
+
 void TransportDG::update_solution()
 {
 	if (mass_matrix == NULL)
@@ -232,6 +256,21 @@ void TransportDG::update_solution()
     time_->view();
     data.set_time(*time_);
     
+    ::Mat old_stiffness_matrix = 0;
+    ::Vec old_rhs, old_solution;
+    bool ls_is_new = ls->is_new();
+    double theta = 1;
+
+    if (!ls_is_new) {
+		MatConvert(stiffness_matrix, MATSAME, MAT_INITIAL_MATRIX, &old_stiffness_matrix);
+		VecDuplicate(rhs, &old_rhs);
+		VecCopy(rhs, old_rhs);
+		VecDuplicate(ls->get_solution(), &old_solution);
+		VecCopy(ls->get_solution(), old_solution);
+    }
+
+
+
     // TODO: assemble system matrix only if velocity flux or boundary conditions changed
 //    if (flux_changed || (bc->get_time_level() != -1 && time_->is_current(bc_mark_type_)))
 //    {
@@ -263,6 +302,16 @@ void TransportDG::update_solution()
         VecCopy(ls->get_rhs(), rhs);
 //    }
 
+	if (ls_is_new) {
+		MatConvert(ls->get_matrix(), MATSAME, MAT_INITIAL_MATRIX, &old_stiffness_matrix);
+		VecDuplicate(ls->get_rhs(), &old_rhs);
+		VecCopy(ls->get_rhs(), old_rhs);
+		VecDuplicate(ls->get_solution(), &old_solution);
+		VecCopy(ls->get_solution(), old_solution);
+		MatZeroEntries(old_stiffness_matrix);
+		VecSet(old_rhs, 0);
+	}
+
 
     /* Apply backward Euler time integration.
      *
@@ -281,6 +330,7 @@ void TransportDG::update_solution()
      *
      */
 
+/*
     MatCopy(stiffness_matrix, ls->get_matrix(), DIFFERENT_NONZERO_PATTERN);
     // ls->get_matrix() = 1/dt*mass_matrix + ls->get_matrix()
     MatAXPY(ls->get_matrix(), 1./time_->dt(), mass_matrix, SUBSET_NONZERO_PATTERN);
@@ -294,10 +344,76 @@ void TransportDG::update_solution()
     //MatView( ls->get_matrix(), PETSC_VIEWER_STDOUT_SELF );
 
     VecDestroy(&y);
+*/
+
+    // Theta scheme
+    // (M + dt*theta*A^k)u^k = dt*theta*f^k + dt*(1-theta)f^{k-1} + (M + dt*(theta-1)*A^{k-1})u^{k-1}
+    MatCopy(mass_matrix, ls->get_matrix(), DIFFERENT_NONZERO_PATTERN);
+    MatAXPY(ls->get_matrix(), time_->dt()*theta, stiffness_matrix, DIFFERENT_NONZERO_PATTERN);
+
+    ::Mat tmp_mat = 0;
+    MatConvert(mass_matrix, MATSAME, MAT_INITIAL_MATRIX, &tmp_mat);
+    MatAXPY(tmp_mat, time_->dt()*(theta-1.), old_stiffness_matrix, DIFFERENT_NONZERO_PATTERN);
+    MatMult(tmp_mat, old_solution, ls->get_rhs());
+    VecAXPBYPCZ(ls->get_rhs(), time_->dt()*theta, time_->dt()*(1.-theta), 1., rhs, old_rhs);
+    VecDestroy(&old_rhs);
+    VecDestroy(&old_solution);
+    MatDestroy(&tmp_mat);
+    MatDestroy(&old_stiffness_matrix);
 
     //VecView( ls->get_rhs(), PETSC_VIEWER_STDOUT_SELF );
     // solve
     solve_system(solver, ls);
+
+    // postprocessing for positivity preserving:
+    unsigned int dof_indices[4], ndofs;
+    double *sol = ls->get_solution_array();
+    for (ElementFullIter cell = mesh_->element.begin(); cell != mesh_->element.end(); ++cell)
+    {
+        switch (cell->dim()) {
+        case 1:
+        	dof_handler1d->get_dof_indices(cell, dof_indices);
+        	ndofs = dof_handler1d->n_local_dofs();
+        	break;
+        case 2:
+        	dof_handler2d->get_dof_indices(cell, dof_indices);
+        	ndofs = dof_handler2d->n_local_dofs();
+        	break;
+        case 3:
+        	dof_handler3d->get_dof_indices(cell, dof_indices);
+        	ndofs = dof_handler3d->n_local_dofs();
+        	break;
+        }
+
+        double avg = 0, vmin = std::numeric_limits<double>::infinity(), vmax = -vmin, val, factor;
+
+        for (int i=0; i<ndofs; i++)
+        {
+        	val = sol[dof_indices[i]];
+        	avg += val;
+        	if (val > vmax) vmax = val;
+        	if (val < vmin) vmin = val;
+        }
+
+        avg /= ndofs;
+
+        if (avg-vmin<1e-15)
+        	factor = 1;
+        else
+        	factor =
+        			min(
+        			(max(vmin, 0.)-avg)/(vmin - avg)
+        			,
+        			(min(vmax,1.)-avg)/(vmax-avg)
+        			)
+        			;
+
+        for (int i=0; i<ndofs; i++)
+        {
+        	sol[dof_indices[i]] = avg + (sol[dof_indices[i]]-avg)*factor;
+        }
+    }
+
 
     //VecView( ls->get_solution(), PETSC_VIEWER_STDOUT_SELF );
 }
@@ -721,7 +837,7 @@ void TransportDG::assemble_fluxes_boundary(DOFHandler<dim,3> *dh, DOFHandler<dim
                 for (int k=0; k<side_q.size(); k++)
                 {
                     // penalty enforcing continuity across edges (applied on interior and Dirichlet edges)
-                    local_matrix[i*ndofs+j] += gamma_l*fe_values_side.shape_value(j,k)*fe_values_side.shape_value(i,k)*fe_values_side.JxW(k);
+                    local_matrix[i*ndofs+j] += 2.*gamma_l*fe_values_side.shape_value(j,k)*fe_values_side.shape_value(i,k)*fe_values_side.JxW(k);
                 }
             }
         }
@@ -901,8 +1017,8 @@ void TransportDG::set_boundary_conditions(DOFHandler<dim,3> *dh, FiniteElement<d
             {
             	double value = data.bc_conc.value(fe_values_side.point(k), ele_acc)(0);
                 local_rhs[i] += (
-                        +gamma[ib]*value
-//                       -advection*0.5*min(b->side->flux, 0)*bc_values[0][b.id()]
+                        +2.*gamma[ib]*value
+//                        +advection*min(mh_dh->side_flux(*(b->side())), 0.)*value
                                 )*fe_values_side.shape_value(i,k)*fe_values_side.JxW(k);
             }
         }

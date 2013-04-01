@@ -168,6 +168,9 @@ linux_package: all clean_tests
 	# remove .svn
 	find $(install_dir) -name ".svn" -exec rm -rf "{}" \;
 
+CYGWIN_DLLS=cygblas-0.dll cyggcc_s-1.dll cyggfortran-3.dll cyglapack-0.dll cygstdc++-6.dll cygwin1.dll
+win_package: linux_package
+	for f in $(CYGWIN_DLLS);do cp -f "/bin/$${f}" $(install_dir)/bin; done
 linux_pack:
 	cd $(install_dir); tar -cvzf ../flow_build.tar.gz .
 

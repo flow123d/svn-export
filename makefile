@@ -150,22 +150,25 @@ clean_tests:
 	make -C tests clean
 
 
-lbuild=linux_build
-linux_package: #clean clean_tests all
+install_dir=installed
+linux_package: all clean_tests
 	# copy bin
-	rm -rf $(lbuild)
-	mkdir -p $(lbuild)/bin/mpich
-	mpiexec=`cat bin/mpiexec |grep mpiexec |sed 's/ ".*$$//'|sed 's/"//g'`;\
-	cp "$${mpiexec}" $(lbuild)/bin/mpich/mpiexec
-	cp -r bin/flow123d bin/flow123d.sh bin/ndiff bin/tests bin/ngh/bin/ngh bin/bcd/bin/bcd $(lbuild)/bin
-	cp -r bin/paraview $(lbuild)/bin
+	rm -rf $(install_dir)
+	mkdir -p $(install_dir)/bin
+	mpiexec=`cat bin/mpiexec |grep mpiexec |sed 's/ *".*$$//'|sed 's/"//g'`;\
+	cp "$${mpiexec}" $(install_dir)/bin/mpiexec
+	cp -r bin/flow123d bin/flow123d.sh bin/ndiff $(install_dir)/bin
+	cp -r bin/paraview $(install_dir)/bin
+	cp -r bin/tests $(install_dir)/bin
 	# copy doc
-	mkdir $(lbuild)/doc
-	cp -r doc/articles doc/reference_manual/flow123d_doc.pdf doc/petsc_options_help $(lbuild)/doc
+	mkdir $(install_dir)/doc
+	cp -r doc/articles doc/reference_manual/flow123d_doc.pdf doc/petsc_options_help $(install_dir)/doc
 	# copy tests
-	cp -r tests $(lbuild)
+	cp -r tests $(install_dir)
+	# remove .svn
+	find $(install_dir) -name ".svn" -exec rm -rf "{}" \;
 
 linux_pack:
-	cd $(lbuild); tar -cvzf ../flow_build.tar.gz .
+	cd $(install_dir); tar -cvzf ../flow_build.tar.gz .
 
 	

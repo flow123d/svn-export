@@ -3,6 +3,11 @@
 # Created on: Jul 20, 2012
 #     Author: jb
 #
+# Accepts variables:
+#
+# ARMADILLO_CXX_FLAGS - used to set CMAKE_CXX_FLAGS
+# EXTERNAL_ARMADILLO_DIR - place where to build the library
+#
 
 # set directory to which install armadillo 
 if (NOT EXTERNAL_ARMADILLO_DIR)
@@ -22,7 +27,7 @@ endif()
   endif()    
   
   # hint same Boost to armadillo 
-  set(Armadillo_Boost_Hint  -D BOOST_ROOT=${BOOST_ROOT})
+  set(Armadillo_Boost_Hint "-DBOOST_ROOT=${BOOST_ROOT}")
 
 
 
@@ -41,6 +46,7 @@ file (WRITE "${cmakelists_fname}"
     BINARY_DIR ${EXTERNAL_ARMADILLO_DIR}/src
     PATCH_COMMAND patch ${EXTERNAL_ARMADILLO_DIR}/src/CMakeLists.txt ${PROJECT_SOURCE_DIR}/third_party/armadillo_patch
     CONFIGURE_COMMAND cmake ${Armadillo_Boost_Hint} ${PETSC_BLAS} ${PETSC_LAPACK} -DCMAKE_INSTALL_PREFIX=${EXTERNAL_ARMADILLO_DIR} .
+    CMAKE_ARGS -DCMAKE_CXX_FLAGS:STRING=${ARMADILLO_CXX_FLAGS}
     BUILD_COMMAND make
     INSTALL_COMMAND make install 
   )

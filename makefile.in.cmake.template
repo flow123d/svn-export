@@ -61,6 +61,7 @@ set(PETSC_ARCH "gcc_O3")
 set(FLOW_BUILD_TYPE debug)
 
 
+
 # you can override these settings through variable FLOW_CC_FLAGS
 #
 # Flow recognize  following definitions:
@@ -76,6 +77,10 @@ set(FLOW_BUILD_TYPE debug)
 #set(FLOW_CC_FLAGS "-O3 -DNODEBUG -pg ")
 
 
+### Explicit Revision
+# If SVN doesn't work you should specify revision number manually.
+##
+# set(EXPLICIT_REVISION "2264")
 
 ### External Projects directory ##########################################################
 #

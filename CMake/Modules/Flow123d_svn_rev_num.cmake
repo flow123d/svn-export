@@ -1,16 +1,32 @@
 ####
 # this CMake script is called at build time to get revision of current working copy
+#
+# Input variables:
+# WC_DIRECTORY - working copy directory to check for revision
+# WC_REVISION - set revision manually
 
 # the FindSubversion.cmake module is part of the standard distribution
 include(FindSubversion)
 
-if (Subversion_FOUND) 
-  # extract working copy information for SOURCE_DIR into Flow variable
-  Subversion_WC_INFO(${SOURCE_DIR} Flow)
-  message(STATUS "SVN working copy revision: ${Flow_WC_REVISION}")
-  message(STATUS "SVN working copy URL: ${Flow_WC_URL}")
-else ()
-  set(Flow_WC_REVISION "(unknown revision)")
+message(STATUS "dir: ${WC_DIRECTORY}")
+message(STATUS "rev: ${WC_REVISION}")
+if (DEFINED WC_REVISION)
+	set(Flow_WC_REVISION "${WC_REVISION}")
+	set(Flow_WC_URL "(unknown)")
+else()
+	if (Subversion_FOUND)
+		# extract working copy information for SOURCE_DIR into Flow variable
+		Subversion_WC_INFO(${WC_DIRECTORY} Flow)
+	else ()
+		message(SEND_ERROR "Subversion client not found. Needed to detect revision.")
+	endif()
+
+	if(Flow_WC_REVISION)
+		message(STATUS "SVN working copy revision: ${Flow_WC_REVISION}")
+		message(STATUS "SVN working copy URL: ${Flow_WC_URL}")	
+	else()
+		message(STATUS "SVN ERROR: Can not detect revision. Please, fix the problem specified above or set Flow_WC_REVISION manually.")
+	endif()
 endif()
 
 # write a file with the SVN VERSION and URL define

@@ -77,7 +77,7 @@ else(FLOW_CC_FLAGS)
   elseif(FLOW_BUILD_TYPE STREQUAL "release")
     # Release mode
     set(CMAKE_CXX_FLAGS "-O3")
-    add_definitions(-DNODEBUG)
+    add_definitions(-DDEBUG_PROFILER)
   elseif(FLOW_BUILD_TYPE STREQUAL "release_with_debug")
     # Release mode with debug info 
     set(CMAKE_CXX_FLAGS "-O3")
@@ -312,6 +312,7 @@ find_package(ArmadilloFlow 3.2.4)
 if (NOT Armadillo_FOUND)
   message(STATUS "Try to install our own Armadillo.")
   set(EXTERNAL_ARMADILLO_DIR  ${EXTERNAL_PROJECT_DIR}/armadillo_build)
+  set(ARMADILLO_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   include(InstallArmadillo)
 
   # we try to erease from the cache everything that can cause failure of the second find_package
@@ -343,8 +344,6 @@ if (PYTHONLIBS_FOUND)
     include_directories( ${PYTHON_INCLUDE_DIRS})
     add_definitions(-DHAVE_PYTHON)
 endif()
-# check for subversion and prepare generating of file with revision info.
-find_package(Subversion)
 
 
 
@@ -380,12 +379,18 @@ add_subdirectory(test_units)
 
 
 if( PETSC_FOUND )
+  # check for subversion and prepare generating of file with revision info.
+  set(WC_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(WC_REVISION "${EXPLICIT_REVISION}")
+  include(Flow123d_svn_rev_num)
 
   #### create rev_num.h - file with revision number
   # a custom target - is always built -> call cmake script to generate rev_num.h
   add_custom_target(rev_num_always 
-    COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-                         -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules/Flow123d_svn_rev_num.cmake)
+    COMMAND ${CMAKE_COMMAND} 
+		-DWC_DIRECTORY=${CMAKE_CURRENT_SOURCE_DIR}
+		-DWC_REVISION=${EXPLICIT_REVISION}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules/Flow123d_svn_rev_num.cmake)
   
   # rev_num.h is a generated file
   set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/rev_num.h

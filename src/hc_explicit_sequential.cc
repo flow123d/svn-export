@@ -39,12 +39,15 @@
 #include "mesh/msh_gmshreader.h"
 #include "io/output.h"
 #include "main.h"
+#include "system/sys_profiler.hh"
 
 /**
  * FUNCTION "MAIN" FOR COMPUTING MIXED-HYBRID PROBLEM FOR UNSTEADY SATURATED FLOW
  */
 HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 {
+    START_TIMER("HC constructor");
+    
     type_=problem_type;
 
     // Initialize Time Marks
@@ -55,14 +58,20 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     material_database = new MaterialDatabase(material_file_name);
 
     // Read mesh
+    START_TIMER("READING MESH");
+    
     mesh = new Mesh();
     const string& mesh_file_name = IONameHandler::get_instance()->get_input_file_name(OptGetStr("Input", "Mesh", NULL));
     MeshReader* meshReader = new GmshMeshReader();
     meshReader->read(mesh_file_name, mesh);
     mesh->setup_topology();
     mesh->setup_materials(*material_database);
-    Profiler::instance()->set_task_size(mesh->n_elements());
+    
+    END_TIMER("READING MESH");
 
+    const string& description = OptGetStr("Global", "Description", "Unknown description.");
+    Profiler::instance()->set_task_info(description, mesh->n_elements());
+    
     // setup water flow object
     switch (problem_type) {
         case STEADY_SATURATED:
@@ -104,7 +113,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
 
 void HC_ExplicitSequential::run_simulation()
 {
-
+    START_TIMER("HC run simulation");
     // following should be specified in constructor:
     // value for velocity interpolation :
     // theta = 0     velocity from beginning of transport interval (fully explicit method)
@@ -175,7 +184,7 @@ void HC_ExplicitSequential::run_simulation()
         }
 
     }
-
+    xprintf(Msg, "End of simulation at time: %f\n", transport_reaction->solved_time());
 }
 
 

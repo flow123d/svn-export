@@ -27,6 +27,7 @@
  *
  */
 
+#include <petsc.h>
 #include <string>
 
 #include "xio.h"

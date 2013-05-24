@@ -27,6 +27,7 @@
  *
  */
 
+#include <petsc.h>
 #include <limits.h>
 
 #include "xio.h"

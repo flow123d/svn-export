@@ -37,6 +37,7 @@
 #include <petscviewer.h>
 
 #include "system/system.hh"
+#include "system/sys_profiler.hh"
 #include "xio.h"
 #include "system/par_distribution.hh"
 #include "solve.h"
@@ -138,6 +139,7 @@ void solver_set_type( Solver *solver )
 
 void solve_system( struct Solver *solver, struct LinSys *system )
 {
+START_TIMER("solve_system");
 /// set command line for external solvers
 #define SET_GENERIC_CALL sprintf( cmdline, "%s %s",solver->executable,solver->params)
 #define SET_MATLAB_CALL sprintf( cmdline, "matlab -r solve" )
@@ -349,7 +351,7 @@ void solver_petsc(Solver *solver)
 	 
 	PetscOptionsInsertString(petsc_str); // overwrites previous options values
 	xfree(petsc_str);
-    
+
         MatSetOption(sys->get_matrix(), MAT_USE_INODES, PETSC_FALSE);
 
 
@@ -416,13 +418,17 @@ void solver_petsc(Solver *solver)
 	KSPSetOperators(System, sys->get_matrix(), sys->get_matrix(), DIFFERENT_NONZERO_PATTERN);
 	KSPSetTolerances(System, solver->r_tol, solver->a_tol, PETSC_DEFAULT,PETSC_DEFAULT);
 	KSPSetFromOptions(System);
+  
+  
+  START_TIMER("iteration-PETSC solver");
 	KSPSolve(System, sys->get_rhs(), sys->get_solution());
 	KSPGetConvergedReason(System,&Reason);
 	KSPGetIterationNumber(System,&nits);
 
 	// TODO: make solver part of LinSyt, and make gatter for num of it
 	xprintf(MsgLog,"convergence reason %d, number of iterations is %d\n", Reason, nits);
-    Profiler::instance()->set_timer_subframes("SOLVING MH SYSTEM", nits);
+    ADD_CALLS(nits);
+    //Profiler::instance()->set_timer_subframes("SOLVING MH SYSTEM", nits);
 	KSPDestroy(System);
 
 }

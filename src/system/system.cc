@@ -44,6 +44,7 @@
 #include "system/system.hh"
 #include "io/read_ini.h"
 #include "xio.h"
+#include "sys_profiler.hh"
 
 #ifdef WINDOWS
   #include <direct.h>
@@ -68,7 +69,6 @@ void system_init( int &argc, char ** &argv )
     ierr = PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
     petsc_initialized = true;
 
-    //F_ENTRY;
 
     xio_init(); //Initialize XIO library
 
@@ -81,10 +81,31 @@ void system_init( int &argc, char ** &argv )
 
     DBGMSG("MPI size: %d rank: %d\n",sys_info.n_proc,sys_info.my_proc);
 
+    // determine logfile name or switch it off
+    PetscTruth flg;
+    char file[PETSC_MAX_PATH_LEN];     /* log file name */
     stringstream log_name;
-    log_name << "flow123."<< sys_info.my_proc << ".log";
-    sys_info.log_fname = IONameHandler::get_instance()->get_output_file_name(log_name.str());
-    sys_info.log=xfopen(sys_info.log_fname.c_str(),"wt");
+
+    PetscOptionsGetString(PETSC_NULL,"-l",file,PETSC_MAX_PATH_LEN,&flg);
+    if (flg == PETSC_TRUE) {
+        if (file[0] == '\n') {
+           // -l option without given name -> turn logging off
+           sys_info.log=NULL;
+        } else {
+           // given log name
+           log_name << string(file) <<  "." << sys_info.my_proc << ".log";
+           sys_info.log_fname = IONameHandler::get_instance()->get_output_file_name(log_name.str());
+           sys_info.log=xfopen(sys_info.log_fname.c_str(),"wt");
+
+        }
+    } else {
+        // use default name
+        log_name << "flow123."<< sys_info.my_proc << ".log";
+        sys_info.log_fname = IONameHandler::get_instance()->get_output_file_name(log_name.str());
+        sys_info.log=xfopen(sys_info.log_fname.c_str(),"wt");
+
+    }
+
     sys_info.verbosity=0;
     sys_info.pause_after_run=0;
 }
@@ -205,6 +226,8 @@ int _xprintf(const char * const xprintf_file, const char * const xprintf_func, c
 			va_start( argptr, fmt );
 			rc=vfprintf(sys_info.log,fmt,argptr); //rc=char written, <0 if err
 			va_end( argptr );
+            // flush every message (maybe there is a problem in cygwin without that)
+		    fflush(sys_info.log);
 		}
 
 		if (screen)
@@ -212,8 +235,11 @@ int _xprintf(const char * const xprintf_file, const char * const xprintf_func, c
 			va_start( argptr, fmt );
 			rc=vfprintf(screen,fmt,argptr);
 			va_end( argptr );
+		    // flush every message (maybe there is a problem in cygwin without that)
+			fflush(screen);
 		}
 	}
+
 
 	if (mf.stop) {
 	    // explicit flush of all streams
@@ -235,6 +261,7 @@ int _xprintf(const char * const xprintf_file, const char * const xprintf_func, c
 int xterminate( bool on_error )
 {
     //close the Profiler
+    Profiler::instance()->output(PETSC_COMM_WORLD);
     Profiler::uninitialize();
 
     PetscErrorCode ierr=0;

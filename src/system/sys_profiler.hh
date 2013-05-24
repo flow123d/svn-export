@@ -22,130 +22,344 @@
  * $LastChangedBy: tomas.bambuch $
  * $LastChangedDate: 2011-01-08 18:58:15 +0100 (So, 08 led 2011) $
  *
- * @file
+ * 
+ * 
+ * TODO:
+ * - START_GLOBAL_TIMER(tag) - this calls the start_timer, which creates local timer on the correct place in the hierarchy,
+ *    further this timer is added to the list of global timers, this contains groups of timers with same tag, and
+ *    collect/sum data from these timers in the report.
  *
+ * - Allow output even during calculation (not complete, but at least some thing)
+ *    Report should contain time of start as well as time of creation of the report or time from start of the program.
+ *
+ * - When generating report we has to deal with possibly different trees at every MPI process.
+ *
+ * - test memory profiling
+ *   in our own new and xmalloc functions - register allocatied and deallocated memory to active Profiler frame.
+ *
+ * - test in parallel
+ * - extended output:
+ *      cas na jedno volani (jina redukce nez pro kumulativni cas, pokud je pocet volani ruzny)
+ *      procenta vuci predkovi
+ *      code point (az nekde na konci radky)
+ *
+ *
+ *  !!! Unfortunately using constexpr is worse (without optimization).
+ *  This is probably due to use of static variable for
+ *  CodePoint, the access could be slow, and computation of hash is done only once. Actually timing results
+ *  are:
+ *
+ *  OPTIONS     OVERHEAD (compared to call 2x clock())
+ *  -g, no c++11 : 18%
+ *  -g,    c++11 : 60%
+ *  -O3,no c++11 : 6%
+ *  -O3,   c++11 : 6%
  */
 
+#define DEBUG_PROFILER
 
 #ifndef PROFILER_H
 #define	PROFILER_H
 
-#include <map>
-#include <iostream>
-#include <time.h>
-#include <vector>
-#include <petsc.h>
-#include <string>
+#include "global_defs.h"
+#include "system/system.hh"
+#include <mpi.h>
+
+//instead of #include "mpi.h"
+//mpi declarations follows:
+class MPI_Functions {
+public:
+    static int sum(int* val, MPI_Comm comm);
+    static double sum(double* val, MPI_Comm comm);
+    static int min(int* val, MPI_Comm comm);
+    static double min(double* val, MPI_Comm comm);
+    static int max(int* val, MPI_Comm comm);
+    static double max(double* val, MPI_Comm comm);
+};
+
+// Workaround for older compilers, that do not support constexpr feature
+#ifdef HAVE_CXX11
+    #define CONSTEXPR_ constexpr
+#else
+    #define CONSTEXPR_
+#endif
+
 
 using namespace std;
 
 
-class MPI_Functions {
+// These helper macros are necessary due to use of _LINE_ variable in START_TIMER macro.
+#define _PASTE(a,b) a ## b
+#define PASTE(a,b) _PASTE(a, b)
+
+
+
+/**
+ * \def START_TIMER(tag)
+ *
+ * @brief Starts a timer with specified tag.
+ *
+ * In fact it creates an static constant expression that identifies the point in the code and
+ * contains tag of the involved timer and its hash. Then it creates local variable that
+ * calls @p Profiler::start_timer() in constructor and @p Profiler::stop_timer() in destructor.
+ * This way the timer is automatically closed at the end of current block.
+ *
+ * ATTENTION: This macro expands to two statements so following code is illegal:
+ * @code
+ *      if (some_condition) START_TIMER(tag);
+ * @endcode
+ */
+#ifdef DEBUG_PROFILER
+#define START_TIMER(tag) static CONSTEXPR_ CodePoint PASTE(cp_,__LINE__) = CODE_POINT(tag); TimerFrame PASTE(timer_,__LINE__) = TimerFrame( PASTE(cp_,__LINE__) )
+#else
+#define START_TIMER(tag)
+#endif
+
+/**
+ * \def END_TIMER(tag)
+ *
+ * @brief Ends a timer with specified tag.
+ *
+ * Use only if you want to end timer before the end of block. Again this expands into two lines, see ATTENTION in previous macro.
+ */
+#ifdef DEBUG_PROFILER
+#define END_TIMER(tag) static CONSTEXPR_ CodePoint PASTE(cp_,__LINE__) = CODE_POINT(tag); Profiler::instance()->stop_timer( PASTE(cp_,__LINE__) )
+#else
+#define END_TIMER(tag)
+#endif
+
+/**
+ * \def END_START_TIMER(tag)
+ *
+ * Ends current timer and starts the new one with given tag.  Again this expands into two lines, see ATTENTION in previous macro.
+ */
+#ifdef DEBUG_PROFILER
+#define END_START_TIMER(tag) Profiler::instance()->stop_timer(); START_TIMER(tag);
+#else
+#define END_START_TIMER(tag)
+#endif
+
+
+/**
+ * \def ADD_CALLS(n_calls)
+ *
+ * @brief Increase number of calls in actual timer.
+ *
+ * Some time you want to measure a performance of a cycle with body that is below resolution of the Timer implementation.
+ * If you know number of cycles, you can use this macro in following way:
+ *
+ * @code
+ *  START_TIMER("cycle");
+ *  unsigned int i;
+ *  for(i =0; i<1000000; i++) i*i*i;
+ *  ADD_CALLS(i);
+ *  END_TIMER("cycle");
+ * @endcode
+ *
+ * In the profiler report you get the total time spent in the cycle, and time per one call which will be average
+ * time spent in the body of the cycle.
+ */
+#ifdef DEBUG_PROFILER
+#define ADD_CALLS(n_calls) Profiler::instance()->add_calls(n_calls)
+#else
+#define ADD_CALLS(n_calls)
+#endif
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DEBUG_PROFILER
+
+/**
+ * @brief Function for compile-time hash computation.  (Needs C++x11 standard.)
+ * Input, @p str, is constant null terminated string, result is unsigned int (usually 4 bytes).
+ * Function has to be recursive, since standard requires that the body consists only from the return statement.
+ *
+ * SALT is hash for the empty string. Currently zero for simpler testing.
+ */
+inline CONSTEXPR_ unsigned int str_hash(const char * str) {
+    #define SALT 0 //0xef50e38f
+    return (*str == 0 ? SALT : str_hash(str+1) * 101 + (unsigned int)(*str) );
+}
+
+/**
+ * Macro to generate constexpr CodePoint object.
+ */
+#define CODE_POINT(tag) CodePoint(tag, __FILE__, __func__, __LINE__)
+
+/**
+ * @brief Class that represents point in the code.
+ *
+ * This class allow construction at compile time. And includes the information about the code point as well
+ * as the 'tag' of the timer and cimpile-time computed hashes of this 'tag'. The @p hash_ is long one with
+ * very small probability of collisions - this we use for comparison of tags. The @p hash_idx_ is the long hash modulo
+ * length of the array of Timer's children, this is used for fast loop up into this array that servers as a simple hash table.
+ */
+class CodePoint {
 public:
+    CONSTEXPR_ CodePoint(const char *tag, const char * file, const char * func, const unsigned int line)
+    : tag_(tag), file_(file), func_(func), line_(line),
+      hash_(str_hash(tag)), hash_idx_( str_hash(tag)%max_n_timer_childs )
+    {}
 
-    static int sum(int* val, MPI_Comm comm) {
-        int total = 0;
-        MPI_Reduce(val, &total, 1, MPI_INT, MPI_SUM, 0, comm);
-        return total;
-    }
+    /// Size of child arrays in timer nodes.
+    static const unsigned int max_n_timer_childs=13;
 
-    static double sum(double* val, MPI_Comm comm) {
-        double total = 0;
-        MPI_Reduce(val, &total, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-        return total;
-    }
+    /// Tag of the code point.
+    const char * const tag_;
 
-    static int min(int* val, MPI_Comm comm) {
-        int min = 0;
-        MPI_Reduce(val, &min, 1, MPI_INT, MPI_MIN, 0, comm);
-        return min;
-    }
+    /// file name of the code point
+    const char * const file_;
 
-    static double min(double* val, MPI_Comm comm) {
-        double min = 0;
-        MPI_Reduce(val, &min, 1, MPI_DOUBLE, MPI_MIN, 0, comm);
-        return min;
-    }
+    /// file name of the code point
+    const char * const func_;
 
-    static int max(int* val, MPI_Comm comm) {
-        int max = 0;
-        MPI_Reduce(val, &max, 1, MPI_INT, MPI_MAX, 0, comm);
-        return max;
-    }
+    /// file name of the code point
+    const unsigned int line_;
 
-    static double max(double* val, MPI_Comm comm) {
-        double max = 0;
-        MPI_Reduce(val, &max, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
-        return max;
-    }
+    /// Full 32-bit hash of the tag ( practically no chance of collision)
+    unsigned int hash_;
+
+    /// Hash modulo size of array of timer childs ( we have to check full hash to prevent collision)
+    unsigned int hash_idx_;
 };
+
+
 
 /**
  * @brief Class for profiling tree nodes.
+ *
+ * One Timer represents one particular time frame in the execution tree.
+ * It collects information about total time, number of calls, allocated and deallocated memory.
+ *
+ * It should be accessed only through Profiler, which is its friend class.
+ *
+ * TODO: for better performance: move copy hash_ and hash_idx_ into Timer since CodePoint are in static
+ * variables, that may be slower to acces.
+ *
  */
 class Timer {
-private:
-    double start_time;
-    double cumul_time;
-    int count;
-    int start_count;
-    int sub_frames;
-    bool running;
-    string timer_tag;
-    Timer* parent_timer;
-    vector<Timer*> child_timers;
 
-    void stop(double time);
 
 public:
-    Timer(string tag, Timer* parent);
-    void start(double time); // time given by Profiler
-    bool end(double time);
-    void forced_end(double time);
-    void insert_child(Timer* child);
+    /// Size of array @p child_timers, the hash table containing descendants in the call tree.
+    static const unsigned int max_n_childs=CodePoint::max_n_timer_childs;
 
     /**
-     * Indicates how many times the timer has been started
+     * TimeData is a type returned by method get_time and used to store time data in timer nodes.
+     * Timer node also provides method @p cumulative_time to retrieve true cumulative time in ms.
      */
-    int call_count() const {
-        return count;
-    }
-
-    int subframes() const {
-        return sub_frames;
-    }
-
-    void subframes(int info) {
-        sub_frames = info;
-    }
+    typedef clock_t TimeData;
 
     /**
-     * Total time measured by this timer
+     * Creates the timer node object. Should not be called directly, but through the START_TIMER macro.
      */
-    double cumulative_time() const {
-        return cumul_time;
-    }
+    Timer(const CodePoint &cp, int parent);
+
 
     /**
-     * Name of the timer
+     * @brief Returns measure of the time spent in the process since the start.
+     *
+     * TODO: We should detect precision of the clock() command and report it with timing data.
+     * It is usually about 10ms. If this is not enough one is forced to use high-resolution timers
+     * which are system dependent.
      */
-    string tag() const {
-        return timer_tag;
-    }
+    static TimeData get_time();
 
     /**
-     * Parent of the timer
+     * Start the timer. If it is already started, just increase number of starts (recursions) and calls.
      */
-    Timer* parent() {
-        return parent_timer;
-    }
+    void start();
 
-    vector<Timer*>* child_timers_list() {
-        return &child_timers;
-    }
+    /**
+     * Updates cumulative time of the timer.
+     */
+    void update();
 
-    ~Timer();
+    /**
+     * If number of starts (recursions) drop back to zero, we stop the timer and add the period to the cumulative time.
+     * This method do not take care of its childs (it has no access to the other timers).
+     * When the parameter 2p forced is 'true', we stop the timer immediately regardless the number of recursions.
+     * Returns true if the timer is not closed (recursions didn't drop to zero yet).
+     */
+    bool stop(bool forced = false);
+
+
+    /// Getter for the 'tag'.
+    inline const char *tag() const
+        { return code_point_->tag_; }
+
+    /// Returns true if the timer is open, number of starts (recursions) is nonzero.
+    inline bool running() const
+        { return start_count >0; }
+
+    /// Returns string with description of the code point where the timer was first started.
+    std::string code_point_str() const;
+
+    /**
+     * Returns cumulative time of the timer in 'ms'.
+     */
+    double cumulative_time() const;
+
+    /*
+     * Adds given index @p child_index of the timer @p child to the correct place in the hash table.
+     */
+    void add_child(int child_index, const Timer &child);
+
+
+protected:
+    /**
+     *   Start time when frame opens.
+     */
+    TimeData start_time;
+    /**
+     * Cumulative time spent in the frame.
+     */
+    TimeData cumul_time;
+    /**
+     * Total number of opening of the frame.
+     */
+    unsigned int call_count;
+    /**
+     * Number of recursive openings.
+     */
+    unsigned int start_count;
+
+
+    /**
+     * Code point of the first START_TIMER for the particular tag. The 'tag' identifies timer
+     * and is used in reported profiler table.
+     */
+    const CodePoint *code_point_;
+    /// Full tag hash. Copy from code_point_.
+    unsigned int full_hash_;
+    /// Hash modulo size of array of timer childs. Copy from code_point_.
+    unsigned int hash_idx_;
+
+    /**
+     * Index of the parent timer node  in the tree. Negative value means 'not set'.
+     */
+    int parent_timer;
+    /**
+     * Indices of the child timers in the Profiler::timers_ vector. Negative values means 'not set'.
+     */
+    int child_timers[max_n_childs];
+
+    /**
+     * Total number of bytes allocated directly in this frame (not include subframes).
+     */
+    size_t total_allocated_;
+    /**
+     * Total number of bytes deallocated directly in this frame (not include subframes).
+     */
+    size_t total_deallocated_;
+
+
+    friend class Profiler;
+
 };
+
 
 /**
  *
@@ -166,131 +380,204 @@ public:
  * By using #SET_TIMER_SUBFRAMES macro, the programmer can specify the number of subframes (eg. iterations)
  * for the currently active timer.
  *
+ *
+ * Currently the Profiler system is not thread safe. No idea how to do this.
+ *
  */
 class Profiler {
-private:
-    static Profiler* _instance;
-    Timer *root;
-    Timer *actual_node;
-    clock_t start_clock;
-    time_t start_time;
-    MPI_Comm communicator;
-    int id;
-    int task_size;
-
-    map<string, Timer*> tag_map;
-
-    /**
-     * Gets the time in milliseconds since the program was launched
-     * @return time in milliseconds
-     */
-    double inline get_time();
-
-    void add_timer_info(vector<vector<string>*>* timersInfo, Timer* timer, int indent);
-
-    Profiler(MPI_Comm comm); // private constructor
-
-    Profiler(Profiler const&); // copy constructor is private
-
-    Profiler & operator=(Profiler const&); // assignment operator is private
-
-    /**
-     *  Pass through the profiling tree (collective over processors)
-     *  Print cumulative times average, balance (max/min), count (denote differences)
-     *  Destroy all structures.
-     */
-    ~Profiler();
-
 public:
-
-    /**
-     * Gets the Profiler object
-     */
-    static Profiler* instance() {
-        //singleton pattern implementation
-        if (!_instance)
-            _instance = new Profiler(PETSC_COMM_WORLD);
-
-        return _instance;
-    }
-
-    /**
-     * Destroys the Profiler object and causes that the statistics will be written to output
-     */
-    static void uninitialize() {
-        if (_instance) {
-            delete _instance;
-            _instance = NULL;
-        }
-    }
 
     /**
      * Initializes the Profiler with specific MPI communicator object
      */
-    static void initialize(MPI_Comm communicator) {
-        if (!_instance)
-            _instance = new Profiler(communicator);
+    //static void initialize(MPI_Comm communicator = MPI_COMM_WORLD);
+    static void initialize();
+    /**
+     * Returns unique Profiler object.
+     */
+    inline static Profiler* instance() {
+        ASSERT( _instance , "Can not get Profiler instance. Profiler not initialized yet.\n");
+        return _instance;
     }
+    /**
+     * Sets task specific information. The string @p description with textual description of the task and the
+     * number of elements of the mesh (parameter @p size). This is used for weak scaling graphs so it should
+     * measure size of the task of the same type (same description).
+     *
+     */
+    void set_task_info(string description, int size);
+    /**
+     * Sets informations about program version. This consists of @p program_version (includes program name), @p branch in the repository or rather full URL of the branch,
+     * and SVN @p revision (or hash for GIT).
+     *
+     */
+    void set_program_info(string program_name, string program_version, string branch, string revision, string build);
+
 
     /**
-     * Starts a timer with specified name. If the timer is not already created, creates a new one.
-     *
-     * @param tag - name of the timer to start
+     * Starts a timer with code point, tag and hashes specified by CodePoint object @p cp.
+     * If the timer is not already created, it creates a new one. It returns index of
+     * the actual timer.
      */
-    void start(string tag);
+    int start_timer(const CodePoint &cp);
+    /**
+     * Stops actual timer. It check if the hash of given code point match hash of the
+     * tag of actual timer node. If not we print out warning and try to find the correct tag
+     * towards the tree root closing all nodes we pass through.
+     *
+     * If DEBUG is set, we check that all children are closed.
+     */
+    void stop_timer(const CodePoint &cp);
 
     /**
-     * Stops a timer with specified name.
+     * Stop timer with index given by @p timer_index. If this is not equal to @p actual_node, we
+     * traverse the tree towards root while force closing nodes by the way.
      *
-     * @param tag - name of the timer to stop
+     * Negative @p timer_index means close @p actual_node
      */
-    void end(string tag = "");
+    void stop_timer(int timer_index = -1);
+
+
 
     /**
-     * Sets the size of the task. Will be written into output
-     *
-     * @param size - size of the task
+     * Adds @p n_calls - 1 to the total number of calls of the current timer. Minus one, since one call is counted when
+     * timer was started. You should use macro ADD_CALLS above.
      */
-    void set_task_size(int size);
+    void add_calls(unsigned int n_calls);
+    /**
+     * Notification about allocation of given size.
+     * Increase total allocated memory in current profiler frame.
+     */
+    void notify_malloc(const size_t size );
+    /**
+     * Notification about freeing memory of given size.
+     * Increase total deallocated memory in current profiler frame.
+     */
+    void notify_free(const size_t size );
+
 
     /**
-     * Sets the number of subframes (eg. iterations) in which the current Timer is divided.
-     *
-     * @param tag - the tag of the currently running timer. If the tag doesn't match the currently
-     * running one, no subframes are set.
-     * @param n_subframes - the number of subframes
+     * Returns tag of current timer.
      */
-    void set_timer_subframes(string tag, int n_subframes);
+    inline const char *actual_tag() const
+        { return timers_[actual_node].tag(); }
+    /**
+     * Returns total number of calls of current timer.
+     */
+    inline unsigned int actual_count() const
+        { return timers_[actual_node].call_count; }
+    /**
+     * Returns total time of current timer.
+     */
+    inline double actual_cumulative_time() const
+        { return timers_[actual_node].cumulative_time(); }
+
+
+    /**
+     * @brief Output current timing information into the given stream.
+     *
+     * COLECTIVE - all processes in the communicator have to call this
+     * method. It temporally stops all timers, synchronize all processes, collect
+     * profiling informations and write it to the given stream.
+     *
+     *  Pass through the profiling tree (collective over processors)
+     *  Print cumulative times average, balance (max/min), count (denote differences)
+     *
+     */
+    void output(MPI_Comm comm, ostream &os);
+    /**
+     * Same as previous, but output to the file with default name: "profiler_info_YYMMDD_HH::MM:SS.log".
+     * Empty body if macro DEBUG_PROFILER is not defined.
+     *
+     * TODO: move this outside to minimize dependencies
+     */
+    void output(MPI_Comm comm);
+    /**
+     * Stop all timers and destroys the Profiler object.
+     * If you want some output call @p output method just before.
+     */
+    static void uninitialize();
+
+
+private:
+    /**
+     * Try to find timer with tag (in fact only its 32-bit hash) from given code point @p cp.
+     * Returns -1 if it is not found otherwise it returns its index.
+     */
+    int find_child(const CodePoint &cp);
+
+    /**
+     * Used to update cumulative times of running timers
+     * in the @p output method in order to get actual results.
+     */
+    void update_running_timers();
+
+
+    /// Default code point.
+    static CodePoint null_code_point;
+
+    /// Pointer to the unique instance of singleton Profiler class.
+    static Profiler* _instance;
+
+    /// Vector of all timers. Whole tree is stored in this array.
+    vector<Timer> timers_;
+
+    /// Index of the actual timer node. Negative value means 'unset'.
+    int actual_node;
+
+    /// MPI communicator used for final reduce of the timer node tree.
+    //MPI_Comm communicator_;
+    /// MPI_rank
+    //int mpi_rank_;
+
+    // header informations
+
+    /// Some measure of the size of the task in the set of the tasks that differs
+    /// only by size - used for scaling tests.
+    int task_size_;
+    /// Task description and identifier in possible database of all Profiler results.
+    string task_description_;
+    /// Time and date of the start of the task solution. In fact start of the Profiler.
+    time_t start_time;
+
+    /// Name of the program.
+    string flow_name_;
+    /// Version of the program.
+    string flow_version_;
+    /// Http address of the branch in a repository.
+    string flow_branch_;
+    /// Revision or GIT hash.
+    string flow_revision_;
+    /// Build date and time.
+    string flow_build_;
+
+
+    /**
+     * Use DFS to pass through the tree and collect information about all timers reduced from the processes in the communicator.
+     * For every timer the information strings are stored in the struct TimerInfo in order to pad fields correctly
+     * to have alligned columns on the output. The alligning is performed in the output() method.
+     */
+    void add_timer_info(MPI_Comm comm, vector<vector<string> > &timersInfo, int timer_idx, int indent, double parent_time);
+
+    //Profiler(MPI_Comm comm); // private constructor
+    Profiler(); // private constructor
+    Profiler(Profiler const&); // copy constructor is private
+    Profiler & operator=(Profiler const&); // assignment operator is private
 };
 
-#define _PASTE(a,b) a ## b
-#define PASTE(a,b) _PASTE(a, b)
 
-/**
- * \def START_TIMER(tag)
- *
- * Starts a timer with specified tag.
- *
- * In fact it creates an object named 'timer_' followed by the number of the line
- * where it has been used. This is done to avoid variable name conflicts when
- * using the macro more than once in one block of code.
- */
-#define START_TIMER(tag) TimerFrame PASTE(timer_,__LINE__) = TimerFrame(tag)
+#else
+#define START_TIMER(tag)
+#endif
 
-/**
- * \def END_TIMER(tag)
- *
- * Ends a timer with specified tag.
- */
-#define END_TIMER(tag) TimerFrame::endTimer(tag)          // only if you want end on different place then end of function
+#else
+#define END_TIMER(tag)
+#endif
 
-/**
- * \def SET_TIMER_SUBFRAMES(tag, subframes)
- *
- * Sets specified amount of subframes (eg. iterations) for the given tag.
- * The specified timer tag must represent the currently active timer.
- */
-#define SET_TIMER_SUBFRAMES(tag, subframes) Profiler::instance->setTimerSubframes(tag, info)
+#else
+#define SET_TIMER_SUBFRAMES(tag,subfarmes)
+#endif
+
 
 /**
  *
@@ -303,47 +590,64 @@ public:
  * in situations where #END_TIMER was used to stop the timer manually before (but there is still the
  * variable which will be later destroyed), we have to store references to these variables and
  * destroy them on-demand.
+ *
+ * TODO:
+ * Should only contain pointer to the Timer. And destructor, that close the timer.
  */
 class TimerFrame {
 private:
-    string tag;
-    TimerFrame* _parent;
-    bool closed;
-    static map<string, TimerFrame*> _frames;
+    int const timer_index_;
 public:
+    inline TimerFrame(const CodePoint &cp)
+    : timer_index_( Profiler::instance()->start_timer(cp) )
+    {}
 
-    /**
-     * Parent of the TimerFrame object (it is a TimerFrame object with the same tag,
-     * but defined in the superior block of code or function)
-     */
-    TimerFrame* parent() {
-        return _parent;
-    }
-
-    TimerFrame(string tag);
-
-    ~TimerFrame();
-
-    /**
-     * If not already closed, closes the TimerFrame object.
-     * Asks Profiler to end a timer with specified tag and changes the frames
-     * map appropriately (if the TimerFrame object has a parent, associate hits parent
-     * with the tag or if not, delete the tag from the map)
-     */
-    void close();
-
-    /**
-     * Stops the timer manually
-     * @param tag - timer name
-     */
-    static void endTimer(string tag);
-
-    /**
-     * Tags with associated TimerFrame objects
-     */
-    static map<string, TimerFrame*>* frames() {
-        return &_frames;
+    ~TimerFrame() {
+        Profiler::instance()->stop_timer(timer_index_);
     }
 };
+
+#else // DEBUG_PROFILER
+
+
+// dummy declaration of Profiler class
+class Profiler {
+public:
+    static void initialize();
+    inline static Profiler* instance() {
+        ASSERT( _instance , "Can not get Profiler instance. Profiler not initialized yet.\n");
+        return _instance;
+    }
+
+    void set_task_info(string description, int size)
+    {}
+    void set_program_info(string program_name, string program_version, string branch, string revision, string build)
+    {}
+    void notify_malloc(const size_t size )
+    {}
+    void notify_free(const size_t size )
+    {}
+    void output(MPI_Comm comm, ostream &os)
+    {}
+    void output(MPI_Comm comm)
+    {}
+    const char *actual_tag() const
+    { return NULL; }
+    inline unsigned int actual_count() const
+    { return 0; }
+    inline double actual_cumulative_time() const
+    { return 0.0; }
+    static void uninitialize();
+
+private:
+    static Profiler* _instance;
+    Profiler() {}
+};
+
+
+
+
+#endif
+
 
 #endif

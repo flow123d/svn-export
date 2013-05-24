@@ -27,10 +27,10 @@
  *
  */
 
-
 #include <petsc.h>
 
 #include "system/system.hh"
+#include "system/sys_profiler.hh"
 #include "hc_explicit_sequential.hh"
 
 #include "main.h"
@@ -38,7 +38,16 @@
 
 #include "rev_num.h"
 /// named version of the program
-#define _VERSION_   "1.6.6"
+#define _VERSION_   "1.6.7"
+
+#ifndef _REVISION_
+    #define _REVISION_ "(unknown revision)"
+#endif
+
+#ifndef _BRANCH_
+    #define _BRANCH_ "https://dev.nti.tul.cz/repos/flow123d/tag/1.6.6"
+#endif
+
 
 static void main_convert_to_output();
 
@@ -62,7 +71,8 @@ void parse_cmd_line(const int argc, char * argv[],  string &ini_fname) {
     -S       Compute MH problem\n\
              Source files have to be in the same directory as ini file.\n\
     -i       String used to change the 'variable' ${INPUT} in the file path.\n\
-    -o       Absolute path to output directory.\n";
+    -o       Absolute path to output directory.\n\
+    -l file  Set base name of log files or turn logging off if no name is given.\n";
 
     xprintf(MsgLog, "Parsing program parameters ...\n");
 
@@ -109,18 +119,20 @@ int main(int argc, char **argv) {
 
     parse_cmd_line(argc, argv,  ini_fname); // command-line parsing
 
+
     system_init(argc, argv); // Petsc, open log, read ini file
     OptionsInit(ini_fname.c_str()); // Read options/ini file into database
     system_set_from_options();
 
-    Profiler::initialize(MPI_COMM_WORLD);
-
-    START_TIMER("WHOLE PROGRAM");
-
+    Profiler::initialize();
+    
     // Say Hello
-    xprintf(Msg, "This is FLOW-1-2-3, version %s rev: %s\n", _VERSION_,REVISION);
+    xprintf(Msg, "This is FLOW-1-2-3, version %s rev: %s\n", _VERSION_,_REVISION_);
     xprintf(Msg, "Built on %s at %s.\n", __DATE__, __TIME__);
 
+    string build = string(__DATE__) + ", " + string(__TIME__);
+    Profiler::instance()->set_program_info("Flow123d", _VERSION_, _BRANCH_, _REVISION_, build);
+    
     ProblemType type = (ProblemType) OptGetInt("Global", "Problem_type", NULL);
     switch (type) {
     case CONVERT_TO_OUTPUT:

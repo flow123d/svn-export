@@ -37,6 +37,8 @@
 
 #include "system/system.hh"
 #include "system/math_fce.h"
+#include "system/sys_profiler.hh"
+
 #include "mesh/mesh.h"
 #include "system/par_distribution.hh"
 #include "flow/darcy_flow_mh.hh"
@@ -70,6 +72,8 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
 : DarcyFlowMH(marks, mesh_in, mat_base_in)
 
 {
+  START_TIMER("DARCY-constructor.");
+  
     int ierr;
 
     size = mesh_->n_elements() + mesh_->n_sides + mesh_->n_edges();
@@ -79,8 +83,10 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
         n_schur_compls = 2;
     }
 
+    START_TIMER("solver init");
     solver = new (Solver);
     solver_init(solver);
+    END_TIMER("solver init");
 
     solution = NULL;
     schur0   = NULL;
@@ -133,6 +139,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
 
     make_schur0();
 
+    START_TIMER("prepare paralel");
     // prepare Scatter form parallel to sequantial in original numbering
     {
             IS is_par, is_loc;
@@ -169,6 +176,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
         }
     solution_changed_for_scatter=true;
 
+    END_TIMER("prepare paralel");
 }
 
 //=============================================================================
@@ -228,6 +236,8 @@ void DarcyFlowMH_Steady::postprocess() {
     if (sources == NULL)
         return;
 
+    START_TIMER("postprocess");
+    
     int i_loc, side_rows[4];
     double values[4];
     ElementFullIter ele = ELEMENT_FULL_ITER(mesh_, NULL);
@@ -512,14 +522,17 @@ DarcyFlowMH_Steady::~DarcyFlowMH_Steady() {
 // lokalni elementy -> lokalni sides -> jejich id -> jejich radky
 // TODO: reuse IA a Schurova doplnku
 void DarcyFlowMH_Steady::make_schur1() {
+  
+    START_TIMER("Schur 1");
+    
     ElementFullIter ele = ELEMENT_FULL_ITER(mesh_, NULL);
     int i_loc, nsides, i, side_rows[4], ierr, el_row;
     double det;
     PetscErrorCode err;
 
     F_ENTRY;
-    START_TIMER("Schur 1");
-
+    
+    START_TIMER("schur1 - create,inverse");
 
     // check type of LinSys
     if      (schur0->type == LinSys::MAT_IS)
@@ -600,8 +613,14 @@ void DarcyFlowMH_Steady::make_schur1() {
     MatAssemblyBegin(IA1, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(IA1, MAT_FINAL_ASSEMBLY);
 
+    END_TIMER("schur1 - create,inverse");
+    
+    START_TIMER("schur1 - form");
+    
     schur1->form_schur();
     schur1->set_spd();
+    
+    END_TIMER("schur1 - form");
 }
 
 /*******************************************************************************
@@ -1242,7 +1261,7 @@ void DarcyFlowMH_Unsteady::setup_time_term() {
 
 void DarcyFlowMH_Unsteady::modify_system()
 {
-
+  START_TIMER("modify system");
   if (time_->is_changed_dt()) {
       MatDiagonalSet(schur0->get_matrix(),steady_diagonal, INSERT_VALUES);
 
@@ -1343,6 +1362,7 @@ void DarcyFlowLMH_Unsteady::setup_time_term()
 
 void DarcyFlowLMH_Unsteady::modify_system()
 {
+    START_TIMER("modify system");
     if (time_->is_changed_dt()) {
         MatDiagonalSet(schur0->get_matrix(),steady_diagonal, INSERT_VALUES);
 

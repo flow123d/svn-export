@@ -32,6 +32,7 @@
 
 
 #include "system/system.hh"
+#include "system/sys_profiler.hh"
 #include "mesh/mesh.h"
 
 // think about following dependencies
@@ -154,7 +155,8 @@ int *max_entry() {
 
 void Mesh::setup_topology() {
     Mesh *mesh=this;
-
+    
+    START_TIMER("MESH - setup topology");
     /// initialize mesh topology (should be handled inside mesh object)
     read_neighbour_list(mesh);
 
@@ -188,6 +190,7 @@ void Mesh::setup_topology() {
 
 void Mesh::setup_materials( MaterialDatabase &base)
 {
+    START_TIMER("MESH - setup materials");
     xprintf( MsgVerb, "   Element to material... ")/*orig verb 5*/;
     FOR_ELEMENTS(this, ele ) {
         ele->material=base.find_id(ele->mid);

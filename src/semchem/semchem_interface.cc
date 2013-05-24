@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include "system/system.hh"
+#include "system/sys_profiler.hh"
 #include "semchem/che_semchem.h"
 #include "semchem/semchem_interface.hh"
 #include "transport/transport.h"

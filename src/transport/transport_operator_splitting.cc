@@ -8,6 +8,7 @@
 #include "transport/transport_operator_splitting.hh"
 #include <petscmat.h>
 #include "system/sys_vector.hh"
+#include "system/sys_profiler.hh"
 #include <time_governor.hh>
 #include <materials.hh>
 #include "equation.hh"
@@ -29,6 +30,7 @@ TransportOperatorSplitting::TransportOperatorSplitting(TimeMarks &marks, Mesh &i
     double problem_stop_time = OptGetDbl("Global", "Stop_time", "1.0");
 
 	convection = new ConvectionTransport(marks, *mesh_, *mat_base);
+	convection->test_concentration_sources(*convection);
 
 	// Chemistry initialization
 	decayRad = new Linear_reaction(0.0, mesh_, convection->get_n_substances(), convection->get_dual_porosity());
@@ -84,6 +86,9 @@ TransportOperatorSplitting::~TransportOperatorSplitting()
 void TransportOperatorSplitting::output_data(){
 
     if (time_->is_current(output_mark_type)) {
+        
+        START_TIMER("TOS-output data");
+      
         convection->output_vector_gather();
         field_output->write_data(time_->t());
     }
@@ -105,22 +110,22 @@ void TransportOperatorSplitting::update_solution() {
 	// TODO: update Semchem time step here!!
 	Semchem_reactions->set_timestep(convection->time().estimate_dt());
 
-    xprintf( Msg, "t: %f (TOS)                  cfl_dt: %f ", convection->time().t(), convection->time().dt() );
-    START_TIMER("transport_steps");
+    xprintf( Msg, "t: %f (TOS)                  cfl_dt: %g ", convection->time().t(), convection->time().estimate_dt() );
+    START_TIMER("TOS-one step");
     int steps=0;
     while ( convection->time().lt(time_->t()) )
     {
         steps++;
 	    // one internal step
-	    //xprintf( Msg, "Time : %f\n", convection->time().t() );
+	    //xprintf( Msg, "Time : %f dt: %f\n", convection->time().t(), convection->time().dt() );
 	    convection->compute_one_step();
 	    // Calling linear reactions and Semchem
 	    decayRad->compute_one_step();
 	    Semchem_reactions->compute_one_step();
 	}
-    END_TIMER("transport_steps");
+    END_TIMER("TOS-one step");
     //DBGMSG("conv time: %f TOS time: %f\n", convection->time().t(), time_->t());
-    xprintf( Msg, " steps: %d\n",steps);
+    xprintf( Msg, "CONVECTION: steps: %d\n",steps);
 }
 
 

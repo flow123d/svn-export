@@ -34,6 +34,7 @@
 #include "flow/darcy_flow_mh_output.hh"
 #include "field_p0.hh"
 #include "system/system.hh"
+#include "system/sys_profiler.hh"
 #include <vector>
 
 #include "io/output.h"
@@ -114,6 +115,8 @@ void DarcyFlowMHOutput::postprocess() {
 
 void DarcyFlowMHOutput::output()
 {
+    START_TIMER("DARCY OUTPUT");
+    
     std::string eleVectorName = "velocity_elements";
     std::string eleVectorUnit = "L/T";
 

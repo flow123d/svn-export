@@ -30,6 +30,7 @@
  * @date Created on October 3, 2010, 11:32 AM
  */
 
+#include "system/sys_profiler.hh"
 #include "msh_gmshreader.h"
 #include "mesh/nodes.hh"
 #include "xio.h"
@@ -45,6 +46,8 @@ GmshMeshReader::~GmshMeshReader() {
  *  Read mesh from file
  */
 void GmshMeshReader::read(const std::string &fileName, Mesh* mesh) {
+  
+    START_TIMER("GMSHReader - read mesh");
     xprintf(Msg, " - GmshMeshReader->read(const char* fileName, Mesh* mesh)\n");
 
     ASSERT(!(mesh == NULL), "Argument mesh is NULL in method GmshMeshRedaer->read(const char*, Mesh*)\n");

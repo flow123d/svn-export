@@ -155,17 +155,7 @@ bool Timer::stop(bool forced) {
 }
 
 
-#endif
-void Timer::add_child(int child_index, const Timer &child)
-{
-    unsigned int idx = child.hash_idx_;
-    if (child_timers[idx] >0) {
-        unsigned int i=idx;
-        do {
-            i=( i < max_n_childs ? i+1 : 0);
-        } while (i!=idx && child_timers[i] >0);
-        ASSERT(i!=idx, "Too many children of the timer with tag '%s'\n", tag() );
-        idx=i;
+
 void Timer::add_child(int child_index, const Timer &child)
 {
     unsigned int idx = child.hash_idx_;

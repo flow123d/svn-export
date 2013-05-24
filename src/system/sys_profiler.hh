@@ -566,18 +566,6 @@ private:
 };
 
 
-#else
-#define START_TIMER(tag)
-#endif
-
-#else
-#define END_TIMER(tag)
-#endif
-
-#else
-#define SET_TIMER_SUBFRAMES(tag,subfarmes)
-#endif
-
 
 /**
  *

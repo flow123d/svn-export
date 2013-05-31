@@ -72,7 +72,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
 : DarcyFlowMH(marks, mesh_in, mat_base_in)
 
 {
-  START_TIMER("DARCY-constructor.");
+  START_TIMER("Darcy constructor");
   
     int ierr;
 
@@ -116,6 +116,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
     if (ierr)
         xprintf(Err, "Some error in MPI.\n");
 
+    START_TIMER("precalculation in mesh");
     // calculation_mh  - precalculation of some values stored still in mesh_
     {
     struct Side *sde;
@@ -131,6 +132,8 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
     local_matrices_mh(mesh_);
     }
 
+    END_TIMER("precalculation in mesh");
+    
     prepare_parallel();
 
     //side_ds->view();
@@ -185,7 +188,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
 void DarcyFlowMH_Steady::update_solution() {
 
 
-    START_TIMER("SOLVING MH SYSTEM");
+    START_TIMER("Solving MH system");
     F_ENTRY;
 
     if (time_->is_end()) return;
@@ -459,7 +462,7 @@ void DarcyFlowMH_Steady::make_schur0() {
     Element *ele;
     Vec aux;
 
-    START_TIMER("PREALLOCATION");
+    START_TIMER("preallocation");
 
     if (schur0 == NULL) { // create Linear System for MH matrix
 
@@ -475,14 +478,16 @@ void DarcyFlowMH_Steady::make_schur0() {
 
     }
 
-    END_TIMER("PREALLOCATION");
+    END_TIMER("preallocation");
 
-    START_TIMER("ASSEMBLY");
+    START_TIMER("assembly");
 
     schur0->start_add_assembly(); // finish allocation and create matrix
     assembly_steady_mh_matrix(); // fill matrix
     schur0->finalize();
 
+    END_TIMER("assembly");
+    
     //schur0->view_local_matrix();
     //PetscViewer myViewer;
     //PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matis.m",&myViewer);

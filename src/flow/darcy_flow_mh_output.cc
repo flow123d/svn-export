@@ -115,7 +115,7 @@ void DarcyFlowMHOutput::postprocess() {
 
 void DarcyFlowMHOutput::output()
 {
-    START_TIMER("DARCY OUTPUT");
+    START_TIMER("Darcy output");
     
     std::string eleVectorName = "velocity_elements";
     std::string eleVectorUnit = "L/T";

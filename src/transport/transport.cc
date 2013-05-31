@@ -672,7 +672,7 @@ void ConvectionTransport::set_target_time(double target_time)
 //=============================================================================
 void ConvectionTransport::create_transport_matrix_mpi() {
   
-    START_TIMER("transport_matrix_assembly");
+    START_TIMER("convection_matrix_assembly");
 
     ElementFullIter el2 = ELEMENT_FULL_ITER_NULL(mesh_);
     ElementFullIter elm = ELEMENT_FULL_ITER_NULL(mesh_);
@@ -745,7 +745,11 @@ void ConvectionTransport::create_transport_matrix_mpi() {
                     }
                 }
                 if (elm->side[si]->flux > 0.0)
+                {
+                    
                     aii -= (elm->side[si]->flux / (elm->volume * elm->material->por_m));
+                    //xprintf(Msg,"aii=%f \t\t el=%d",aii);
+                }
             } else {
                 if (elm->side[si]->flux < 0.0) {
                     aij = -(elm->side[si]->flux / (elm->volume * elm->material->por_m));
@@ -796,6 +800,8 @@ void ConvectionTransport::create_transport_matrix_mpi() {
 
         if (fabs(aii) > max_sum)
             max_sum = fabs(aii);
+        
+        xprintf(MsgLog,"el=%d \t\t aii=%f \t\t el_vol=%f \t\t por=%f\n",loc_el,aii, elm->volume,elm->material->por_m);
         aii = 0.0;
         //   i++;
     } // END ELEMENTS
@@ -803,6 +809,7 @@ void ConvectionTransport::create_transport_matrix_mpi() {
     double glob_max_sum;
 
     MPI_Allreduce(&max_sum,&glob_max_sum,1,MPI_DOUBLE,MPI_MAX,PETSC_COMM_WORLD);
+    xprintf(Msg,"CFL: glob_max_sum=%f\n",glob_max_sum);
     cfl_max_step = 1 / glob_max_sum;
     //time_step = 0.9 / glob_max_sum;
     
@@ -821,7 +828,7 @@ void ConvectionTransport::create_transport_matrix_mpi() {
      getchar();
      */
     is_convection_matrix_scaled = false;
-    END_TIMER("transport_matrix_assembly");
+    END_TIMER("convection_matrix_assembly");
 }
 
 

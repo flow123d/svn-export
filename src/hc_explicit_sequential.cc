@@ -58,7 +58,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     material_database = new MaterialDatabase(material_file_name);
 
     // Read mesh
-    START_TIMER("READING MESH");
+    START_TIMER("Reading mesh");
     
     mesh = new Mesh();
     const string& mesh_file_name = IONameHandler::get_instance()->get_input_file_name(OptGetStr("Input", "Mesh", NULL));
@@ -67,7 +67,7 @@ HC_ExplicitSequential::HC_ExplicitSequential(ProblemType problem_type)
     mesh->setup_topology();
     mesh->setup_materials(*material_database);
     
-    END_TIMER("READING MESH");
+    END_TIMER("Reading mesh");
 
     const string& description = OptGetStr("Global", "Description", "Unknown description.");
     Profiler::instance()->set_task_info(description, mesh->n_elements());

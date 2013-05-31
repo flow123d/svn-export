@@ -405,8 +405,7 @@ void Linear_reaction::compute_one_step(void)
 {
   if (reaction_matrix == NULL)   return;
   
-  START_TIMER("decay_step");
-	 //for (int loc_el = 0; loc_el < distribution->lsize(distribution->myp()); loc_el++)
+  START_TIMER("linear reaction step");
 	for (int loc_el = 0; loc_el < distribution->lsize(); loc_el++)
 	 {
 	  
@@ -417,8 +416,8 @@ void Linear_reaction::compute_one_step(void)
 	 }
   
   ADD_CALLS(distribution->lsize());
-  END_TIMER("decay_step");
-	 
+  END_TIMER("linear reaction step");
+	
 	return;
 }
 

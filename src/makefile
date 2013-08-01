@@ -82,8 +82,8 @@ $(OBJS)/xio.o\
 $(OBJS)/sparse_graph.o\
 $(OBJS)/la_linsys.o\
 $(OBJS)/time_governor.o\
-$(OBJS)/hc_explicit_sequential.o\
-$(OBJS)/field_p0.o
+$(OBJS)/field_p0.o\
+$(OBJS)/hc_explicit_sequential.o
 
 
 #$(OBJS)/convert.o\

@@ -31,6 +31,7 @@
 #define OUTPUT_H
 
 #include "mesh/mesh.h"
+#include <petsc.h>
 
 #include <vector>
 #include <string>

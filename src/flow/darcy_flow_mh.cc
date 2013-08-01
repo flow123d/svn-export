@@ -107,6 +107,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
         sources->setup_from_function(sources_formula);
     }
 
+    
     // time governor
     time_=new TimeGovernor(-1, TimeGovernor::inf_time, *time_marks);
 
@@ -116,6 +117,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
     if (ierr)
         xprintf(Err, "Some error in MPI.\n");
 
+    
     START_TIMER("precalculation in mesh");
     // calculation_mh  - precalculation of some values stored still in mesh_
     {
@@ -134,6 +136,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
 
     END_TIMER("precalculation in mesh");
     
+    
     prepare_parallel();
 
     //side_ds->view();
@@ -142,7 +145,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
 
     make_schur0();
 
-    START_TIMER("prepare paralel");
+    START_TIMER("prepare scatter");
     // prepare Scatter form parallel to sequantial in original numbering
     {
             IS is_par, is_loc;
@@ -179,7 +182,7 @@ DarcyFlowMH_Steady::DarcyFlowMH_Steady(TimeMarks &marks, Mesh &mesh_in, Material
         }
     solution_changed_for_scatter=true;
 
-    END_TIMER("prepare paralel");
+    END_TIMER("prepare scatter");
 }
 
 //=============================================================================
@@ -891,7 +894,9 @@ void DarcyFlowMH_Steady::make_row_numberings() {
 // - make arrays: *_id_4_loc and *_row_4_id to allow parallel assembly of the MH matrix
 // ====================================================================================
 void DarcyFlowMH_Steady::prepare_parallel() {
-
+    
+    START_TIMER("prepare parallel");
+    
     int *loc_part; // optimal (edge,el) partitioning (local chunk)
     int *id_4_old; // map from old idx to ids (edge,el)
     // auxiliary

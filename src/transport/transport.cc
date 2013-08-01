@@ -603,16 +603,22 @@ void ConvectionTransport::compute_one_step() {
 
     for (sbi = 0; sbi < n_substances; sbi++) {
                 // one step in MOBILE phase
+        
     		if(transportsources != NULL){
+          START_TIMER("compute_concentration_sources");
     			transportsources->compute_concentration_sources(sbi);
     			VecAXPBYPCZ(vcumulative_corr[sbi],1.0,time_->dt(),0.0,bcvcorr[sbi],transportsources->vsources_corr[sbi]);
+          END_TIMER("compute_concentration_sources");
     		}
     		else
-    			VecCopy(bcvcorr[sbi], vcumulative_corr[sbi]);
+          VecCopy(bcvcorr[sbi], vcumulative_corr[sbi]);
 
+                START_TIMER("mat mult");
                 MatMultAdd(tm, vpconc[sbi], vcumulative_corr[sbi], vconc[sbi]); // conc=tm*pconc + bc
                 VecCopy(vconc[sbi], vpconc[sbi]); // pconc = conc
-
+                END_TIMER("mat mult");
+                
+                START_TIMER("dual porosity/sorption");
                 if ((dual_porosity == true) || (sorption == true) || (pepa == true) || (reaction_on == true))
                     // cycle over local elements only in any order
                     for (int loc_el = 0; loc_el < el_ds->lsize(); loc_el++) {
@@ -629,6 +635,7 @@ void ConvectionTransport::compute_one_step() {
                          */
                     }
                 // transport_node_conc(mesh_,sbi,problem->transport_sub_problem);  // vyresit prepocet
+                END_TIMER("dual porosity/sorption");
             }
 }
 
@@ -746,9 +753,7 @@ void ConvectionTransport::create_transport_matrix_mpi() {
                 }
                 if (elm->side[si]->flux > 0.0)
                 {
-                    
                     aii -= (elm->side[si]->flux / (elm->volume * elm->material->por_m));
-                    //xprintf(Msg,"aii=%f \t\t el=%d",aii);
                 }
             } else {
                 if (elm->side[si]->flux < 0.0) {
@@ -801,15 +806,15 @@ void ConvectionTransport::create_transport_matrix_mpi() {
         if (fabs(aii) > max_sum)
             max_sum = fabs(aii);
         
-        xprintf(MsgLog,"el=%d \t\t aii=%f \t\t el_vol=%f \t\t por=%f\n",loc_el,aii, elm->volume,elm->material->por_m);
+        //xprintf(MsgLog,"el=%d \t\t aii=%f \t\t el_vol=%f \t\t por=%f\n",
+        //        loc_el,aii, elm->volume,elm->material->por_m);
         aii = 0.0;
-        //   i++;
     } // END ELEMENTS
 
     double glob_max_sum;
 
     MPI_Allreduce(&max_sum,&glob_max_sum,1,MPI_DOUBLE,MPI_MAX,PETSC_COMM_WORLD);
-    xprintf(Msg,"CFL: glob_max_sum=%f\n",glob_max_sum);
+    //xprintf(Msg,"CFL: glob_max_sum=%f\n",glob_max_sum);
     cfl_max_step = 1 / glob_max_sum;
     //time_step = 0.9 / glob_max_sum;
     

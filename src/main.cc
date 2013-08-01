@@ -45,7 +45,7 @@
 #endif
 
 #ifndef _BRANCH_
-    #define _BRANCH_ "https://dev.nti.tul.cz/repos/flow123d/tag/1.6.6"
+    #define _BRANCH_ "https://dev.nti.tul.cz/repos/flow123d/branches/1.6.7"
 #endif
 
 
@@ -127,8 +127,11 @@ int main(int argc, char **argv) {
     Profiler::initialize();
     
     // Say Hello
+    int mpi_size;
+    MPI_Comm_size(PETSC_COMM_WORLD, &mpi_size);
+    
     xprintf(Msg, "This is FLOW-1-2-3, version %s rev: %s\n", _VERSION_,_REVISION_);
-    xprintf(Msg, "Built on %s at %s.\n", __DATE__, __TIME__);
+    xprintf(Msg, "Built on %s at %s. MPI size: %d\n", __DATE__, __TIME__, mpi_size);
 
     string build = string(__DATE__) + ", " + string(__TIME__);
     Profiler::instance()->set_program_info("Flow123d", _VERSION_, _BRANCH_, _REVISION_, build);
